@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/login_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/bg_magic_gradient">
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- Welcome Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:gravity="center_horizontal">
+
+        <ImageView
+            android:layout_width="256dp"
+            android:layout_height="256dp"
+            android:src="@drawable/main_character"
+            android:contentDescription="Chalkak Character"
+            android:scaleType="centerInside"
+            android:adjustViewBounds="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Nice to"
+            android:textColor="#FFFFFF"
+            android:textSize="52sp"
+            android:gravity="center" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="meet you!"
+            android:textColor="#FFFFFF"
+            android:textSize="52sp"
+            android:gravity="center" />
+
+        <ImageView
+            android:id="@+id/btn_sign_in"
+            android:layout_width="match_parent"
+            android:layout_height="72dp"
+            android:layout_marginTop="24dp"
+            android:src="@drawable/google_login"
+            android:scaleType="centerInside"
+            android:contentDescription="Sign in with Google" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+</LinearLayout>
+
