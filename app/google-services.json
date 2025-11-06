@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "176917824873",
+    "project_id": "chalkak-844e1",
+    "storage_bucket": "chalkak-844e1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:176917824873:android:90e1b4c55f85dbb780a9f8",
+        "android_client_info": {
+          "package_name": "com.example.chalkak"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "176917824873-10b7rd451cnjtq87ktv3l4h0jsr2ghra.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYGUPU75T7Kklx-yybGIr7MtKoasE717M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "176917824873-10b7rd451cnjtq87ktv3l4h0jsr2ghra.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
