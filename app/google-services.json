@@ -12,7 +12,12 @@
           "package_name": "com.example.chalkak"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "176917824873-10b7rd451cnjtq87ktv3l4h0jsr2ghra.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDYGUPU75T7Kklx-yybGIr7MtKoasE717M"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "176917824873-10b7rd451cnjtq87ktv3l4h0jsr2ghra.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
