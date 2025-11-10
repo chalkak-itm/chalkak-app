@@ -64,4 +64,8 @@ dependencies {
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
+    //Add the dependency for the TensorFlow lite Model
+    implementation("org.tensorflow:tensorflow-lite-task-vision:0.4.4")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+
 }
