@@ -1,26 +1,44 @@
 package com.example.chalkak
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import com.example.chalkak.ml.ObjectDetectionHelper
 import java.io.File
 
 class ImagePreviewActivity : AppCompatActivity() {
 	private var photoUri: Uri? = null
 	private var isGalleryMode = false
 
+	//variables for detection model
+	private lateinit var detectionHelper: ObjectDetectionHelper
+	private var currentBitmap: Bitmap? = null
+
 	private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
 		if (success && photoUri != null) {
-			findViewById<android.widget.ImageView>(R.id.img_quiz)?.setImageURI(photoUri)
-			// After camera capture, hide capture button and show "Choose Another"
-			findViewById<android.widget.TextView>(R.id.btn_capture)?.visibility = android.view.View.GONE
-			findViewById<android.widget.TextView>(R.id.btn_retake)?.text = "Choose Another"
+			val imgQuiz = findViewById<ImageView>(R.id.img_quiz)
+
+			currentBitmap = loadBitmapFromUri(photoUri!!)
+			if (currentBitmap != null) {
+				imgQuiz.setImageBitmap(currentBitmap)
+			} else {
+				imgQuiz.setImageURI(photoUri)
+			}
+
+			findViewById<TextView>(R.id.btn_capture)?.visibility = android.view.View.GONE
+			findViewById<TextView>(R.id.btn_retake)?.text = "Choose Another"
 		}
 	}
 
@@ -28,10 +46,17 @@ class ImagePreviewActivity : AppCompatActivity() {
 		uri?.let {
 			photoUri = it
 			isGalleryMode = true
-			findViewById<android.widget.ImageView>(R.id.img_quiz)?.setImageURI(it)
-			// After gallery selection, hide capture button and show "Choose Another"
-			findViewById<android.widget.TextView>(R.id.btn_capture)?.visibility = android.view.View.GONE
-			findViewById<android.widget.TextView>(R.id.btn_retake)?.text = "Choose Another"
+
+			val imgQuiz = findViewById<ImageView>(R.id.img_quiz)
+			currentBitmap = loadBitmapFromUri(it)
+			if (currentBitmap != null) {
+				imgQuiz.setImageBitmap(currentBitmap)
+			} else {
+				imgQuiz.setImageURI(it)
+			}
+
+			findViewById<TextView>(R.id.btn_capture)?.visibility = android.view.View.GONE
+			findViewById<TextView>(R.id.btn_retake)?.text = "Choose Another"
 		}
 	}
 
@@ -44,15 +69,31 @@ class ImagePreviewActivity : AppCompatActivity() {
 				// Gallery selection
 				photoUri = uri
 				isGalleryMode = true
-				findViewById<android.widget.ImageView>(R.id.img_quiz)?.setImageURI(uri)
-				findViewById<android.widget.TextView>(R.id.btn_capture)?.visibility = android.view.View.GONE
-				findViewById<android.widget.TextView>(R.id.btn_retake)?.text = "Choose Another"
+
+				val imgQuiz = findViewById<ImageView>(R.id.img_quiz)
+				currentBitmap = loadBitmapFromUri(uri)
+				if (currentBitmap != null) {
+					imgQuiz.setImageBitmap(currentBitmap)
+				} else {
+					imgQuiz.setImageURI(uri)
+				}
+
+				findViewById<TextView>(R.id.btn_capture)?.visibility = android.view.View.GONE
+				findViewById<TextView>(R.id.btn_retake)?.text = "Choose Another"
 			} else if (pendingCameraUri != null) {
 				// Camera capture - use the saved URI
 				photoUri = pendingCameraUri
-				findViewById<android.widget.ImageView>(R.id.img_quiz)?.setImageURI(pendingCameraUri)
-				findViewById<android.widget.TextView>(R.id.btn_capture)?.visibility = android.view.View.GONE
-				findViewById<android.widget.TextView>(R.id.btn_retake)?.text = "Choose Another"
+
+				val imgQuiz = findViewById<ImageView>(R.id.img_quiz)
+				currentBitmap = loadBitmapFromUri(pendingCameraUri!!)
+				if (currentBitmap != null) {
+					imgQuiz.setImageBitmap(currentBitmap)
+				} else {
+					imgQuiz.setImageURI(pendingCameraUri)
+				}
+
+				findViewById<TextView>(R.id.btn_capture)?.visibility = android.view.View.GONE
+				findViewById<TextView>(R.id.btn_retake)?.text = "Choose Another"
 				pendingCameraUri = null
 			}
 		} else {
@@ -65,20 +106,31 @@ class ImagePreviewActivity : AppCompatActivity() {
 		WindowCompat.setDecorFitsSystemWindows(window, false)
 		setContentView(R.layout.activity_camera_capture)
 
+		//Initial the ObjectDetectionHelper
+		detectionHelper = ObjectDetectionHelper(this)
+
+		// pre-bring the frequent views
+		val imgQuiz = findViewById<ImageView>(R.id.img_quiz)
+		val btnCapture = findViewById<TextView>(R.id.btn_capture)
+		val btnRetake = findViewById<TextView>(R.id.btn_retake)
+		val btnConfirm = findViewById<TextView>(R.id.btn_confirm)
+
 		val imageUri = intent.getParcelableExtra<Uri>("image_uri")
 		if (imageUri != null) {
 			photoUri = imageUri
 			isGalleryMode = true
-			findViewById<android.widget.ImageView>(R.id.img_quiz)?.setImageURI(imageUri)
-			findViewById<android.widget.TextView>(R.id.btn_capture)?.visibility = android.view.View.GONE
-			findViewById<android.widget.TextView>(R.id.btn_retake)?.text = "Choose Another"
-		}
 
-		val root = findViewById<android.view.View>(R.id.camera_root)
-		ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
-			val sb = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-			v.setPadding(sb.left, sb.top, sb.right, sb.bottom)
-			insets
+			// Uri → Bitmap and store in currentBitmap
+			currentBitmap = loadBitmapFromUri(imageUri)
+			if (currentBitmap != null) {
+				imgQuiz.setImageBitmap(currentBitmap)
+			} else {
+				// if change is failure stay in URI
+				imgQuiz.setImageURI(imageUri)
+			}
+
+			btnCapture.visibility = android.view.View.GONE
+			btnRetake.text = "Choose Another"
 		}
 
 		findViewById<android.widget.ImageButton>(R.id.btn_back)?.setOnClickListener { finish() }
@@ -157,5 +209,21 @@ class ImagePreviewActivity : AppCompatActivity() {
 		}
 		
 		chooseImageSource.launch(chooserIntent)
+	}
+
+	//function for transfer the uri into bitmap
+	private fun loadBitmapFromUri(uri: Uri): Bitmap? {
+		return try {
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+				val source = ImageDecoder.createSource(contentResolver, uri)
+				ImageDecoder.decodeBitmap(source)
+			} else {
+				@Suppress("DEPRECATION")
+				MediaStore.Images.Media.getBitmap(contentResolver, uri)
+			}
+		} catch (e: Exception) {
+			e.printStackTrace()
+			null
+		}
 	}
 }
