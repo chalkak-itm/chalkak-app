@@ -1,4 +1,3 @@
-
 package com.example.chalkak
 
 import DetectionResultItem
@@ -25,6 +24,9 @@ class DetectionResultActivity : AppCompatActivity() {
 
     private lateinit var btnBack: ImageButton
 
+    private lateinit var btnTtsWord: ImageButton
+    private lateinit var btnTtsExample: ImageButton
+
     private var detectionResults: List<DetectionResultItem> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,6 +44,9 @@ class DetectionResultActivity : AppCompatActivity() {
         txtSelectedObject = findViewById(R.id.txt_selected_object)
         txtKoreanMeaning = findViewById(R.id.txt_korean_meaning)
         txtExampleSentence = findViewById(R.id.txt_example_sentence)
+
+        btnTtsWord = findViewById(R.id.btn_tts_word)
+        btnTtsExample = findViewById(R.id.btn_tts_example)
 
         btnBack = findViewById(R.id.btn_back)
 
