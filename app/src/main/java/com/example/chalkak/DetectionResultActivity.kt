@@ -1,4 +1,4 @@
-// DetectionResultActivity.kt
+
 package com.example.chalkak
 
 import DetectionResultItem
@@ -15,7 +15,6 @@ class DetectionResultActivity : AppCompatActivity() {
     private lateinit var imgResult: ImageView
     private lateinit var boxOverlay: FrameLayout
 
-    private lateinit var txtObjectsTitle: TextView
     private lateinit var scrollObjectButtons: HorizontalScrollView
     private lateinit var layoutObjectButtons: LinearLayout
 
@@ -104,8 +103,6 @@ class DetectionResultActivity : AppCompatActivity() {
      * click box → provide one word button
      */
     private fun onBoxClicked(item: DetectionResultItem) {
-        // set visibility of button
-        txtObjectsTitle.visibility = View.VISIBLE
         scrollObjectButtons.visibility = View.VISIBLE
 
         // represent only the selected word
