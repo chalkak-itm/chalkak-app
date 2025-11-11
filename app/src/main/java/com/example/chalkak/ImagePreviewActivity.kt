@@ -1,5 +1,6 @@
 package com.example.chalkak
 
+import DetectionResultItem
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
@@ -165,18 +166,50 @@ class ImagePreviewActivity : AppCompatActivity() {
 
 			// Execute in thread
 			Thread {
-				// ObjectDetectionHelper
+				// Execute Detection
 				val (outputBitmap, results) = detectionHelper.detect(bitmap)
+				// results: List<com.example.chalkak.ml.DetectionResult>
+				// DetectionResult(name: String, score: Float, boundingBox: RectF)
 
-				// outputBitmap is image with boxes
-				// results is list containing name, score, boundingBox(position)
+				// 2. Store the result image in cache
+				val imageFile = java.io.File(cacheDir, "detection_${System.currentTimeMillis()}.png")
+				java.io.FileOutputStream(imageFile).use { out ->
+					outputBitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+				}
 
-				// The activity to handle the results
+				// 3. DetectionResult -> DetectionResultItem
+				val uiResults = ArrayList<DetectionResultItem>()
+				val w = outputBitmap.width.toFloat()
+				val h = outputBitmap.height.toFloat()
+
+				for (r in results) {
+					val box = r.boundingBox   // RectF
+					uiResults.add(
+						DetectionResultItem(
+							label = r.name,
+							score = r.score,
+							left = box.left / w,
+							top = box.top / h,
+							right = box.right / w,
+							bottom = box.bottom / h
+						)
+					)
+				}
+
+				// 4. UI Thread --> result Activity
 				runOnUiThread {
-					Toast.makeText(this@ImagePreviewActivity, "Executed successfully!", Toast.LENGTH_SHORT).show()
+					btnConfirm.isEnabled = true
+					Toast.makeText(
+						this@ImagePreviewActivity,
+						"Executed successfully!",
+						Toast.LENGTH_SHORT
+					).show()
 
-					// 나중에 결과를 표시할 Activity가 생기면 여기서 Intent로 넘길 예정:
-					// 지금은 아직 UI가 없으니까 finish() 없이 그대로 둠.
+					val intent = Intent(this@ImagePreviewActivity, DetectionResultActivity::class.java).apply {
+						putExtra("image_path", imageFile.absolutePath)
+						putParcelableArrayListExtra("detection_results", uiResults)
+					}
+					startActivity(intent)
 				}
 			}.start()
 		}
