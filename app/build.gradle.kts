@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     // Add the Google services Gradle plugin
     id("com.google.gms.google-services")
+    // Add the Kotlin-parcelize plugin
+    id("kotlin-parcelize")
 }
 
 android {
