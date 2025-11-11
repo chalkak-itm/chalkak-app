@@ -103,6 +103,7 @@ class DetectionResultActivity : AppCompatActivity() {
      * click box → provide one word button
      */
     private fun onBoxClicked(item: DetectionResultItem) {
+        cardWordDetail.visibility = View.GONE
         scrollObjectButtons.visibility = View.VISIBLE
 
         // represent only the selected word
