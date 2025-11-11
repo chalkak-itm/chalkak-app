@@ -14,7 +14,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "176917824873-10b7rd451cnjtq87ktv3l4h0jsr2ghra.apps.googleusercontent.com",
+          "client_id": "176917824873-0c5spvgp1ullaolj51ega6rb2qfbvch4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.chalkak",
+            "certificate_hash": "69dbc4ec12c695ff16c7fe78a011822115379983"
+          }
+        },
+        {
+          "client_id": "176917824873-ipc46dhtgiacnep2ejaf598l468k5ral.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
