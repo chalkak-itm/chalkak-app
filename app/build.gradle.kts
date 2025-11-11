@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     // Add the Google services Gradle plugin
     id("com.google.gms.google-services")
+    // Add the Kotlin-parcelize plugin
+    id("kotlin-parcelize")
 }
 
 android {
@@ -64,5 +66,8 @@ dependencies {
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
+    //Add the dependency for the TensorFlow lite Model
+    implementation("org.tensorflow:tensorflow-lite-task-vision:0.4.4")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
 
 }

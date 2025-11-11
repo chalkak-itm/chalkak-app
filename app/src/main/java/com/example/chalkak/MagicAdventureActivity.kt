@@ -1,16 +1,27 @@
 package com.example.chalkak
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.widget.LinearLayout
 import android.widget.ImageButton
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 
 class MagicAdventureActivity : AppCompatActivity() {
+    private val pickImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            val intent = Intent(this, ImagePreviewActivity::class.java).apply {
+                putExtra("image_uri", it)
+            }
+            startActivity(intent)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -24,10 +35,10 @@ class MagicAdventureActivity : AppCompatActivity() {
         val navQuiz: TextView = findViewById(R.id.nav_quiz)
 
         takePhoto.setOnClickListener {
-            startActivity(Intent(this, CameraCaptureActivity::class.java))
+            startActivity(Intent(this, ImagePreviewActivity::class.java))
         }
         upload.setOnClickListener {
-            // TODO: 구현 - 갤러리 선택
+            pickImage.launch("image/*")
         }
 
         backButton.setOnClickListener { finish() }

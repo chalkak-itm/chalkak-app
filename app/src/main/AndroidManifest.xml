@@ -27,13 +27,16 @@
             android:name=".MagicAdventureActivity"
             android:exported="false" />
         <activity
+            android:name=".DetectionResultActivity"
+            android:exported="false" />
+        <activity
             android:name=".LogActivity"
             android:exported="false" />
         <activity
             android:name=".QuizActivity"
             android:exported="false" />
         <activity
-            android:name=".CameraCaptureActivity"
+            android:name=".ImagePreviewActivity"
             android:exported="false" />
         <provider
             android:name="androidx.core.content.FileProvider"
