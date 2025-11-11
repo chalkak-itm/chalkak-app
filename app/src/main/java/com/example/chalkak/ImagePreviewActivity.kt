@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
@@ -155,11 +156,29 @@ class ImagePreviewActivity : AppCompatActivity() {
 				launchCamera()
 			}
 		}
-		findViewById<android.widget.TextView>(R.id.btn_confirm)?.setOnClickListener {
-			photoUri?.let { uri ->
-				setResult(RESULT_OK, Intent().setData(uri))
+		btnConfirm.setOnClickListener {
+			val bitmap = currentBitmap
+			if (bitmap == null) {
+				Toast.makeText(this, "Take photo or choose picture in gallery first.", Toast.LENGTH_SHORT).show()
+				return@setOnClickListener
 			}
-			finish()
+
+			// Execute in thread
+			Thread {
+				// ObjectDetectionHelper
+				val (outputBitmap, results) = detectionHelper.detect(bitmap)
+
+				// outputBitmap is image with boxes
+				// results is list containing name, score, boundingBox(position)
+
+				// The activity to handle the results
+				runOnUiThread {
+					Toast.makeText(this, "Excuting ! 결과를 준비 중입니다.", Toast.LENGTH_SHORT).show()
+
+					// 나중에 결과를 표시할 Activity가 생기면 여기서 Intent로 넘길 예정:
+					// 지금은 아직 UI가 없으니까 finish() 없이 그대로 둠.
+				}
+			}.start()
 		}
 
 		if (savedInstanceState == null && !isGalleryMode) {
