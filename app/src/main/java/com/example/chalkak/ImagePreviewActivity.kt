@@ -173,7 +173,7 @@ class ImagePreviewActivity : AppCompatActivity() {
 
 				// The activity to handle the results
 				runOnUiThread {
-					Toast.makeText(this, "Excuting ! 결과를 준비 중입니다.", Toast.LENGTH_SHORT).show()
+					Toast.makeText(this@ImagePreviewActivity, "Executed successfully!", Toast.LENGTH_SHORT).show()
 
 					// 나중에 결과를 표시할 Activity가 생기면 여기서 Intent로 넘길 예정:
 					// 지금은 아직 UI가 없으니까 finish() 없이 그대로 둠.

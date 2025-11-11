@@ -46,11 +46,19 @@ class ObjectDetectionHelper(context: Context) {
      * with name of label as DetectionResult.name
      */
     fun detect(inputBitmap: Bitmap): Pair<Bitmap, List<DetectionResult>> {
-        val image = TensorImage.fromBitmap(inputBitmap)
+        // always set the bitmap as ARGB_8888
+        val argbBitmap = if (inputBitmap.config != Bitmap.Config.ARGB_8888) {
+            inputBitmap.copy(Bitmap.Config.ARGB_8888, true)
+        } else {
+            inputBitmap
+        }
+
+        // input this image into tensor image
+        val image = TensorImage.fromBitmap(argbBitmap)
         val results = detector.detect(image)
 
         // the copy of origin
-        val outputBitmap = inputBitmap.copy(Bitmap.Config.ARGB_8888, true)
+        val outputBitmap = argbBitmap.copy(Bitmap.Config.ARGB_8888, true)
         val canvas = Canvas(outputBitmap)
 
         // box-paint setting
