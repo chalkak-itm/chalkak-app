@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
-import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -15,7 +14,6 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import androidx.recyclerview.widget.RecyclerView
 
 class MainActivity : AppCompatActivity() {
     private var currentFragmentTag: String = "home"
@@ -24,8 +22,6 @@ class MainActivity : AppCompatActivity() {
     private val backPressHandler = Handler(Looper.getMainLooper())
     private val backPressRunnable = Runnable { backPressedTime = 0 }
     private var bottomNavContainer: View? = null
-    private var scrollHideRunnable: Runnable? = null
-    private val scrollHideHandler = Handler(Looper.getMainLooper())
     
     companion object {
         private val MAIN_NAVIGATION_TAGS = setOf("home", "log", "quiz", "setting")
@@ -56,7 +52,16 @@ class MainActivity : AppCompatActivity() {
         ViewCompat.setOnApplyWindowInsetsListener(bottomNavContainer) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(0, 0, 0, systemBars.bottom)
+            
+            // Apply bottom padding to fragment container based on bottom nav height
+            applyBottomPaddingToFragments()
+            
             insets
+        }
+        
+        // Initial padding application after layout
+        bottomNavContainer?.post {
+            applyBottomPaddingToFragments()
         }
 
         // Handle Intent to navigate to specific fragment
@@ -79,9 +84,6 @@ class MainActivity : AppCompatActivity() {
 
         // Initialize navigation icons with default color
         initializeNavigationIcons()
-        
-        // Setup scroll listener for initial fragment
-        setupScrollListener()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -132,8 +134,9 @@ class MainActivity : AppCompatActivity() {
             updateNavigationHighlight(currentMainNavigationTag)
         }
         
-        // Setup scroll listener for the new fragment
-        setupScrollListener()
+        // Apply bottom padding after fragment is added
+        supportFragmentManager.executePendingTransactions()
+        applyBottomPaddingToFragments()
     }
 
     private fun navigateToFragmentByTag(tag: String) {
@@ -246,68 +249,76 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         backPressHandler.removeCallbacks(backPressRunnable)
-        scrollHideHandler.removeCallbacks(scrollHideRunnable ?: return)
     }
     
-    private fun setupScrollListener() {
-        // Clear previous runnable
-        scrollHideRunnable?.let { scrollHideHandler.removeCallbacks(it) }
-        
-        // Find scrollable view in current fragment
-        val fragmentContainer = findViewById<View>(R.id.fragment_container)
-        fragmentContainer?.post {
-            val scrollableView = findScrollableView(fragmentContainer)
-            scrollableView?.let { view ->
-                when (view) {
-                    is RecyclerView -> {
-                        var lastScrollY = 0
-                        view.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                                val currentScrollY = recyclerView.computeVerticalScrollOffset()
-                                val isScrollingDown = currentScrollY > lastScrollY
-                                lastScrollY = currentScrollY
-                                handleScroll(isScrollingDown && currentScrollY > 10)
-                            }
-                        })
-                    }
-                    is ScrollView -> {
-                        view.viewTreeObserver.addOnScrollChangedListener {
-                            val scrollY = view.scrollY
-                            val maxScrollY = view.getChildAt(0)?.height?.minus(view.height) ?: 0
-                            handleScroll(scrollY > 0 && scrollY < maxScrollY)
-                        }
-                    }
-                }
+    private fun applyBottomPaddingToFragments() {
+        bottomNavContainer?.let { navContainer ->
+            val bottomNavHeight = navContainer.height
+            val systemBars = ViewCompat.getRootWindowInsets(navContainer)?.getInsets(WindowInsetsCompat.Type.systemBars())
+            val totalBottomPadding = bottomNavHeight + (systemBars?.bottom ?: 0) + 16 // 16dp extra space
+            
+            val fragmentContainer = findViewById<View>(R.id.fragment_container)
+            fragmentContainer?.post {
+                applyPaddingToScrollableViews(fragmentContainer, totalBottomPadding)
             }
         }
     }
     
-    private fun findScrollableView(parent: View): View? {
-        if (parent is RecyclerView || parent is ScrollView) {
-            return parent
+    private fun applyPaddingToScrollableViews(parent: View, padding: Int) {
+        when (parent) {
+            is androidx.recyclerview.widget.RecyclerView -> {
+                // Log screen RecyclerView needs less padding
+                val isLogRecyclerView = parent.id == R.id.recyclerLog
+                val actualPadding = if (isLogRecyclerView) {
+                    // For log screen, use reduced padding (about 75% of full padding)
+                    (padding * 0.75).toInt()
+                } else {
+                    padding
+                }
+                parent.setPadding(
+                    parent.paddingLeft,
+                    parent.paddingTop,
+                    parent.paddingRight,
+                    actualPadding
+                )
+                return // Don't recurse into RecyclerView children
+            }
+            is android.widget.ScrollView -> {
+                if (parent.childCount > 0) {
+                    val child = parent.getChildAt(0)
+                    // Setting screen ScrollView needs less padding
+                    val isSettingScrollView = parent.id == R.id.scroll_setting
+                    val actualPadding = if (isSettingScrollView) {
+                        // For setting screen, use minimal padding
+                        (padding * 0.8).toInt() // Reduce padding by 60%
+                    } else {
+                        padding
+                    }
+                    child.setPadding(
+                        child.paddingLeft,
+                        child.paddingTop,
+                        child.paddingRight,
+                        actualPadding
+                    )
+                }
+                return // Don't recurse into ScrollView children
+            }
         }
+        
+        // For other views, also check if they need padding (like HomeFragment's spacer View)
         if (parent is android.view.ViewGroup) {
             for (i in 0 until parent.childCount) {
                 val child = parent.getChildAt(i)
-                val found = findScrollableView(child)
-                if (found != null) return found
+                // Apply padding to spacer views in HomeFragment
+                if (child is View && child.layoutParams is android.widget.LinearLayout.LayoutParams) {
+                    val params = child.layoutParams as android.widget.LinearLayout.LayoutParams
+                    if (params.height == 0 && params.weight == 0f) {
+                        params.height = padding
+                        child.layoutParams = params
+                    }
+                }
+                applyPaddingToScrollableViews(child, padding)
             }
-        }
-        return null
-    }
-    
-    private fun handleScroll(isScrollingDown: Boolean) {
-        scrollHideRunnable?.let { scrollHideHandler.removeCallbacks(it) }
-        
-        if (isScrollingDown) {
-            // Hide bottom bar
-            bottomNavContainer?.animate()?.translationY(bottomNavContainer?.height?.toFloat() ?: 0f)?.setDuration(200)?.start()
-        } else {
-            // Show bottom bar after a delay
-            scrollHideRunnable = Runnable {
-                bottomNavContainer?.animate()?.translationY(0f)?.setDuration(200)?.start()
-            }
-            scrollHideHandler.postDelayed(scrollHideRunnable!!, 300)
         }
     }
 }

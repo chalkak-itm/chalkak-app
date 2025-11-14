@@ -207,6 +207,7 @@ class LogEntryViewHolder(itemView: android.view.View) : RecyclerView.ViewHolder(
 
     fun bind(entry: LogEntry, onItemClick: (LogEntry) -> Unit) {
         wordView.text = entry.word
+        wordView.visibility = View.VISIBLE
         imageView.setImageResource(entry.imageRes)
 
         // Set click listener on the card
