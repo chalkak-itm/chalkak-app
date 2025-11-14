@@ -1,53 +1,129 @@
-package com.example.chalkak
-
+import android.app.Activity
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
+import com.example.chalkak.databinding.ActivityLoginBinding
 
 class LoginActivity : AppCompatActivity() {
-    private lateinit var prefs: SharedPreferences
+
+    private lateinit var auth: FirebaseAuth
+    private lateinit var binding: ActivityLoginBinding
+    private val TAG = "LoginActivity"
+
+    // Use the classic GoogleSignInClient (instead of CredentialManager)
+    private lateinit var googleSignInClient: GoogleSignInClient
+    private lateinit var googleSignInLauncher: ActivityResultLauncher<Intent>
+
+    // Get the Web Client ID from google-services.json (via R.string)
+    private val webClientId by lazy { getString(R.string.default_web_client_id) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        setContentView(R.layout.activity_login)
 
-        prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        binding = ActivityLoginBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        // Check if already logged in
-        if (prefs.getBoolean("is_logged_in", false)) {
+        auth = FirebaseAuth.getInstance()
+
+        // Check if user is already signed in
+        if (auth.currentUser != null) {
+            Log.d(TAG, "Already Login: ${auth.currentUser?.displayName}")
             navigateToMain()
             return
         }
 
-        // Apply insets
-        val root = findViewById<android.view.View>(R.id.login_root)
-        ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
+        // Configure GoogleSignInOptions to request an ID token for Firebase
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(webClientId)
+            .requestEmail()
+            .build()
+
+        // Initialize the GoogleSignInClient
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
+
+        // Initialize the ActivityResultLauncher to handle the sign-in result
+        googleSignInLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                try {
+                    // Google Sign-In was successful, get the ID token
+                    val account = task.getResult(ApiException::class.java)!!
+                    Log.d(TAG, "Google Sign In Succeeded, getting token...")
+                    // Pass the ID token to Firebase for authentication
+                    firebaseAuthWithGoogle(account.idToken!!)
+                } catch (e: ApiException) {
+                    // Google Sign-In failed
+                    val statusCode = e.statusCode
+                    Log.e(TAG, "Google sign in failed: ApiException (statusCode: $statusCode)", e)
+                    updateUI(null)
+                }
+            } else {
+                // User cancelled the sign-in flow
+                Log.w(TAG, "Google sign in flow cancelled by user (resultCode: ${result.resultCode})")
+                updateUI(null)
+            }
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.loginRoot) { v, insets ->
             val sb = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(sb.left, sb.top, sb.right, sb.bottom)
             insets
         }
 
-        // Sign in button click
-        findViewById<android.widget.ImageView>(R.id.btn_sign_in)?.setOnClickListener {
-            performLogin()
+        // Set click listener to launch the Google Sign-In flow
+        binding.btnSignIn?.setOnClickListener {
+            Log.d(TAG, "Launching Google Sign In Intent...")
+            val signInIntent = googleSignInClient.signInIntent
+            googleSignInLauncher.launch(signInIntent)
         }
     }
 
-    private fun performLogin() {
-        // TODO: Implement actual Google Sign-in or authentication logic
-        // For now, just mark as logged in and navigate
-        prefs.edit().putBoolean("is_logged_in", true).apply()
-        navigateToMain()
+    // Authenticate with Firebase using the Google ID token
+    private fun firebaseAuthWithGoogle(idToken: String) {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    Log.d(TAG, "signInWithCredential:success")
+                    val user = auth.currentUser
+                    updateUI(user)
+                } else {
+                    Log.w(TAG, "signInWithCredential:failure", task.exception)
+                    updateUI(null)
+                }
+            }
     }
 
+    // Update UI after sign-in attempt
+    private fun updateUI(user: FirebaseUser?) {
+        if (user != null) {
+            Toast.makeText(this, "${user.displayName} \n Nice to Meet you!", Toast.LENGTH_SHORT).show()
+            navigateToMain()
+        } else {
+            Log.d(TAG, "Login Required")
+        }
+    }
+
+    // Navigate to MainActivity after successful login
     private fun navigateToMain() {
         startActivity(Intent(this, MainActivity::class.java))
         finish()
     }
 }
-
