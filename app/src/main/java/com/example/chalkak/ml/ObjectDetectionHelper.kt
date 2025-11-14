@@ -20,27 +20,23 @@ class ObjectDetectionHelper(context: Context) {
     private val detector: ObjectDetector
 
     init {
-        try {
-            // setting the options
-            val baseOptions = BaseOptions.builder()
-                .setNumThreads(4)
-                .build()
+        // setting the options
+        val baseOptions = BaseOptions.builder()
+            .setNumThreads(4)
+            .build()
 
-            val options = ObjectDetector.ObjectDetectorOptions.builder()
-                .setBaseOptions(baseOptions)
-                .setMaxResults(3)      // the maximum detected objects
-                .setScoreThreshold(0.3f)   // the minimum trust rate
-                .build()
+        val options = ObjectDetector.ObjectDetectorOptions.builder()
+            .setBaseOptions(baseOptions)
+            .setMaxResults(2)      // the maximum detected objects
+            .setScoreThreshold(0.3f)   // the minimum trust rate
+            .build()
 
-            // using assets/1.tflite
-            detector = ObjectDetector.createFromFileAndOptions(
-                context,
-                "1.tflite",
-                options
-            ) ?: throw IllegalStateException("Failed to initialize ObjectDetector")
-        } catch (e: Exception) {
-            throw IllegalStateException("Failed to initialize ObjectDetector: ${e.message}", e)
-        }
+        // using assets/1.tflite
+        detector = ObjectDetector.createFromFileAndOptions(
+            context,
+            "1.tflite",
+            options
+        )
     }
 
     /**
@@ -50,17 +46,9 @@ class ObjectDetectionHelper(context: Context) {
      * with name of label as DetectionResult.name
      */
     fun detect(inputBitmap: Bitmap): Pair<Bitmap, List<DetectionResult>> {
-        // Validate input bitmap
-        if (inputBitmap.isRecycled) {
-            throw IllegalArgumentException("Bitmap is recycled")
-        }
-        if (inputBitmap.width <= 0 || inputBitmap.height <= 0) {
-            throw IllegalArgumentException("Invalid bitmap dimensions: ${inputBitmap.width}x${inputBitmap.height}")
-        }
-
         // always set the bitmap as ARGB_8888
         val argbBitmap = if (inputBitmap.config != Bitmap.Config.ARGB_8888) {
-            inputBitmap.copy(Bitmap.Config.ARGB_8888, true) ?: throw IllegalStateException("Failed to copy bitmap")
+            inputBitmap.copy(Bitmap.Config.ARGB_8888, true)
         } else {
             inputBitmap
         }
@@ -71,7 +59,6 @@ class ObjectDetectionHelper(context: Context) {
 
         // the copy of origin
         val outputBitmap = argbBitmap.copy(Bitmap.Config.ARGB_8888, true)
-            ?: throw IllegalStateException("Failed to create output bitmap copy")
         val canvas = Canvas(outputBitmap)
 
         // box-paint setting

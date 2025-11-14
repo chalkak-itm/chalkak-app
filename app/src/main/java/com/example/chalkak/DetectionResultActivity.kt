@@ -2,6 +2,7 @@
 package com.example.chalkak
 
 import DetectionResultItem
+import android.content.Intent
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Bundle
@@ -25,6 +26,11 @@ class DetectionResultActivity : AppCompatActivity() {
 
     private lateinit var btnBack: ImageButton
 
+    // TTS + Speaker buttons
+    private lateinit var btnTtsWord: ImageView
+    private lateinit var btnTtsExample: ImageView
+    private lateinit var tts: android.speech.tts.TextToSpeech
+
     private var detectionResults: List<DetectionResultItem> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,8 +48,21 @@ class DetectionResultActivity : AppCompatActivity() {
         txtSelectedObject = findViewById(R.id.txt_selected_object)
         txtKoreanMeaning = findViewById(R.id.txt_korean_meaning)
         txtExampleSentence = findViewById(R.id.txt_example_sentence)
+        btnTtsWord = findViewById(R.id.btn_tts_word)
+        btnTtsExample = findViewById(R.id.btn_tts_example)
+        val navHome: TextView = findViewById(R.id.nav_home)
+        val navLog: TextView = findViewById(R.id.nav_log)
+        val navQuiz: TextView = findViewById(R.id.nav_quiz)
 
         btnBack = findViewById(R.id.btn_back)
+
+        // Initialization of TTS
+        tts = android.speech.tts.TextToSpeech(this) { status ->
+            if (status == android.speech.tts.TextToSpeech.SUCCESS) {
+                val result = tts.setLanguage(java.util.Locale.US)
+                tts.setSpeechRate(0.7f)
+            }
+        }
 
         // Take Data from the Intent
         val imagePath = intent.getStringExtra("image_path")
@@ -63,6 +82,32 @@ class DetectionResultActivity : AppCompatActivity() {
 
         btnBack.setOnClickListener {
             finish()
+        }
+
+        navHome.setOnClickListener {
+            startActivity(Intent(this, MainActivity::class.java))
+        }
+        navLog.setOnClickListener {
+            startActivity(Intent(this, LogActivity::class.java))
+        }
+        navQuiz.setOnClickListener {
+            startActivity(Intent(this, QuizActivity::class.java))
+        }
+
+        // Reading word
+        btnTtsWord.setOnClickListener {
+            val text = txtSelectedObject.text.toString()
+            if (text.isNotBlank()) {
+                speak(text)
+            }
+        }
+
+        // Reading Example text
+        btnTtsExample.setOnClickListener {
+            val text = txtExampleSentence.text.toString()
+            if (text.isNotBlank()) {
+                speak(text)
+            }
         }
     }
 
@@ -145,4 +190,25 @@ class DetectionResultActivity : AppCompatActivity() {
         txtKoreanMeaning.text = "한국어 뜻."
         txtExampleSentence.text = "It is a space for example sentence."
     }
+
+    private fun speak(text: String) {
+        if (!::tts.isInitialized) return
+
+        tts.stop()
+        tts.speak(
+            text,
+            android.speech.tts.TextToSpeech.QUEUE_FLUSH,
+            null,
+            "chalkak_tts"
+        )
+    }
+
+    override fun onDestroy() {
+        if (::tts.isInitialized) {
+            tts.stop()
+            tts.shutdown()
+        }
+        super.onDestroy()
+    }
+
 }
