@@ -117,11 +117,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun navigateToFragment(fragment: Fragment, tag: String) {
-        // Clear back stack and replace with new fragment
-        supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, fragment, tag)
-            .commit()
+        // If navigating to a main navigation fragment, clear back stack
+        // Otherwise, add to back stack for proper navigation
+        if (tag in MAIN_NAVIGATION_TAGS) {
+            supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, fragment, tag)
+                .commit()
+        } else {
+            // Add to back stack for sub-fragments
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, fragment, tag)
+                .addToBackStack(tag)
+                .commit()
+        }
         
         currentFragmentTag = tag
         

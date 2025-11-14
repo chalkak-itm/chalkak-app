@@ -103,13 +103,11 @@ class DetectionResultActivity : AppCompatActivity() {
             insets
         }
 
-        // Apply WindowInsets to bottom navigation bar
-        val bottomNav = findViewById<View>(R.id.bottom_nav_include)
-        ViewCompat.setOnApplyWindowInsetsListener(bottomNav) { v, insets ->
+        // Apply WindowInsets to bottom navigation bar container
+        val bottomNavContainer = findViewById<View>(R.id.bottom_nav_container)
+        ViewCompat.setOnApplyWindowInsetsListener(bottomNavContainer) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val layoutParams = v.layoutParams as android.view.ViewGroup.MarginLayoutParams
-            layoutParams.bottomMargin = systemBars.bottom
-            v.layoutParams = layoutParams
+            v.setPadding(0, 0, 0, systemBars.bottom)
             insets
         }
 
@@ -143,8 +141,8 @@ class DetectionResultActivity : AppCompatActivity() {
                 text = item.label
                 setBackgroundResource(R.drawable.bg_button_purple_ripple)
                 setTextColor(Color.WHITE)
-                textSize = 14f
-                setPadding(32, 16, 32, 16)
+                textSize = 18f
+                setPadding(28, 11, 28, 11)
                 isClickable = true
                 isFocusable = true
                 alpha = 0.7f // Initial unselected state
@@ -238,7 +236,7 @@ class DetectionResultActivity : AppCompatActivity() {
         val button = wordButtons[selectedLabel]
         if (button != null) {
             // Apply selected effect: darker background and full opacity
-            button.setBackgroundColor(Color.parseColor("#5A4A9A")) // Darker purple for selected
+            button.setBackgroundResource(R.drawable.bg_button_purple_selected)
             button.alpha = 1.0f
             selectedButton = button
             

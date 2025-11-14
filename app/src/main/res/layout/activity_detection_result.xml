@@ -60,8 +60,8 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:paddingLeft="24dp"
-        android:paddingRight="24dp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
         android:paddingTop="8dp">
 
         <!-- image card of result -->
@@ -70,7 +70,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_card_white_pure"
-            android:padding="16dp"
+            android:padding="10dp"
             android:orientation="vertical">
 
             <FrameLayout
@@ -82,7 +82,7 @@
                     android:id="@+id/img_result"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:scaleType="centerInside"
+                    android:scaleType="fitCenter"
                     android:contentDescription="Detection Result Image"
                     android:src="@drawable/demo" />
 
@@ -100,7 +100,9 @@
                 android:id="@+id/txt_hint"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
                 android:text="Tap a box to select an object!"
                 android:textColor="#666666"
                 android:textSize="14sp" />
@@ -203,9 +205,19 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Bottom Navigation Bar -->
-    <include
-        android:id="@+id/bottom_nav_include"
-        layout="@layout/bottom_navigation_bar" />
+    <!-- Bottom Navigation Bar Container (Overlay) -->
+    <LinearLayout
+        android:id="@+id/bottom_nav_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_bottom_nav_container"
+        android:elevation="8dp">
+        
+        <!-- Bottom Navigation Bar -->
+        <include
+            android:id="@+id/bottom_nav_include"
+            layout="@layout/bottom_navigation_bar" />
+    </LinearLayout>
 
 </LinearLayout>

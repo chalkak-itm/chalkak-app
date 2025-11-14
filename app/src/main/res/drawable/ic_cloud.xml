@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="80dp"
+    android:viewportWidth="200"
+    android:viewportHeight="80">
+    <!-- Main cloud body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M50,30C40,30 32,38 32,48C32,58 40,66 50,66L150,66C160,66 168,58 168,48C168,38 160,30 150,30C148,20 140,14 130,14C120,14 112,20 110,30C109,30 108,30 107,30C97,30 89,38 89,48C89,58 97,66 107,66L50,66C40,66 32,58 32,48C32,38 40,30 50,30Z"
+        android:alpha="0.95"/>
+    <!-- Additional cloud puff for more natural look -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,50C25,50 20,55 20,60C20,65 25,70 30,70C35,70 40,65 40,60C40,55 35,50 30,50Z"
+        android:alpha="0.9"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M170,50C165,50 160,55 160,60C160,65 165,70 170,70C175,70 180,65 180,60C180,55 175,50 170,50Z"
+        android:alpha="0.9"/>
+</vector>

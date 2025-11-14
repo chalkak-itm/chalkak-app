@@ -48,6 +48,15 @@ class HomeFragment : Fragment() {
                 "magic_adventure"
             )
         }
+
+        val reviewProgressButton: LinearLayout = view.findViewById(R.id.btnReviewProgress)
+        reviewProgressButton.setOnClickListener {
+            // Navigate to QuizFragment
+            (activity as? MainActivity)?.navigateToFragment(
+                QuizFragment(),
+                "quiz"
+            )
+        }
     }
 
     override fun onResume() {

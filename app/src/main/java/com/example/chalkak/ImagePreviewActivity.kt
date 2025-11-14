@@ -106,13 +106,11 @@ class ImagePreviewActivity : AppCompatActivity() {
 			insets
 		}
 
-		// Apply WindowInsets to bottom navigation bar
-		val bottomNav = findViewById<android.view.View>(R.id.bottom_nav_include)
-		ViewCompat.setOnApplyWindowInsetsListener(bottomNav) { v, insets ->
+		// Apply WindowInsets to bottom navigation bar container
+		val bottomNavContainer = findViewById<android.view.View>(R.id.bottom_nav_container)
+		ViewCompat.setOnApplyWindowInsetsListener(bottomNavContainer) { v, insets ->
 			val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-			val layoutParams = v.layoutParams as android.view.ViewGroup.MarginLayoutParams
-			layoutParams.bottomMargin = systemBars.bottom
-			v.layoutParams = layoutParams
+			v.setPadding(0, 0, 0, systemBars.bottom)
 			insets
 		}
 
