@@ -132,7 +132,7 @@
             android:background="@drawable/bg_card_white_pure"
             android:orientation="vertical"
             android:padding="16dp"
-            android:visibility="">
+            android:visibility="gone">
 
             <!-- word + TTS ICON -->
             <LinearLayout
