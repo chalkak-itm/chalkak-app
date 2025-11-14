@@ -23,6 +23,7 @@ import java.io.File
 class ImagePreviewActivity : AppCompatActivity() {
 	private var photoUri: Uri? = null
 	private var isGalleryMode = false
+	private var mainNavTag: String = "home"
 
 	//variables for detection model
 	private lateinit var detectionHelper: ObjectDetectionHelper
@@ -75,6 +76,8 @@ class ImagePreviewActivity : AppCompatActivity() {
 		val btnConfirm = findViewById<TextView>(R.id.btn_confirm)
 
 		val imageUri = intent.getParcelableExtra<Uri>("image_uri")
+		mainNavTag = intent.getStringExtra("main_nav_tag") ?: "home"
+		
 		if (imageUri != null) {
 			photoUri = imageUri
 			isGalleryMode = true
@@ -93,6 +96,7 @@ class ImagePreviewActivity : AppCompatActivity() {
 
 		// Setup bottom navigation
 		setupBottomNavigation()
+		updateBottomNavigationHighlight(mainNavTag)
 
 		// Apply WindowInsets to root layout
 		val root = findViewById<android.view.View>(R.id.camera_root)
@@ -181,6 +185,7 @@ class ImagePreviewActivity : AppCompatActivity() {
 						val intent = Intent(this@ImagePreviewActivity, DetectionResultActivity::class.java).apply {
 							putExtra("image_path", imageFile.absolutePath)
 							putParcelableArrayListExtra("detection_results", uiResults)
+							putExtra("main_nav_tag", mainNavTag)
 						}
 						startActivity(intent)
 					}
@@ -232,7 +237,7 @@ class ImagePreviewActivity : AppCompatActivity() {
 	}
 
 	private fun setupBottomNavigation() {
-		findViewById<android.widget.TextView>(R.id.nav_home)?.setOnClickListener {
+		findViewById<android.view.View>(R.id.nav_home)?.setOnClickListener {
 			val intent = Intent(this, MainActivity::class.java).apply {
 				putExtra("fragment_tag", "home")
 				flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -240,7 +245,7 @@ class ImagePreviewActivity : AppCompatActivity() {
 			startActivity(intent)
 			finish()
 		}
-		findViewById<android.widget.TextView>(R.id.nav_log)?.setOnClickListener {
+		findViewById<android.view.View>(R.id.nav_log)?.setOnClickListener {
 			val intent = Intent(this, MainActivity::class.java).apply {
 				putExtra("fragment_tag", "log")
 				flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -248,7 +253,7 @@ class ImagePreviewActivity : AppCompatActivity() {
 			startActivity(intent)
 			finish()
 		}
-		findViewById<android.widget.TextView>(R.id.nav_quiz)?.setOnClickListener {
+		findViewById<android.view.View>(R.id.nav_quiz)?.setOnClickListener {
 			val intent = Intent(this, MainActivity::class.java).apply {
 				putExtra("fragment_tag", "quiz")
 				flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -256,7 +261,7 @@ class ImagePreviewActivity : AppCompatActivity() {
 			startActivity(intent)
 			finish()
 		}
-		findViewById<android.widget.TextView>(R.id.nav_setting)?.setOnClickListener {
+		findViewById<android.view.View>(R.id.nav_setting)?.setOnClickListener {
 			val intent = Intent(this, MainActivity::class.java).apply {
 				putExtra("fragment_tag", "setting")
 				flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -264,5 +269,13 @@ class ImagePreviewActivity : AppCompatActivity() {
 			startActivity(intent)
 			finish()
 		}
+	}
+	
+	private fun updateBottomNavigationHighlight(tag: String) {
+		// Icons remain in original color, use alpha to show selection state
+		findViewById<android.widget.ImageView>(R.id.nav_home_icon)?.alpha = if (tag == "home") 1.0f else 0.5f
+		findViewById<android.widget.ImageView>(R.id.nav_log_icon)?.alpha = if (tag == "log") 1.0f else 0.5f
+		findViewById<android.widget.ImageView>(R.id.nav_quiz_icon)?.alpha = if (tag == "quiz") 1.0f else 0.5f
+		findViewById<android.widget.ImageView>(R.id.nav_setting_icon)?.alpha = if (tag == "setting") 1.0f else 0.5f
 	}
 }

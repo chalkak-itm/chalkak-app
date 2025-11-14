@@ -18,8 +18,11 @@ class MagicAdventureFragment : Fragment() {
 
     private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success && photoUri != null) {
+            val mainActivity = activity as? MainActivity
+            val mainNavTag = mainActivity?.getCurrentMainNavigationTag() ?: "home"
             val intent = Intent(requireContext(), ImagePreviewActivity::class.java).apply {
                 putExtra("image_uri", photoUri)
+                putExtra("main_nav_tag", mainNavTag)
             }
             startActivity(intent)
         }
@@ -27,8 +30,11 @@ class MagicAdventureFragment : Fragment() {
 
     private val pickImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
+            val mainActivity = activity as? MainActivity
+            val mainNavTag = mainActivity?.getCurrentMainNavigationTag() ?: "home"
             val intent = Intent(requireContext(), ImagePreviewActivity::class.java).apply {
                 putExtra("image_uri", it)
+                putExtra("main_nav_tag", mainNavTag)
             }
             startActivity(intent)
         }

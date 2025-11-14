@@ -82,7 +82,7 @@
                     android:id="@+id/img_result"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:scaleType="centerCrop"
+                    android:scaleType="centerInside"
                     android:contentDescription="Detection Result Image"
                     android:src="@drawable/demo" />
 
@@ -107,14 +107,14 @@
         </LinearLayout>
 
 
-        <!-- Word buttons(appear when touch box) -->
+        <!-- Word buttons (all detected objects) -->
         <HorizontalScrollView
             android:id="@+id/scroll_object_buttons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:scrollbars="none"
-            android:visibility="gone">
+            android:visibility="visible">
 
             <LinearLayout
                 android:id="@+id/layout_object_buttons"

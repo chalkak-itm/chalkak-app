@@ -35,6 +35,9 @@ class DetectionResultActivity : AppCompatActivity() {
     private lateinit var tts: android.speech.tts.TextToSpeech
 
     private var detectionResults: List<DetectionResultItem> = emptyList()
+    private var mainNavTag: String = "home"
+    private val wordButtons = mutableMapOf<String, TextView>() // Map to store buttons by label
+    private var selectedButton: TextView? = null // Currently selected button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,12 +71,16 @@ class DetectionResultActivity : AppCompatActivity() {
         val imagePath = intent.getStringExtra("image_path")
         detectionResults =
             intent.getParcelableArrayListExtra<DetectionResultItem>("detection_results") ?: emptyList()
+        mainNavTag = intent.getStringExtra("main_nav_tag") ?: "home"
 
         // Image setting
         if (imagePath != null) {
             val bitmap = BitmapFactory.decodeFile(imagePath)
             imgResult.setImageBitmap(bitmap)
         }
+
+        // Initialize word buttons for all detected objects
+        initializeWordButtons()
 
         // Addition the Box overlay
         boxOverlay.post {
@@ -86,6 +93,7 @@ class DetectionResultActivity : AppCompatActivity() {
 
         // Setup bottom navigation
         setupBottomNavigation()
+        updateBottomNavigationHighlight(mainNavTag)
 
         // Apply WindowInsets to root layout
         val root = findViewById<View>(R.id.result_root)
@@ -123,7 +131,46 @@ class DetectionResultActivity : AppCompatActivity() {
     }
 
     /**
-     *Add a clickable transparent View to each box location in detectionResults.
+     * Initialize word buttons for all detected objects
+     */
+    private fun initializeWordButtons() {
+        layoutObjectButtons.removeAllViews()
+        wordButtons.clear()
+        selectedButton = null
+
+        detectionResults.forEach { item ->
+            val wordButton = TextView(this).apply {
+                text = item.label
+                setBackgroundResource(R.drawable.bg_button_purple_ripple)
+                setTextColor(Color.WHITE)
+                textSize = 14f
+                setPadding(32, 16, 32, 16)
+                isClickable = true
+                isFocusable = true
+                alpha = 0.7f // Initial unselected state
+
+                val lp = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                lp.rightMargin = 16
+                layoutParams = lp
+
+                setOnClickListener {
+                    showWordDetail(item)
+                }
+            }
+
+            wordButtons[item.label] = wordButton
+            layoutObjectButtons.addView(wordButton)
+        }
+
+        // Show word buttons section
+        scrollObjectButtons.visibility = View.VISIBLE
+    }
+
+    /**
+     * Add a clickable transparent View to each box location in detectionResults.
      */
     private fun addBoxOverlays() {
         val width = boxOverlay.width.toFloat()
@@ -143,7 +190,7 @@ class DetectionResultActivity : AppCompatActivity() {
                 setBackgroundColor(Color.TRANSPARENT)
 
                 setOnClickListener {
-                    onBoxClicked(item)
+                    showWordDetail(item)
                 }
             }
 
@@ -156,43 +203,12 @@ class DetectionResultActivity : AppCompatActivity() {
     }
 
     /**
-     * click box → provide one word button
-     */
-    private fun onBoxClicked(item: DetectionResultItem) {
-        cardWordDetail.visibility = View.GONE
-        scrollObjectButtons.visibility = View.VISIBLE
-
-        // represent only the selected word
-        layoutObjectButtons.removeAllViews()
-
-        val wordButton = TextView(this).apply {
-            text = item.label
-            setBackgroundResource(R.drawable.bg_button_purple_ripple)
-            setTextColor(Color.WHITE)
-            textSize = 14f
-            setPadding(32, 16, 32, 16)
-            isClickable = true
-            isFocusable = true
-
-            val lp = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            lp.rightMargin = 16
-            layoutParams = lp
-
-            setOnClickListener {
-                showWordDetail(item)
-            }
-        }
-
-        layoutObjectButtons.addView(wordButton)
-    }
-
-    /**
-     * click word button → show detail card
+     * Show word detail card
      */
     private fun showWordDetail(item: DetectionResultItem) {
+        // Update button selection
+        updateButtonSelection(item.label)
+        
         cardWordDetail.visibility = View.VISIBLE
 
         txtSelectedObject.text = item.label
@@ -200,6 +216,38 @@ class DetectionResultActivity : AppCompatActivity() {
         // bring the example sentence and korean meaning by GPT
         txtKoreanMeaning.text = "한국어 뜻."
         txtExampleSentence.text = "It is a space for example sentence."
+    }
+    
+    /**
+     * Update button selection state
+     */
+    private fun updateButtonSelection(selectedLabel: String) {
+        // Reset all buttons to unselected state
+        wordButtons.values.forEach { btn ->
+            btn.setBackgroundResource(R.drawable.bg_button_purple_ripple)
+            btn.alpha = 0.7f // Slightly transparent for unselected
+        }
+        
+        // Reset previous selected button
+        selectedButton?.apply {
+            setBackgroundResource(R.drawable.bg_button_purple_ripple)
+            alpha = 0.7f
+        }
+        
+        // Set new selected button
+        val button = wordButtons[selectedLabel]
+        if (button != null) {
+            // Apply selected effect: darker background and full opacity
+            button.setBackgroundColor(Color.parseColor("#5A4A9A")) // Darker purple for selected
+            button.alpha = 1.0f
+            selectedButton = button
+            
+            // Scroll to selected button to make it visible
+            scrollObjectButtons.post {
+                val scrollX = button.left - scrollObjectButtons.width / 2 + button.width / 2
+                scrollObjectButtons.smoothScrollTo(scrollX, 0)
+            }
+        }
     }
 
     private fun speak(text: String) {
@@ -215,7 +263,7 @@ class DetectionResultActivity : AppCompatActivity() {
     }
 
     private fun setupBottomNavigation() {
-        findViewById<TextView>(R.id.nav_home)?.setOnClickListener {
+        findViewById<View>(R.id.nav_home)?.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java).apply {
                 putExtra("fragment_tag", "home")
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -223,7 +271,7 @@ class DetectionResultActivity : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
-        findViewById<TextView>(R.id.nav_log)?.setOnClickListener {
+        findViewById<View>(R.id.nav_log)?.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java).apply {
                 putExtra("fragment_tag", "log")
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -231,7 +279,7 @@ class DetectionResultActivity : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
-        findViewById<TextView>(R.id.nav_quiz)?.setOnClickListener {
+        findViewById<View>(R.id.nav_quiz)?.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java).apply {
                 putExtra("fragment_tag", "quiz")
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -239,7 +287,7 @@ class DetectionResultActivity : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
-        findViewById<TextView>(R.id.nav_setting)?.setOnClickListener {
+        findViewById<View>(R.id.nav_setting)?.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java).apply {
                 putExtra("fragment_tag", "setting")
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -247,6 +295,14 @@ class DetectionResultActivity : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
+    }
+    
+    private fun updateBottomNavigationHighlight(tag: String) {
+        // Icons remain in original color, use alpha to show selection state
+        findViewById<ImageView>(R.id.nav_home_icon)?.alpha = if (tag == "home") 1.0f else 0.5f
+        findViewById<ImageView>(R.id.nav_log_icon)?.alpha = if (tag == "log") 1.0f else 0.5f
+        findViewById<ImageView>(R.id.nav_quiz_icon)?.alpha = if (tag == "quiz") 1.0f else 0.5f
+        findViewById<ImageView>(R.id.nav_setting_icon)?.alpha = if (tag == "setting") 1.0f else 0.5f
     }
 
     override fun onDestroy() {
