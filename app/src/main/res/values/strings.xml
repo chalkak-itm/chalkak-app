@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Chalkak</string>
+    <string name="default_web_client_id" translatable="false">176917824873-ipc46dhtgiacnep2ejaf598l468k5ral.apps.googleusercontent.com</string>
 </resources>
