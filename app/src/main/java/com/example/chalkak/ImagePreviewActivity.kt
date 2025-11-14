@@ -164,52 +164,73 @@ class ImagePreviewActivity : AppCompatActivity() {
 				return@setOnClickListener
 			}
 
+			// Validate bitmap before processing
+			if (bitmap.isRecycled) {
+				Toast.makeText(this, "Image is no longer available. Please select another image.", Toast.LENGTH_SHORT).show()
+				return@setOnClickListener
+			}
+
+			// Disable button during processing
+			btnConfirm.isEnabled = false
+
 			// Execute in thread
 			Thread {
-				// Execute Detection
-				val (outputBitmap, results) = detectionHelper.detect(bitmap)
-				// results: List<com.example.chalkak.ml.DetectionResult>
-				// DetectionResult(name: String, score: Float, boundingBox: RectF)
+				try {
+					// Execute Detection
+					val (outputBitmap, results) = detectionHelper.detect(bitmap)
+					// results: List<com.example.chalkak.ml.DetectionResult>
+					// DetectionResult(name: String, score: Float, boundingBox: RectF)
 
-				// 2. Store the result image in cache
-				val imageFile = java.io.File(cacheDir, "detection_${System.currentTimeMillis()}.png")
-				java.io.FileOutputStream(imageFile).use { out ->
-					outputBitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
-				}
-
-				// 3. DetectionResult -> DetectionResultItem
-				val uiResults = ArrayList<DetectionResultItem>()
-				val w = outputBitmap.width.toFloat()
-				val h = outputBitmap.height.toFloat()
-
-				for (r in results) {
-					val box = r.boundingBox   // RectF
-					uiResults.add(
-						DetectionResultItem(
-							label = r.name,
-							score = r.score,
-							left = box.left / w,
-							top = box.top / h,
-							right = box.right / w,
-							bottom = box.bottom / h
-						)
-					)
-				}
-
-				// 4. UI Thread --> result Activity
-				runOnUiThread {
-					btnConfirm.isEnabled = true
-					Toast.makeText(
-						this@ImagePreviewActivity,
-						"Executed successfully!",
-						Toast.LENGTH_SHORT
-					).show()
-
-					val intent = Intent(this@ImagePreviewActivity, DetectionResultActivity::class.java).apply {
-						putExtra("image_path", imageFile.absolutePath)
-						putParcelableArrayListExtra("detection_results", uiResults)
+					// 2. Store the result image in cache
+					val imageFile = java.io.File(cacheDir, "detection_${System.currentTimeMillis()}.png")
+					java.io.FileOutputStream(imageFile).use { out ->
+						outputBitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
 					}
-					startActivity(intent)
+
+					// 3. DetectionResult -> DetectionResultItem
+					val uiResults = ArrayList<DetectionResultItem>()
+					val w = outputBitmap.width.toFloat()
+					val h = outputBitmap.height.toFloat()
+
+					for (r in results) {
+						val box = r.boundingBox   // RectF
+						uiResults.add(
+							DetectionResultItem(
+								label = r.name,
+								score = r.score,
+								left = box.left / w,
+								top = box.top / h,
+								right = box.right / w,
+								bottom = box.bottom / h
+							)
+						)
+					}
+
+					// 4. UI Thread --> result Activity
+					runOnUiThread {
+						btnConfirm.isEnabled = true
+						Toast.makeText(
+							this@ImagePreviewActivity,
+							"Executed successfully!",
+							Toast.LENGTH_SHORT
+						).show()
+
+						val intent = Intent(this@ImagePreviewActivity, DetectionResultActivity::class.java).apply {
+							putExtra("image_path", imageFile.absolutePath)
+							putParcelableArrayListExtra("detection_results", uiResults)
+						}
+						startActivity(intent)
+					}
+				} catch (e: Exception) {
+					e.printStackTrace()
+					runOnUiThread {
+						btnConfirm.isEnabled = true
+						Toast.makeText(
+							this@ImagePreviewActivity,
+							"Detection failed: ${e.message ?: "Unknown error"}",
+							Toast.LENGTH_LONG
+						).show()
+					}
 				}
 			}.start()
 		}
