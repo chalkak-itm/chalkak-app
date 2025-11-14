@@ -19,7 +19,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_marginStart="16dp"
-            android:background="@android:color/transparent"
+            android:background="@drawable/bg_button_transparent_ripple"
             android:contentDescription="Back"
             android:padding="4dp"
             app:layout_constraintStart_toStartOf="parent"

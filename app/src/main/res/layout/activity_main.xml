@@ -44,7 +44,9 @@
         android:layout_marginLeft="24dp"
         android:layout_marginRight="24dp"
         android:layout_marginTop="16dp"
-        android:background="@drawable/bg_card_purple"
+        android:background="@drawable/bg_button_purple_ripple"
+        android:clickable="true"
+        android:focusable="true"
         android:minHeight="120dp"
         android:gravity="center"
         android:padding="16dp">

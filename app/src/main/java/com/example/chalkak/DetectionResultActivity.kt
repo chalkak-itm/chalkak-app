@@ -111,10 +111,12 @@ class DetectionResultActivity : AppCompatActivity() {
 
         val wordButton = TextView(this).apply {
             text = item.label
-            setBackgroundResource(R.drawable.bg_card_purple)
+            setBackgroundResource(R.drawable.bg_button_purple_ripple)
             setTextColor(Color.WHITE)
             textSize = 14f
             setPadding(32, 16, 32, 16)
+            isClickable = true
+            isFocusable = true
 
             val lp = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,

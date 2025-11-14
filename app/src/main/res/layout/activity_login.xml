@@ -51,6 +51,9 @@
             android:layout_width="match_parent"
             android:layout_height="72dp"
             android:layout_marginTop="24dp"
+            android:background="@drawable/bg_button_transparent_ripple"
+            android:clickable="true"
+            android:focusable="true"
             android:src="@drawable/google_login"
             android:scaleType="centerInside"
             android:contentDescription="Sign in with Google" />
