@@ -70,6 +70,6 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth:21.2.0")
 
     //Add the dependency for the TensorFlow lite Model
-    implementation("org.tensorflow:tensorflow-lite-task-vision:0.4.4")
-    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+    implementation("org.tensorflow:tensorflow-lite-task-vision:0.4.2")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.2")
 }
