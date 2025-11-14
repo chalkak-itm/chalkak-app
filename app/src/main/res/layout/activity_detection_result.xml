@@ -158,6 +158,15 @@
                     android:src="@drawable/speaker" />
             </LinearLayout>
 
+            <TextView
+                android:id="@+id/txt_korean_meaning"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="개 (강아지)"
+                android:textColor="#555555"
+                android:textSize="16sp" />
+
             <!-- Example + TTS ICON -->
             <LinearLayout
                 android:layout_width="wrap_content"
