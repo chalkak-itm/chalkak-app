@@ -27,7 +27,7 @@ class ObjectDetectionHelper(context: Context) {
 
         val options = ObjectDetector.ObjectDetectorOptions.builder()
             .setBaseOptions(baseOptions)
-            .setMaxResults(3)      // the maximum detected objects
+            .setMaxResults(2)      // the maximum detected objects
             .setScoreThreshold(0.3f)   // the minimum trust rate
             .build()
 
