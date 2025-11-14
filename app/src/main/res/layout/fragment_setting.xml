@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_magic_gradient"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="16dp">
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingLeft="24dp"
+            android:paddingRight="24dp"
+            android:paddingTop="48dp"
+            android:gravity="center_horizontal">
+
+            <ImageView
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:src="@drawable/main_character"
+                android:contentDescription="Settings"
+                android:scaleType="centerInside"
+                android:adjustViewBounds="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Settings"
+                android:textColor="#FFFFFF"
+                android:textSize="36sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Profile Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginLeft="24dp"
+            android:layout_marginRight="24dp"
+            android:layout_marginTop="32dp"
+            android:background="@drawable/bg_card_white"
+            android:padding="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Profile"
+                android:textColor="#8200DB"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txt_user_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="User Name"
+                android:textColor="#333333"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="8dp">
+
+                <TextView
+                    android:id="@+id/txt_nickname"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Nickname"
+                    android:textColor="#666666"
+                    android:textSize="16sp" />
+
+                <ImageButton
+                    android:id="@+id/btn_edit_nickname"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="@drawable/bg_button_transparent_ripple"
+                    android:contentDescription="Edit Nickname"
+                    android:padding="4dp"
+                    app:tint="#8200DB"
+                    app:srcCompat="@android:drawable/ic_menu_edit" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/txt_user_email"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="user@example.com"
+                android:textColor="#999999"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- Account Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginLeft="24dp"
+            android:layout_marginRight="24dp"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_card_white"
+            android:padding="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Account"
+                android:textColor="#8200DB"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/btn_logout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="16dp"
+                android:paddingBottom="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackground">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Logout"
+                    android:textColor="#333333"
+                    android:textSize="16sp" />
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    app:tint="#999999"
+                    app:srcCompat="@android:drawable/ic_menu_revert" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- App Settings Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginLeft="24dp"
+            android:layout_marginRight="24dp"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_card_white"
+            android:padding="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="App Settings"
+                android:textColor="#8200DB"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="16dp"
+                android:paddingBottom="16dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Notifications"
+                    android:textColor="#666666"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Coming Soon"
+                    android:textColor="#999999"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Data Management Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginLeft="24dp"
+            android:layout_marginRight="24dp"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_card_white"
+            android:padding="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Data Management"
+                android:textColor="#8200DB"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/btn_clear_cache"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="16dp"
+                android:paddingBottom="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackground">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Clear Cache"
+                    android:textColor="#333333"
+                    android:textSize="16sp" />
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    app:tint="#999999"
+                    app:srcCompat="@android:drawable/ic_menu_delete" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- App Info Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginLeft="24dp"
+            android:layout_marginRight="24dp"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_card_white"
+            android:padding="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="App Info"
+                android:textColor="#8200DB"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="16dp"
+                android:paddingBottom="16dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Version"
+                    android:textColor="#666666"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/txt_app_version"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1.0"
+                    android:textColor="#999999"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

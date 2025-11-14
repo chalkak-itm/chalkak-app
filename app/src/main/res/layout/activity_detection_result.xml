@@ -203,51 +203,9 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Nav -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:orientation="horizontal"
-        android:background="#F7F7F7"
-        android:paddingLeft="24dp"
-        android:paddingRight="24dp"
-        android:gravity="center">
-
-        <TextView
-            android:id="@+id/nav_home"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="home"
-            android:textColor="#99A1AF"
-            android:gravity="center" />
-
-        <TextView
-            android:id="@+id/nav_log"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="log"
-            android:textColor="#99A1AF"
-            android:gravity="center" />
-
-        <TextView
-            android:id="@+id/nav_quiz"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="quiz"
-            android:textColor="#99A1AF"
-            android:gravity="center" />
-
-        <TextView
-            android:id="@+id/nav_setting"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="setting"
-            android:textColor="#99A1AF"
-            android:gravity="center" />
-    </LinearLayout>
+    <!-- Bottom Navigation Bar -->
+    <include
+        android:id="@+id/bottom_nav_include"
+        layout="@layout/bottom_navigation_bar" />
 
 </LinearLayout>

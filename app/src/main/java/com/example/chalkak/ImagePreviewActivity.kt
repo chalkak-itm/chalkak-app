@@ -30,17 +30,7 @@ class ImagePreviewActivity : AppCompatActivity() {
 
 	private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
 		if (success && photoUri != null) {
-			val imgQuiz = findViewById<ImageView>(R.id.img_quiz)
-
-			currentBitmap = loadBitmapFromUri(photoUri!!)
-			if (currentBitmap != null) {
-				imgQuiz.setImageBitmap(currentBitmap)
-			} else {
-				imgQuiz.setImageURI(photoUri)
-			}
-
-			findViewById<TextView>(R.id.btn_capture)?.visibility = android.view.View.GONE
-			findViewById<TextView>(R.id.btn_retake)?.text = "Choose Another"
+			updateImageDisplay(photoUri!!)
 		}
 	}
 
@@ -48,58 +38,24 @@ class ImagePreviewActivity : AppCompatActivity() {
 		uri?.let {
 			photoUri = it
 			isGalleryMode = true
-
-			val imgQuiz = findViewById<ImageView>(R.id.img_quiz)
-			currentBitmap = loadBitmapFromUri(it)
-			if (currentBitmap != null) {
-				imgQuiz.setImageBitmap(currentBitmap)
-			} else {
-				imgQuiz.setImageURI(it)
-			}
-
-			findViewById<TextView>(R.id.btn_capture)?.visibility = android.view.View.GONE
-			findViewById<TextView>(R.id.btn_retake)?.text = "Choose Another"
+			updateImageDisplay(it)
 		}
 	}
 
-	private var pendingCameraUri: Uri? = null
-	
-	private val chooseImageSource = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-		if (result.resultCode == RESULT_OK) {
-			val uri = result.data?.data
-			if (uri != null) {
-				// Gallery selection
-				photoUri = uri
-				isGalleryMode = true
-
-				val imgQuiz = findViewById<ImageView>(R.id.img_quiz)
-				currentBitmap = loadBitmapFromUri(uri)
-				if (currentBitmap != null) {
-					imgQuiz.setImageBitmap(currentBitmap)
-				} else {
-					imgQuiz.setImageURI(uri)
-				}
-
-				findViewById<TextView>(R.id.btn_capture)?.visibility = android.view.View.GONE
-				findViewById<TextView>(R.id.btn_retake)?.text = "Choose Another"
-			} else if (pendingCameraUri != null) {
-				// Camera capture - use the saved URI
-				photoUri = pendingCameraUri
-
-				val imgQuiz = findViewById<ImageView>(R.id.img_quiz)
-				currentBitmap = loadBitmapFromUri(pendingCameraUri!!)
-				if (currentBitmap != null) {
-					imgQuiz.setImageBitmap(currentBitmap)
-				} else {
-					imgQuiz.setImageURI(pendingCameraUri)
-				}
-
-				findViewById<TextView>(R.id.btn_capture)?.visibility = android.view.View.GONE
-				findViewById<TextView>(R.id.btn_retake)?.text = "Choose Another"
-				pendingCameraUri = null
-			}
+	// 이미지 표시를 업데이트하는 헬퍼 함수
+	private fun updateImageDisplay(uri: Uri) {
+		val imgQuiz = findViewById<ImageView>(R.id.img_quiz)
+		val txtNoImage = findViewById<TextView>(R.id.txt_no_image)
+		
+		currentBitmap = loadBitmapFromUri(uri)
+		if (currentBitmap != null) {
+			imgQuiz.setImageBitmap(currentBitmap)
+			imgQuiz.visibility = android.view.View.VISIBLE
+			txtNoImage.visibility = android.view.View.GONE
 		} else {
-			pendingCameraUri = null
+			imgQuiz.setImageURI(uri)
+			imgQuiz.visibility = android.view.View.VISIBLE
+			txtNoImage.visibility = android.view.View.GONE
 		}
 	}
 
@@ -113,6 +69,7 @@ class ImagePreviewActivity : AppCompatActivity() {
 
 		// pre-bring the frequent views
 		val imgQuiz = findViewById<ImageView>(R.id.img_quiz)
+		val txtNoImage = findViewById<TextView>(R.id.txt_no_image)
 		val btnCapture = findViewById<TextView>(R.id.btn_capture)
 		val btnRetake = findViewById<TextView>(R.id.btn_retake)
 		val btnConfirm = findViewById<TextView>(R.id.btn_confirm)
@@ -121,41 +78,47 @@ class ImagePreviewActivity : AppCompatActivity() {
 		if (imageUri != null) {
 			photoUri = imageUri
 			isGalleryMode = true
-
-			// Uri → Bitmap and store in currentBitmap
-			currentBitmap = loadBitmapFromUri(imageUri)
-			if (currentBitmap != null) {
-				imgQuiz.setImageBitmap(currentBitmap)
-			} else {
-				// if change is failure stay in URI
-				imgQuiz.setImageURI(imageUri)
-			}
-
-			btnCapture.visibility = android.view.View.GONE
-			btnRetake.text = "Choose Another"
+			updateImageDisplay(imageUri)
+		} else {
+			// 사진이 없을 때 "No Image" 텍스트 표시
+			imgQuiz.visibility = android.view.View.GONE
+			txtNoImage.visibility = android.view.View.VISIBLE
 		}
+		
+		// 버튼 텍스트는 항상 "Upload"와 "Retake"로 유지
+		btnCapture.text = "Upload"
+		btnRetake.text = "Retake"
 
 		findViewById<android.widget.ImageButton>(R.id.btn_back)?.setOnClickListener { finish() }
-		findViewById<android.widget.TextView>(R.id.nav_home)?.setOnClickListener {
-			startActivity(Intent(this, MainActivity::class.java))
+
+		// Setup bottom navigation
+		setupBottomNavigation()
+
+		// Apply WindowInsets to root layout
+		val root = findViewById<android.view.View>(R.id.camera_root)
+		ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
+			val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+			v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0)
+			insets
 		}
-		findViewById<android.widget.TextView>(R.id.nav_log)?.setOnClickListener {
-			startActivity(Intent(this, LogActivity::class.java))
-		}
-		findViewById<android.widget.TextView>(R.id.nav_quiz)?.setOnClickListener {
-			startActivity(Intent(this, QuizActivity::class.java))
+
+		// Apply WindowInsets to bottom navigation bar
+		val bottomNav = findViewById<android.view.View>(R.id.bottom_nav_include)
+		ViewCompat.setOnApplyWindowInsetsListener(bottomNav) { v, insets ->
+			val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+			val layoutParams = v.layoutParams as android.view.ViewGroup.MarginLayoutParams
+			layoutParams.bottomMargin = systemBars.bottom
+			v.layoutParams = layoutParams
+			insets
 		}
 
 		findViewById<android.widget.TextView>(R.id.btn_capture)?.setOnClickListener {
-			launchCamera()
+			// Upload 버튼: 갤러리에서 사진 선택
+			pickImage.launch("image/*")
 		}
 		findViewById<android.widget.TextView>(R.id.btn_retake)?.setOnClickListener {
-			// Always show source selection dialog when image is already selected
-			if (photoUri != null) {
-				showSourceSelectionDialog()
-			} else {
-				launchCamera()
-			}
+			// Retake 버튼: 카메라 실행
+			launchCamera()
 		}
 		btnConfirm.setOnClickListener {
 			val bitmap = currentBitmap
@@ -235,9 +198,7 @@ class ImagePreviewActivity : AppCompatActivity() {
 			}.start()
 		}
 
-		if (savedInstanceState == null && !isGalleryMode) {
-			launchCamera()
-		}
+		// 자동으로 카메라를 실행하지 않음 (사용자가 버튼을 눌러야 함)
 	}
 
 	private fun launchCamera() {
@@ -254,36 +215,6 @@ class ImagePreviewActivity : AppCompatActivity() {
 		}
 	}
 
-	private fun showSourceSelectionDialog() {
-		// Create camera intent
-		val photoFile = File.createTempFile("capture_", ".jpg", cacheDir).apply {
-			deleteOnExit()
-		}
-		val cameraUri = FileProvider.getUriForFile(
-			this,
-			"${packageName}.fileprovider",
-			photoFile
-		)
-		pendingCameraUri = cameraUri
-		
-		val cameraIntent = Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE).apply {
-			putExtra(android.provider.MediaStore.EXTRA_OUTPUT, cameraUri)
-			addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-		}
-		
-		// Create gallery intent
-		val galleryIntent = Intent(Intent.ACTION_GET_CONTENT).apply {
-			type = "image/*"
-		}
-		
-		// Create chooser with both options
-		val chooserIntent = Intent.createChooser(galleryIntent, "Choose Image Source").apply {
-			putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(cameraIntent))
-		}
-		
-		chooseImageSource.launch(chooserIntent)
-	}
-
 	//function for transfer the uri into bitmap
 	private fun loadBitmapFromUri(uri: Uri): Bitmap? {
 		return try {
@@ -297,6 +228,41 @@ class ImagePreviewActivity : AppCompatActivity() {
 		} catch (e: Exception) {
 			e.printStackTrace()
 			null
+		}
+	}
+
+	private fun setupBottomNavigation() {
+		findViewById<android.widget.TextView>(R.id.nav_home)?.setOnClickListener {
+			val intent = Intent(this, MainActivity::class.java).apply {
+				putExtra("fragment_tag", "home")
+				flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+			}
+			startActivity(intent)
+			finish()
+		}
+		findViewById<android.widget.TextView>(R.id.nav_log)?.setOnClickListener {
+			val intent = Intent(this, MainActivity::class.java).apply {
+				putExtra("fragment_tag", "log")
+				flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+			}
+			startActivity(intent)
+			finish()
+		}
+		findViewById<android.widget.TextView>(R.id.nav_quiz)?.setOnClickListener {
+			val intent = Intent(this, MainActivity::class.java).apply {
+				putExtra("fragment_tag", "quiz")
+				flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+			}
+			startActivity(intent)
+			finish()
+		}
+		findViewById<android.widget.TextView>(R.id.nav_setting)?.setOnClickListener {
+			val intent = Intent(this, MainActivity::class.java).apply {
+				putExtra("fragment_tag", "setting")
+				flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+			}
+			startActivity(intent)
+			finish()
 		}
 	}
 }

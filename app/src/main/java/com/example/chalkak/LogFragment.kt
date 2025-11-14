@@ -1,20 +1,26 @@
 package com.example.chalkak
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 
-class LogActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
-        setContentView(R.layout.activity_log)
+class LogFragment : Fragment() {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.fragment_log, container, false)
+    }
 
-        val recycler: RecyclerView = findViewById(R.id.recyclerLog)
-        recycler.layoutManager = GridLayoutManager(this, 2)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val recycler: RecyclerView = view.findViewById(R.id.recyclerLog)
 
         // Placeholder data; replace with DB-backed repository later
         val sampleEntries = listOf(
@@ -27,7 +33,7 @@ class LogActivity : AppCompatActivity() {
         val items: List<LogUiItem> = buildSectionedItems(sampleEntries)
         val adapter = SectionedLogAdapter(items)
 
-        val grid = GridLayoutManager(this, 2)
+        val grid = GridLayoutManager(requireContext(), 2)
         grid.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
             override fun getSpanSize(position: Int): Int {
                 return if (items[position] is LogUiItem.Header) 2 else 1
@@ -35,24 +41,6 @@ class LogActivity : AppCompatActivity() {
         }
         recycler.layoutManager = grid
         recycler.adapter = adapter
-
-        // Ensure bottom bar stays above Android navigation bar by applying system bar insets as padding
-        val root = findViewById<android.view.View>(R.id.log_root)
-        ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-
-        // bottom nav
-        findViewById<android.widget.TextView>(R.id.nav_home)?.setOnClickListener {
-            startActivity(android.content.Intent(this, MainActivity::class.java))
-        }
-        findViewById<android.widget.TextView>(R.id.nav_quiz)?.setOnClickListener {
-            startActivity(android.content.Intent(this, QuizActivity::class.java))
-        }
-
-        // TODO: Replace with repository observing DB changes
     }
 }
 
@@ -130,5 +118,4 @@ class HeaderViewHolder(itemView: android.view.View) : RecyclerView.ViewHolder(it
         sectionDate.text = dateIso
     }
 }
-
 

@@ -24,16 +24,7 @@
             android:name=".MainActivity"
             android:exported="false" />
         <activity
-            android:name=".MagicAdventureActivity"
-            android:exported="false" />
-        <activity
             android:name=".DetectionResultActivity"
-            android:exported="false" />
-        <activity
-            android:name=".LogActivity"
-            android:exported="false" />
-        <activity
-            android:name=".QuizActivity"
             android:exported="false" />
         <activity
             android:name=".ImagePreviewActivity"

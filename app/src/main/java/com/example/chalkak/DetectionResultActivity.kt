@@ -9,6 +9,9 @@ import android.os.Bundle
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import android.widget.FrameLayout.LayoutParams as FLP
 
 class DetectionResultActivity : AppCompatActivity() {
@@ -35,6 +38,7 @@ class DetectionResultActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         setContentView(R.layout.activity_detection_result)
 
         // view binding
@@ -50,10 +54,6 @@ class DetectionResultActivity : AppCompatActivity() {
         txtExampleSentence = findViewById(R.id.txt_example_sentence)
         btnTtsWord = findViewById(R.id.btn_tts_word)
         btnTtsExample = findViewById(R.id.btn_tts_example)
-        val navHome: TextView = findViewById(R.id.nav_home)
-        val navLog: TextView = findViewById(R.id.nav_log)
-        val navQuiz: TextView = findViewById(R.id.nav_quiz)
-
         btnBack = findViewById(R.id.btn_back)
 
         // Initialization of TTS
@@ -84,14 +84,25 @@ class DetectionResultActivity : AppCompatActivity() {
             finish()
         }
 
-        navHome.setOnClickListener {
-            startActivity(Intent(this, MainActivity::class.java))
+        // Setup bottom navigation
+        setupBottomNavigation()
+
+        // Apply WindowInsets to root layout
+        val root = findViewById<View>(R.id.result_root)
+        ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0)
+            insets
         }
-        navLog.setOnClickListener {
-            startActivity(Intent(this, LogActivity::class.java))
-        }
-        navQuiz.setOnClickListener {
-            startActivity(Intent(this, QuizActivity::class.java))
+
+        // Apply WindowInsets to bottom navigation bar
+        val bottomNav = findViewById<View>(R.id.bottom_nav_include)
+        ViewCompat.setOnApplyWindowInsetsListener(bottomNav) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val layoutParams = v.layoutParams as android.view.ViewGroup.MarginLayoutParams
+            layoutParams.bottomMargin = systemBars.bottom
+            v.layoutParams = layoutParams
+            insets
         }
 
         // Reading word
@@ -201,6 +212,41 @@ class DetectionResultActivity : AppCompatActivity() {
             null,
             "chalkak_tts"
         )
+    }
+
+    private fun setupBottomNavigation() {
+        findViewById<TextView>(R.id.nav_home)?.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java).apply {
+                putExtra("fragment_tag", "home")
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+            startActivity(intent)
+            finish()
+        }
+        findViewById<TextView>(R.id.nav_log)?.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java).apply {
+                putExtra("fragment_tag", "log")
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+            startActivity(intent)
+            finish()
+        }
+        findViewById<TextView>(R.id.nav_quiz)?.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java).apply {
+                putExtra("fragment_tag", "quiz")
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+            startActivity(intent)
+            finish()
+        }
+        findViewById<TextView>(R.id.nav_setting)?.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java).apply {
+                putExtra("fragment_tag", "setting")
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+            startActivity(intent)
+            finish()
+        }
     }
 
     override fun onDestroy() {
