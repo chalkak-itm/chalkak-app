@@ -41,6 +41,10 @@ interface DetectedObjectDao {
     // get object by english word
     @Query("SELECT * FROM detected_objects WHERE english_word = :word LIMIT 1")
     suspend fun getObjectByEnglishWord(word: String): DetectedObject?
+
+    // get object by objectId
+    @Query("SELECT * FROM detected_objects WHERE objectId = :objectId LIMIT 1")
+    suspend fun getObjectById(objectId: Long): DetectedObject?
 }
 
 // For examples

@@ -12,6 +12,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 class LogItemDetailDialogFragment : DialogFragment() {
     
@@ -22,6 +24,7 @@ class LogItemDetailDialogFragment : DialogFragment() {
     
     private var entry: LogEntry? = null
     private var onDialogDismissed: (() -> Unit)? = null
+    private val roomDb by lazy { AppDatabase.getInstance(requireContext()) }
     
     // TTS and Speech Recognition helpers
     private var ttsHelper: TtsHelper? = null
@@ -108,13 +111,17 @@ class LogItemDetailDialogFragment : DialogFragment() {
         txtExampleSentence = view.findViewById(R.id.txt_example_sentence)
         
         entry?.let { logEntry ->
-            imgSelectedPhoto.setImageResource(logEntry.imageRes)
+            // Load image from path or use resource
+            if (logEntry.imagePath != null) {
+                ImageLoaderHelper.loadImageToView(imgSelectedPhoto, logEntry.imagePath)
+            } else if (logEntry.imageRes != null) {
+                imgSelectedPhoto.setImageResource(logEntry.imageRes)
+            }
+            
             txtSelectedWord.text = logEntry.word
             
-            // Placeholder data for meaning and example
-            // TODO: Replace with actual data from database or API
-            txtKoreanMeaning.text = "Meaning" // Replace with actual meaning
-            txtExampleSentence.text = "Example sentence for ${logEntry.word}" // Replace with actual example
+            // Load word data from Room database
+            loadWordDataFromLocal(logEntry)
         }
         
         // Initialize TTS and Speech Recognition
@@ -195,6 +202,97 @@ class LogItemDetailDialogFragment : DialogFragment() {
         speechRecognitionManager?.cleanup()
         ttsHelper = null
         speechRecognitionManager = null
+    }
+
+    private fun loadWordDataFromLocal(logEntry: LogEntry) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                // objectId가 있으면 우선 사용, 없으면 단어로 검색
+                val detectedObject = if (logEntry.objectId != null) {
+                    roomDb.detectedObjectDao().getObjectById(logEntry.objectId!!)
+                        ?: roomDb.detectedObjectDao().getObjectByEnglishWord(logEntry.word)
+                } else {
+                    roomDb.detectedObjectDao().getObjectByEnglishWord(logEntry.word)
+                }
+
+                if (detectedObject != null) {
+                    txtKoreanMeaning.text = detectedObject.koreanMeaning.ifEmpty { "의미를 불러오는 중..." }
+                    val examples = roomDb.exampleSentenceDao().getSentencesByWordId(detectedObject.objectId)
+                    if (examples.isNotEmpty()) {
+                        val randomExample = examples.random()
+                        txtExampleSentence.text = "${randomExample.sentence}\n(${randomExample.translation})"
+                    } else {
+                        txtExampleSentence.text = "예문이 없습니다."
+                    }
+                } else {
+                    // Firebase에서 가져오기 시도
+                    txtKoreanMeaning.text = logEntry.koreanMeaning ?: "의미를 불러오는 중..."
+                    txtExampleSentence.text = "예문을 불러오는 중..."
+                    
+                    // Firebase에서 단어 정보 가져오기
+                    loadWordDataFromFirebase(logEntry.word)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                txtKoreanMeaning.text = logEntry.koreanMeaning ?: "의미를 불러오는 중..."
+                txtExampleSentence.text = "예문을 불러오는 중..."
+            }
+        }
+    }
+
+    private fun loadWordDataFromFirebase(word: String) {
+        val firestoreRepo = FirestoreRepository()
+        firestoreRepo.fetchWordFromGPT(
+            word = word,
+            onSuccess = { wordDto ->
+                viewLifecycleOwner.lifecycleScope.launch {
+                    try {
+                        // Firebase에 저장
+                        firestoreRepo.saveWordToFirebase(wordDto)
+                        
+                        // Room DB에 저장
+                        val existingObject = roomDb.detectedObjectDao().getObjectByEnglishWord(word)
+                        if (existingObject != null) {
+                            roomDb.detectedObjectDao().updateMeaning(word, wordDto.meaning)
+                            val existingExamples = roomDb.exampleSentenceDao().getSentencesByWordId(existingObject.objectId)
+                            val existingSentences = existingExamples.map { it.sentence }.toSet()
+                            wordDto.examples.forEach { example ->
+                                if (!existingSentences.contains(example.sentence)) {
+                                    roomDb.exampleSentenceDao().insert(
+                                        ExampleSentence(
+                                            wordId = existingObject.objectId,
+                                            sentence = example.sentence,
+                                            translation = example.translation
+                                        )
+                                    )
+                                }
+                            }
+                            // UI 업데이트
+                            txtKoreanMeaning.text = wordDto.meaning
+                            val allExamples = roomDb.exampleSentenceDao().getSentencesByWordId(existingObject.objectId)
+                            if (allExamples.isNotEmpty()) {
+                                val randomExample = allExamples.random()
+                                txtExampleSentence.text = "${randomExample.sentence}\n(${randomExample.translation})"
+                            }
+                        } else {
+                            // 새 단어인 경우 (일반적으로는 발생하지 않아야 함)
+                            txtKoreanMeaning.text = wordDto.meaning
+                            if (wordDto.examples.isNotEmpty()) {
+                                val randomExample = wordDto.examples.random()
+                                txtExampleSentence.text = "${randomExample.sentence}\n(${randomExample.translation})"
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            },
+            onFailure = { e ->
+                // 에러 발생 시 기본 메시지 표시
+                txtKoreanMeaning.text = "의미를 불러올 수 없습니다."
+                txtExampleSentence.text = "예문을 불러올 수 없습니다."
+            }
+        )
     }
 }
 
