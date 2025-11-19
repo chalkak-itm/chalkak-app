@@ -76,6 +76,7 @@ dependencies {
 
     // Google Firestore
     implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-functions")
 
     // asynchronization
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")

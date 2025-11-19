@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
@@ -379,33 +380,33 @@ class MainActivity : AppCompatActivity() {
     }
 
     // Update: Added imagePath parameter
+    // Update: Logic changed to use addNewWordCount & updateReviewTime
     private fun processDetectedWords(results: List<DetectionResultItem>, imagePath: String) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
         lifecycleScope.launch {
-            // Save Photo & Get ID
+            // 1. Save Photo
             val photoLog = PhotoLog(localImagePath = imagePath)
             val newPhotoId = roomDb.photoLogDao().insert(photoLog)
 
-            // Process items (Max 2)
+            // 2. Process Items (Max 2)
             results.take(2).forEach { item ->
                 val detectedWord = item.label
-
-                // Check existence
                 val isKnown = roomDb.detectedObjectDao().isWordExist(detectedWord)
 
                 if (isKnown) {
-                    // Known: update time only
-                    firestoreRepo.onlyUpdateTimestamp(uid)
+                    // [A] Review -> Update Time (Firestore & Room)
+                    // 👇 (Here is the fix!)
+                    firestoreRepo.updateReviewTime(uid, detectedWord)
+
                     roomDb.detectedObjectDao().updateLastStudied(detectedWord, System.currentTimeMillis())
                 } else {
-                    // New: update time & count
-                    firestoreRepo.updateLastStudied(uid)
+                    // [B] New Word -> Count +1
+                    firestoreRepo.addNewWordCount(uid)
 
-                    // BBox to String
                     val boxString = "[${item.left}, ${item.top}, ${item.right}, ${item.bottom}]"
 
-                    // Insert object linked to Photo ID
+                    // 1) Save "Searching..." to Room
                     val newObject = DetectedObject(
                         parentPhotoId = newPhotoId,
                         englishWord = detectedWord,
@@ -413,6 +414,19 @@ class MainActivity : AppCompatActivity() {
                         boundingBox = boxString
                     )
                     roomDb.detectedObjectDao().insert(newObject)
+
+                    // 2) Fetch GPT & Update Room
+                    firestoreRepo.fetchWordFromGPT(
+                        word = detectedWord,
+                        onSuccess = { wordDto ->
+                            lifecycleScope.launch {
+                                // Update "Searching..." to Real Meaning
+                                roomDb.detectedObjectDao().updateMeaning(detectedWord, wordDto.meaning)
+                                Log.d("GPT", "Updated: $detectedWord -> ${wordDto.meaning}")
+                            }
+                        },
+                        onFailure = { Log.e("GPT", "Fail", it) }
+                    )
                 }
             }
         }

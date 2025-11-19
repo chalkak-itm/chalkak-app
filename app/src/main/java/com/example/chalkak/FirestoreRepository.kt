@@ -1,10 +1,10 @@
 package com.example.chalkak
 
 import android.util.Log
-import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.functions.FirebaseFunctions // 필수 Import
 import kotlinx.coroutines.tasks.await
 
 class FirestoreRepository {
@@ -12,7 +12,7 @@ class FirestoreRepository {
     private val db = FirebaseFirestore.getInstance()
     private val TAG = "FirestoreRepo"
 
-    // Saving user info
+    // Save User Info
     fun saveUser(uid: String, email: String, nickname: String, fcmToken: String) {
         val userRef = db.collection("users").document(uid)
         val userData = hashMapOf(
@@ -23,43 +23,49 @@ class FirestoreRepository {
         userRef.set(userData, SetOptions.merge())
     }
 
-    // public word dictionary (getting)
-    suspend fun getWord(wordId: String): WordDTO? {
-        return try {
-            val docSnapshot = db.collection("words")
-                .document(wordId.lowercase())
-                .get()
-                .await()
-
-            if (docSnapshot.exists()) {
-                docSnapshot.toObject(WordDTO::class.java)
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Fail to bring word", e)
-            null
-        }
+    // [Situation 1] New Word (First Time)
+    // Only increment count.
+    fun addNewWordCount(uid: String) {
+        val userRef = db.collection("users").document(uid)
+        userRef.update("stats.totalWordCount", FieldValue.increment(1))
     }
 
-    // count word -> word + 1
-    fun updateLastStudied(uid: String) {
+    // [Situation 2] Reviewing Known Word (Renamed from onlyUpdateTimestamp)
+    // Update timestamp in studyLog for Review Algorithm
+    fun updateReviewTime(uid: String, word: String) {
         val userRef = db.collection("users").document(uid)
+        val logRef = userRef.collection("studyLog").document(word.lowercase())
 
-        // field to update
-        val updates = hashMapOf<String, Any>(
-            "lastStudiedAt" to FieldValue.serverTimestamp(),
-            "stats.totalWordCount" to FieldValue.increment(1)
+        logRef.set(
+            hashMapOf("lastStudied" to FieldValue.serverTimestamp()),
+            SetOptions.merge()
         )
-
-        userRef.update(updates)
-            .addOnSuccessListener { Log.d(TAG, "learning time updated") }
-            .addOnFailureListener { Log.e(TAG, "update failed", it) }
+        userRef.update("lastStudiedAt", FieldValue.serverTimestamp())
     }
 
-    // Existed word not count
-    fun onlyUpdateTimestamp(uid: String) {
-        val userRef = db.collection("users").document(uid)
-        userRef.update("lastStudiedAt", FieldValue.serverTimestamp())
+    // Call Cloud Function (GPT)
+    fun fetchWordFromGPT(word: String, onSuccess: (WordDTO) -> Unit, onFailure: (Exception) -> Unit) {
+        // ⚠️ Region must match your functions (asia-northeast3)
+        val functions = FirebaseFunctions.getInstance("asia-northeast3")
+
+        val data = hashMapOf("word" to word)
+
+        functions
+            .getHttpsCallable("getWordData")
+            .call(data)
+            .addOnSuccessListener { task ->
+                val result = task.data as? Map<String, Any>
+                if (result != null && result["isError"] != true) {
+                    val dto = WordDTO(
+                        originalWord = result["originalWord"] as? String ?: "",
+                        meaning = result["meaning"] as? String ?: ""
+                        // Add examples parsing if needed
+                    )
+                    onSuccess(dto)
+                } else {
+                    onFailure(Exception("Invalid word"))
+                }
+            }
+            .addOnFailureListener { onFailure(it) }
     }
 }

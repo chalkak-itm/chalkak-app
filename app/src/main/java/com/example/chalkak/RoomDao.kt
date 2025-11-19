@@ -33,6 +33,10 @@ interface DetectedObjectDao {
     // getting words
     @Query("SELECT * FROM detected_objects WHERE parent_photo_id = :photoId")
     suspend fun getObjectsByPhotoId(photoId: Long): List<DetectedObject>
+
+    // update words
+    @Query("UPDATE detected_objects SET korean_meaning = :meaning WHERE english_word = :word")
+    suspend fun updateMeaning(word: String, meaning: String)
 }
 
 // For examples
