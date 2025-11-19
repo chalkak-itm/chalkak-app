@@ -3,7 +3,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="8dp">
+    android:padding="8dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:background="?android:attr/selectableItemBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -13,18 +16,11 @@
         android:padding="12dp"
         android:layout_marginTop="6dp">
 
-        <TextView
-            android:id="@+id/txtDate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="#7A7A7A"
-            android:textSize="12sp" />
-
         <ImageView
             android:id="@+id/imgPhoto"
             android:layout_width="match_parent"
             android:layout_height="140dp"
-            android:scaleType="centerCrop"
+            android:scaleType="centerInside"
             android:layout_marginTop="8dp"
             android:src="@mipmap/ic_launcher" />
 
@@ -34,8 +30,11 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="8dp"
+            android:layout_marginBottom="4dp"
+            android:minHeight="24dp"
             android:textColor="#000000"
-            android:textSize="18sp" />
+            android:textSize="18sp"
+            android:gravity="center" />
     </LinearLayout>
 
 </LinearLayout>

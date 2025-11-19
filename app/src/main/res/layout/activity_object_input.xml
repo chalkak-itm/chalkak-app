@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/camera_root"
+    android:id="@+id/input_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/bg_magic_gradient">
 
+    <!-- Header Area -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -43,7 +44,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Take Photo"
+            android:text="객체 이름 입력"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
             android:textStyle="bold"
@@ -53,6 +54,7 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <!-- Main contents -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -62,6 +64,7 @@
         android:paddingRight="16dp"
         android:paddingTop="8dp">
 
+        <!-- Image card -->
         <LinearLayout
             android:id="@+id/card_image"
             android:layout_width="match_parent"
@@ -70,82 +73,79 @@
             android:padding="10dp"
             android:orientation="vertical">
 
-            <FrameLayout
+            <ImageView
+                android:id="@+id/img_preview"
                 android:layout_width="match_parent"
-                android:layout_height="360dp">
-
-                <ImageView
-                    android:id="@+id/img_quiz"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:scaleType="fitCenter"
-                    android:contentDescription="Captured Preview"
-                    android:visibility="gone" />
-
-                <TextView
-                    android:id="@+id/txt_no_image"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:text="No Image"
-                    android:textColor="#999999"
-                    android:textSize="24sp"
-                    android:gravity="center"
-                    android:visibility="visible" />
-            </FrameLayout>
+                android:layout_height="300dp"
+                android:scaleType="fitCenter"
+                android:contentDescription="Preview Image"
+                android:src="@drawable/demo" />
         </LinearLayout>
 
+        <!-- Description text -->
+        <TextView
+            android:id="@+id/txt_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="모델이 인식하지 못한 객체입니다.\n사진을 보면서 객체 이름을 입력해주세요."
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:gravity="center"
+            android:lineSpacingExtra="4dp" />
+
+        <!-- Input card -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="12dp">
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_card_white_pure"
+            android:orientation="vertical"
+            android:padding="20dp">
 
             <TextView
-                android:id="@+id/btn_capture"
-                android:layout_width="0dp"
+                android:id="@+id/txt_input_label"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:minHeight="56dp"
-                android:background="@drawable/bg_button_purple_ripple"
-                android:clickable="true"
-                android:focusable="true"
-                android:padding="12dp"
-                android:text="Upload"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:gravity="center" />
+                android:text="객체 이름"
+                android:textColor="#333333"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp" />
 
-            <TextView
-                android:id="@+id/btn_retake"
-                android:layout_width="0dp"
+            <EditText
+                android:id="@+id/edt_object_name"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginLeft="8dp"
-                android:minHeight="56dp"
-                android:background="@drawable/bg_button_purple_ripple"
-                android:clickable="true"
-                android:focusable="true"
-                android:padding="12dp"
-                android:text="Retake"
-                android:textColor="#FFFFFF"
+                android:hint="예: apple, dog, car..."
+                android:textColor="#333333"
+                android:textColorHint="#999999"
                 android:textSize="18sp"
-                android:gravity="center" />
+                android:padding="16dp"
+                android:background="@drawable/bg_card_white"
+                android:inputType="text"
+                android:maxLines="1"
+                android:imeOptions="actionDone"
+                android:singleLine="true" />
+
         </LinearLayout>
 
+        <!-- Confirm button -->
         <TextView
             android:id="@+id/btn_confirm"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:minHeight="56dp"
-            android:background="@drawable/bg_button_purple_ripple"
-            android:clickable="true"
-            android:focusable="true"
-            android:padding="12dp"
-            android:text="Use Photo"
+            android:layout_marginTop="24dp"
+            android:text="확인"
             android:textColor="#FFFFFF"
             android:textSize="18sp"
-            android:gravity="center" />
+            android:textStyle="bold"
+            android:gravity="center"
+            android:padding="16dp"
+            android:background="@drawable/bg_button_purple_ripple"
+            android:clickable="true"
+            android:focusable="true" />
+
     </LinearLayout>
 
     <!-- Bottom Navigation Bar Container (Overlay) -->
@@ -164,5 +164,4 @@
     </LinearLayout>
 
 </LinearLayout>
-
 

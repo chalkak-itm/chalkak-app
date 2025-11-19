@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/bottom_navigation_bar"
+    android:layout_width="match_parent"
+    android:layout_height="56dp"
+    android:orientation="horizontal"
+    android:background="@android:color/transparent"
+    android:paddingLeft="24dp"
+    android:paddingRight="24dp"
+    android:gravity="center">
+
+    <LinearLayout
+        android:id="@+id/nav_home"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="@drawable/bg_nav_item_unselected"
+        android:padding="4dp">
+
+        <ImageView
+            android:id="@+id/nav_home_icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/home" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/nav_log"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="@drawable/bg_nav_item_unselected"
+        android:padding="4dp">
+
+        <ImageView
+            android:id="@+id/nav_log_icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/egg" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/nav_quiz"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="@drawable/bg_nav_item_unselected"
+        android:padding="4dp">
+
+        <ImageView
+            android:id="@+id/nav_quiz_icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/hat" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/nav_setting"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="@drawable/bg_nav_item_unselected"
+        android:padding="4dp">
+
+        <ImageView
+            android:id="@+id/nav_setting_icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/setting" />
+    </LinearLayout>
+
+</LinearLayout>
+

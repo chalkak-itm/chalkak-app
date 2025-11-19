@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_card_white_pure"
+    android:padding="24dp">
+
+    <TextView
+        android:id="@+id/txt_dialog_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="객체 이름을 입력해주세요"
+        android:textColor="#333333"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/txt_dialog_description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="모델이 인식하지 못한 객체입니다.\n직접 객체 이름을 입력해주세요."
+        android:textColor="#666666"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:layout_marginBottom="24dp" />
+
+    <EditText
+        android:id="@+id/edt_object_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="예: apple, dog, car..."
+        android:textColor="#333333"
+        android:textColorHint="#999999"
+        android:textSize="16sp"
+        android:padding="16dp"
+        android:background="@drawable/bg_card_white"
+        android:inputType="text"
+        android:maxLines="1"
+        android:imeOptions="actionDone"
+        android:singleLine="true"
+        android:layout_marginBottom="24dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end">
+
+        <TextView
+            android:id="@+id/btn_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="취소"
+            android:textColor="#666666"
+            android:textSize="16sp"
+            android:padding="12dp"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/btn_confirm"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="확인"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:padding="12dp"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="@drawable/bg_button_purple_ripple" />
+
+    </LinearLayout>
+
+</LinearLayout>
+

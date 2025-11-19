@@ -153,52 +153,5 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
 
-    <!-- Bottom Bar (simple) -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:orientation="horizontal"
-        android:background="#F2F2F2"
-        android:paddingLeft="24dp"
-        android:paddingRight="24dp"
-        android:gravity="center">
-
-        <TextView
-            android:id="@+id/nav_home"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="home"
-            android:textColor="#9810FA"
-            android:gravity="center" />
-
-        <TextView
-            android:id="@+id/nav_log"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="log"
-            android:textColor="#99A1AF"
-            android:gravity="center" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:id="@+id/nav_quiz"
-            android:text="quiz"
-            android:textColor="#99A1AF"
-            android:gravity="center" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="setting"
-            android:textColor="#99A1AF"
-            android:gravity="center" />
-    </LinearLayout>
-
 </LinearLayout>
-
 
