@@ -1,8 +1,6 @@
 package com.example.chalkak
 
 import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -18,13 +16,13 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import com.google.firebase.auth.FirebaseAuth
 import kotlin.math.sqrt
 
 class HomeFragment : Fragment(), SensorEventListener {
-    private lateinit var auth: FirebaseAuth
-    private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var userPreferencesHelper: UserPreferencesHelper
     private lateinit var txtWelcome: TextView
+    private lateinit var txtProgressLabel: TextView
+    private lateinit var progressWords: ProgressBar
     private var shakeEnabled = false
     private lateinit var layoutShakeIcon: LinearLayout
     private lateinit var imgShakeToggle: ImageView
@@ -63,8 +61,9 @@ class HomeFragment : Fragment(), SensorEventListener {
         imgMascot.layoutParams.width = sizeInPx
         imgMascot.layoutParams.height = sizeInPx
 
-        // Initialize views
-        txtWelcome = view.findViewById(R.id.txtWelcome)
+        // Initialize progress views
+        txtProgressLabel = view.findViewById(R.id.txtProgressLabel)
+        progressWords = view.findViewById(R.id.progressWords)
 
         // Initialize shaking icon views
         layoutShakeIcon = view.findViewById(R.id.layoutShakeIcon)
@@ -73,7 +72,7 @@ class HomeFragment : Fragment(), SensorEventListener {
         // Update welcome message with nickname
         updateWelcomeMessage()
         
-        // Update progress bar based on label text
+        // Update progress bar
         updateProgressBar()
 
         val magicButton: LinearLayout = view.findViewById(R.id.btnMagicAdventure)
@@ -143,6 +142,17 @@ class HomeFragment : Fragment(), SensorEventListener {
     private fun updateWelcomeMessage() {
         val nickname = userPreferencesHelper.getNickname()
         txtWelcome.text = "Welcome back,\n$nickname"
+    }
+
+    private fun updateProgressBar() {
+        // TODO: Replace with actual data from database
+        // For now, using placeholder values
+        val wordsLearned = 8
+        val wordsTotal = 12
+        val progressPercent = (wordsLearned * 100) / wordsTotal
+        
+        txtProgressLabel.text = "$wordsLearned / $wordsTotal words learned today!"
+        progressWords.progress = progressPercent
     }
     //function for setting the toast view
     private fun showCenterToast(message: String) {

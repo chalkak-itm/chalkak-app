@@ -11,44 +11,16 @@
     <!-- 상단 환영 섹션 -->
     <include
         android:id="@+id/header_common"
-        layout="@layout/header_common"
-    <!-- 상단 환영 섹션 + 흔들기 아이콘/설명 -->
+        layout="@layout/header_common" />
+
+    <!-- Shaking ON/OFF Icon -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingLeft="@dimen/padding_standard"
         android:paddingRight="@dimen/padding_standard"
-        android:paddingTop="48dp">
+        android:paddingTop="@dimen/padding_small">
 
-        <!-- 기존 환영 레이아웃(마스코트 + 텍스트) -->
-        <LinearLayout
-            android:id="@+id/layoutWelcome"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:orientation="vertical"
-            android:gravity="center_horizontal">
-
-            <ImageView
-                android:layout_width="300dp"
-                android:layout_height="300dp"
-                android:adjustViewBounds="true"
-                android:contentDescription="Mascot"
-                android:scaleType="centerInside"
-                android:src="@drawable/main_character" />
-
-            <TextView
-                android:id="@+id/txtWelcome"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Welcome back,\nLeclerc"
-                android:textColor="#FFFFFF"
-                android:textSize="36sp"
-                android:gravity="center"
-                android:layout_marginTop="16dp" />
-        </LinearLayout>
-
-        <!-- 🔔 shaking ON/OFF Icon -->
         <LinearLayout
             android:id="@+id/layoutShakeIcon"
             android:layout_width="wrap_content"

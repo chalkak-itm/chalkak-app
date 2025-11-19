@@ -1,7 +1,6 @@
 package com.example.chalkak
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -11,8 +10,6 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 
 class MagicAdventureFragment : Fragment() {
@@ -28,45 +25,8 @@ class MagicAdventureFragment : Fragment() {
             return fragment
         }
     }
-    private var photoUri: Uri? = null
-
-    private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-        if (success && photoUri != null) {
-            val mainActivity = activity as? MainActivity
-            val mainNavTag = mainActivity?.getCurrentMainNavigationTag() ?: "home"
-            val intent = Intent(requireContext(), ImagePreviewActivity::class.java).apply {
-                putExtra("image_uri", photoUri)
-                putExtra("main_nav_tag", mainNavTag)
-            }
-            startActivity(intent)
-        }
-    }
-
-    private val pickImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let {
-            val mainActivity = activity as? MainActivity
-            val mainNavTag = mainActivity?.getCurrentMainNavigationTag() ?: "home"
-            val intent = Intent(requireContext(), ImagePreviewActivity::class.java).apply {
-                putExtra("image_uri", it)
-                putExtra("main_nav_tag", mainNavTag)
-            }
-            startActivity(intent)
-        }
-    }
-
-    private fun launchCamera() {
-        val photoFile = File.createTempFile("capture_", ".jpg", requireContext().cacheDir).apply {
-            deleteOnExit()
-        }
-        photoUri = FileProvider.getUriForFile(
-            requireContext(),
-            "${requireContext().packageName}.fileprovider",
-            photoFile
-        )
-        photoUri?.let { uri ->
-            takePicture.launch(uri)
-        }
-    }
+    
+    private lateinit var imagePickerHelper: ImagePickerHelper
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -101,7 +61,7 @@ class MagicAdventureFragment : Fragment() {
         val backButton: ImageButton = view.findViewById(R.id.btn_back)
 
         takePhoto.setOnClickListener {
-            launchCamera()
+            imagePickerHelper.launchCamera()
         }
 
         // when come from HomeFragment, check the auto camera
@@ -113,7 +73,7 @@ class MagicAdventureFragment : Fragment() {
             // Do camera after loading UI
             view.post {
                 showCenterToast("Launching camera for Magic Adventure...")
-                launchCamera()
+                imagePickerHelper.launchCamera()
             }
         }
         upload.setOnClickListener {
