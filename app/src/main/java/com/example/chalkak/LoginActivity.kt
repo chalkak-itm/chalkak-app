@@ -19,6 +19,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.example.chalkak.databinding.ActivityLoginBinding
+import com.google.firebase.messaging.FirebaseMessaging
 
 class LoginActivity : AppCompatActivity() {
 
@@ -26,11 +27,11 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
     private val TAG = "LoginActivity"
 
-    // Use the classic GoogleSignInClient (instead of CredentialManager)
+    private val firestoreRepo = FirestoreRepository()
+
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var googleSignInLauncher: ActivityResultLauncher<Intent>
 
-    // Get the Web Client ID from google-services.json (via R.string)
     private val webClientId by lazy { getString(R.string.default_web_client_id) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,35 +50,28 @@ class LoginActivity : AppCompatActivity() {
             return
         }
 
-        // Configure GoogleSignInOptions to request an ID token for Firebase
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(webClientId)
             .requestEmail()
             .build()
 
-        // Initialize the GoogleSignInClient
         googleSignInClient = GoogleSignIn.getClient(this, gso)
 
-        // Initialize the ActivityResultLauncher to handle the sign-in result
         googleSignInLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
                 try {
-                    // Google Sign-In was successful, get the ID token
                     val account = task.getResult(ApiException::class.java)!!
                     Log.d(TAG, "Google Sign In Succeeded, getting token...")
-                    // Pass the ID token to Firebase for authentication
                     firebaseAuthWithGoogle(account.idToken!!)
                 } catch (e: ApiException) {
-                    // Google Sign-In failed
                     val statusCode = e.statusCode
                     Log.e(TAG, "Google sign in failed: ApiException (statusCode: $statusCode)", e)
                     updateUI(null)
                 }
             } else {
-                // User cancelled the sign-in flow
                 Log.w(TAG, "Google sign in flow cancelled by user (resultCode: ${result.resultCode})")
                 updateUI(null)
             }
@@ -94,7 +88,6 @@ class LoginActivity : AppCompatActivity() {
             insets
         }
 
-        // Set click listener to launch the Google Sign-In flow
         binding.btnSignIn?.setOnClickListener {
             Log.d(TAG, "Launching Google Sign In Intent...")
             val signInIntent = googleSignInClient.signInIntent
@@ -102,7 +95,6 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    // Authenticate with Firebase using the Google ID token
     private fun firebaseAuthWithGoogle(idToken: String) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         auth.signInWithCredential(credential)
@@ -118,17 +110,43 @@ class LoginActivity : AppCompatActivity() {
             }
     }
 
-    // Update UI after sign-in attempt
+    // FCM token -> Firestore -> Main page
     private fun updateUI(user: FirebaseUser?) {
         if (user != null) {
-            Toast.makeText(this, "${user.displayName} \n Nice to Meet you!", Toast.LENGTH_SHORT).show()
-            navigateToMain()
+            // 1. FCM getting
+            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    Log.w(TAG, "FCM 토큰 가져오기 실패", task.exception)
+                    // if not succeed, dummy token
+                    saveUserAndNavigate(user, "")
+                    return@addOnCompleteListener
+                }
+
+                // 2. getting token
+                val token = task.result
+                Log.d(TAG, "FCM Token: $token")
+
+                // save and direct
+                saveUserAndNavigate(user, token)
+            }
         } else {
-            Log.d(TAG, "Login Required")
+            Log.d(TAG, "Login Required (User is null)")
         }
     }
 
-    // Navigate to MainActivity after successful login
+    // screen move
+    private fun saveUserAndNavigate(user: FirebaseUser, token: String) {
+        firestoreRepo.saveUser(
+            uid = user.uid,
+            email = user.email ?: "",
+            nickname = user.displayName ?: "Unknown",
+            fcmToken = token // real token
+        )
+
+        Toast.makeText(this, "${user.displayName} \n Nice to Meet you!", Toast.LENGTH_SHORT).show()
+        navigateToMain()
+    }
+
     private fun navigateToMain() {
         startActivity(Intent(this, MainActivity::class.java))
         finish()

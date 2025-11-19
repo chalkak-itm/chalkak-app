@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
@@ -15,6 +16,9 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
+import com.google.firebase.auth.FirebaseAuth
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private var currentFragmentTag: String = "home"
@@ -23,7 +27,9 @@ class MainActivity : AppCompatActivity() {
     private val backPressHandler = Handler(Looper.getMainLooper())
     private val backPressRunnable = Runnable { backPressedTime = 0 }
     private var bottomNavContainer: View? = null
-    
+    private val roomDb by lazy { AppDatabase.getInstance(this) }
+    private val firestoreRepo = FirestoreRepository()
+
     companion object {
         private val MAIN_NAVIGATION_TAGS = setOf("home", "log", "quiz", "setting")
     }
@@ -190,6 +196,11 @@ class MainActivity : AppCompatActivity() {
                 val imagePath = intent.getStringExtra("image_path")
                 val detectionResults = intent.getParcelableArrayListExtra<DetectionResultItem>("detection_results") ?: emptyList()
                 val mainNavTag = intent.getStringExtra("main_nav_tag") ?: "home"
+
+                if (detectionResults.isNotEmpty() && imagePath != null) {
+                    processDetectedWords(detectionResults, imagePath)
+                }
+
                 DetectionResultFragment.newInstance(imagePath, detectionResults, mainNavTag)
             }
             else -> HomeFragment()
@@ -345,6 +356,63 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 applyPaddingToScrollableViews(child, padding)
+            }
+        }
+    }
+
+    // Update: Added imagePath parameter
+    // Update: Logic changed to use addNewWordCount & updateReviewTime
+    private fun processDetectedWords(results: List<DetectionResultItem>, imagePath: String) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+        lifecycleScope.launch {
+            // 1. Save Photo
+            val photoLog = PhotoLog(localImagePath = imagePath)
+            val newPhotoId = roomDb.photoLogDao().insert(photoLog)
+
+            // 2. Process Items (Max 2)
+            results.take(2).forEach { item ->
+                val detectedWord = item.label
+                val isKnown = roomDb.detectedObjectDao().isWordExist(detectedWord)
+
+                if (isKnown) {
+                    // 👇 (Here is the fix!)
+                    firestoreRepo.updateReviewTime(uid, detectedWord)
+
+                    roomDb.detectedObjectDao().updateLastStudied(detectedWord, System.currentTimeMillis())
+                } else {
+                    // [B] New Word -> Count +1
+                    firestoreRepo.addNewWordCount(uid)
+
+                    val boxString = "[${item.left}, ${item.top}, ${item.right}, ${item.bottom}]"
+
+                    // 1) Save "Searching..." to Room
+                    val newObject = DetectedObject(
+                        parentPhotoId = newPhotoId,
+                        englishWord = detectedWord,
+                        koreanMeaning = "Searching...",
+                        boundingBox = boxString
+                    )
+                    roomDb.detectedObjectDao().insert(newObject)
+
+                    // 2) Fetch GPT & Update Room
+                    firestoreRepo.fetchWordFromGPT(
+                        word = detectedWord,
+                        onSuccess = { wordDto ->
+                            lifecycleScope.launch {
+                                // Update "Searching..." to Real Meaning
+                                roomDb.detectedObjectDao().updateMeaning(detectedWord, wordDto.meaning)
+                                Log.d("GPT", "Updated: $detectedWord -> ${wordDto.meaning}")
+                            }
+                        },
+                        onFailure = { e ->
+                            runOnUiThread {
+                                Toast.makeText(this@MainActivity, "GPT 오류: ${e.message}", Toast.LENGTH_LONG).show()
+                            }
+                            Log.e("GPT", "Fail", e)
+                        }
+                    )
+                }
             }
         }
     }
