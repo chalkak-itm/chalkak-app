@@ -1,5 +1,6 @@
 package com.example.chalkak
 
+import android.Manifest
 import android.app.Dialog
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,6 +9,8 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.DialogFragment
 
 class LogItemDetailDialogFragment : DialogFragment() {
@@ -19,6 +22,19 @@ class LogItemDetailDialogFragment : DialogFragment() {
     
     private var entry: LogEntry? = null
     private var onDialogDismissed: (() -> Unit)? = null
+    
+    // TTS and Speech Recognition helpers
+    private var ttsHelper: TtsHelper? = null
+    private var speechRecognitionManager: SpeechRecognitionManager? = null
+    
+    // Permission launcher
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (!isGranted) {
+            Toast.makeText(requireContext(), "Recording permission is required.", Toast.LENGTH_SHORT).show()
+        }
+    }
     
     companion object {
         private const val ARG_ENTRY = "entry"
@@ -100,6 +116,27 @@ class LogItemDetailDialogFragment : DialogFragment() {
             txtKoreanMeaning.text = "Meaning" // Replace with actual meaning
             txtExampleSentence.text = "Example sentence for ${logEntry.word}" // Replace with actual example
         }
+        
+        // Initialize TTS and Speech Recognition
+        initializeTtsAndSpeechRecognition(view)
+    }
+    
+    private fun initializeTtsAndSpeechRecognition(rootView: View) {
+        // Find the card_word_detail_dialog view using the include tag ID
+        val cardWordDetail = rootView.findViewById<View>(R.id.card_word_detail_dialog)
+            ?: rootView.findViewById<ViewGroup>(R.id.dialog_content)?.getChildAt(1)
+        
+        cardWordDetail?.let { cardView ->
+            // Initialize TTS helper
+            ttsHelper = TtsHelper(requireContext(), cardView)
+            
+            // Initialize speech recognition manager
+            speechRecognitionManager = SpeechRecognitionManager(
+                context = requireContext(),
+                cardWordDetail = cardView,
+                requestPermissionLauncher = requestPermissionLauncher
+            )
+        }
     }
     
     override fun onStart() {
@@ -113,6 +150,33 @@ class LogItemDetailDialogFragment : DialogFragment() {
             // 배경을 반투명하게 설정
             window.setBackgroundDrawableResource(android.R.color.transparent)
         }
+        
+        // ScrollView의 최대 높이를 화면 높이의 90%로 제한하여 중앙 정렬 보장
+        view?.let { rootView ->
+            val scrollView = rootView.findViewById<android.widget.ScrollView>(R.id.scroll_view)
+            scrollView?.let { sv ->
+                val displayMetrics = resources.displayMetrics
+                val screenHeight = displayMetrics.heightPixels
+                val maxHeight = (screenHeight * 0.9).toInt()
+                
+                // ScrollView의 LayoutParams를 가져와서 높이 제한 설정
+                val layoutParams = sv.layoutParams as? android.widget.FrameLayout.LayoutParams
+                    ?: android.widget.FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                    )
+                
+                // ScrollView가 화면 높이를 초과하지 않도록 최대 높이 설정
+                // wrap_content이지만 최대 높이를 초과하지 않도록 post로 설정
+                sv.post {
+                    val measuredHeight = sv.measuredHeight
+                    if (measuredHeight > maxHeight) {
+                        layoutParams.height = maxHeight
+                        sv.layoutParams = layoutParams
+                    }
+                }
+            }
+        }
     }
     
     fun setOnDialogDismissedListener(listener: () -> Unit) {
@@ -122,6 +186,15 @@ class LogItemDetailDialogFragment : DialogFragment() {
     override fun onDismiss(dialog: android.content.DialogInterface) {
         super.onDismiss(dialog)
         onDialogDismissed?.invoke()
+    }
+    
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // Cleanup TTS and Speech Recognition resources
+        ttsHelper?.cleanup()
+        speechRecognitionManager?.cleanup()
+        ttsHelper = null
+        speechRecognitionManager = null
     }
 }
 

@@ -7,23 +7,25 @@
     android:focusable="true">
 
     <ScrollView
+        android:id="@+id/scroll_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:fillViewport="false"
         android:scrollbars="vertical">
 
         <LinearLayout
             android:id="@+id/dialog_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
             android:layout_marginLeft="@dimen/dialog_horizontal_margin"
             android:layout_marginRight="@dimen/dialog_horizontal_margin"
             android:orientation="vertical"
             android:background="@android:color/transparent"
             android:clickable="true"
             android:focusable="true"
-            android:paddingBottom="@dimen/bottom_nav_height">
+            android:paddingTop="48dp"
+            android:paddingBottom="48dp">
 
             <!-- Image Card -->
             <LinearLayout
@@ -47,6 +49,7 @@
 
             <!-- Word Detail Card -->
             <include
+                android:id="@+id/card_word_detail_dialog"
                 layout="@layout/card_word_detail_dialog"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
