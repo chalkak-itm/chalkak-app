@@ -17,13 +17,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingLeft="24dp"
-        android:paddingRight="24dp"
+        android:paddingLeft="@dimen/padding_large"
+        android:paddingRight="@dimen/padding_large"
         android:gravity="center_horizontal">
 
         <ImageView
-            android:layout_width="256dp"
-            android:layout_height="256dp"
+            android:layout_width="@dimen/mascot_size_medium"
+            android:layout_height="@dimen/mascot_size_medium"
             android:src="@drawable/main_character"
             android:contentDescription="Chalkak Character"
             android:scaleType="centerInside"
@@ -32,10 +32,10 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/padding_standard"
             android:text="Nice to"
             android:textColor="#FFFFFF"
-            android:textSize="52sp"
+            android:textSize="@dimen/text_size_display"
             android:gravity="center" />
 
         <TextView
@@ -49,8 +49,8 @@
         <ImageView
             android:id="@+id/btn_sign_in"
             android:layout_width="match_parent"
-            android:layout_height="72dp"
-            android:layout_marginTop="24dp"
+            android:layout_height="@dimen/button_height_large"
+            android:layout_marginTop="@dimen/padding_large"
             android:background="@drawable/bg_button_transparent_ripple"
             android:clickable="true"
             android:focusable="true"

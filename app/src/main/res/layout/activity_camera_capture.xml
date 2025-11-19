@@ -10,17 +10,17 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="16dp"
-        android:paddingBottom="16dp">
+        android:paddingTop="@dimen/padding_small"
+        android:paddingBottom="@dimen/padding_standard">
 
         <ImageButton
             android:id="@+id/btn_back"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="16dp"
+            android:layout_width="@dimen/icon_size_medium"
+            android:layout_height="@dimen/icon_size_medium"
+            android:layout_marginStart="@dimen/padding_standard"
             android:background="@drawable/bg_button_transparent_ripple"
             android:contentDescription="Back"
-            android:padding="4dp"
+            android:padding="@dimen/padding_tiny"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:tint="#FFFFFF"
@@ -28,8 +28,8 @@
 
         <ImageView
             android:id="@+id/img_mascot"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
+            android:layout_width="@dimen/mascot_size_small"
+            android:layout_height="@dimen/mascot_size_small"
             android:scaleType="centerInside"
             android:adjustViewBounds="true"
             app:layout_constraintStart_toStartOf="parent"
@@ -42,10 +42,10 @@
             android:id="@+id/txt_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/padding_standard"
             android:text="Take Photo"
             android:textColor="#FFFFFF"
-            android:textSize="20sp"
+            android:textSize="@dimen/text_size_title"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -58,21 +58,21 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
-        android:paddingTop="8dp">
+        android:paddingLeft="@dimen/padding_large"
+        android:paddingRight="@dimen/padding_large"
+        android:paddingTop="@dimen/padding_small">
 
         <LinearLayout
             android:id="@+id/card_image"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_card_white_pure"
-            android:padding="10dp"
+            android:padding="@dimen/card_padding_small"
             android:orientation="vertical">
 
             <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="360dp">
+                android:layout_height="@dimen/image_preview_height">
 
                 <ImageView
                     android:id="@+id/img_quiz"
@@ -88,7 +88,7 @@
                     android:layout_height="match_parent"
                     android:text="No Image"
                     android:textColor="#999999"
-                    android:textSize="24sp"
+                    android:textSize="@dimen/text_size_large"
                     android:gravity="center"
                     android:visibility="visible" />
             </FrameLayout>
@@ -98,21 +98,21 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="12dp">
+            android:layout_marginTop="@dimen/padding_medium">
 
             <TextView
                 android:id="@+id/btn_capture"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:minHeight="56dp"
+                android:minHeight="@dimen/button_height_standard"
                 android:background="@drawable/bg_button_purple_ripple"
                 android:clickable="true"
                 android:focusable="true"
-                android:padding="12dp"
+                android:padding="@dimen/padding_medium"
                 android:text="Upload"
                 android:textColor="#FFFFFF"
-                android:textSize="18sp"
+                android:textSize="@dimen/text_size_body"
                 android:gravity="center" />
 
             <TextView
@@ -120,15 +120,15 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginLeft="8dp"
-                android:minHeight="56dp"
+                android:layout_marginLeft="@dimen/padding_small"
+                android:minHeight="@dimen/button_height_standard"
                 android:background="@drawable/bg_button_purple_ripple"
                 android:clickable="true"
                 android:focusable="true"
-                android:padding="12dp"
+                android:padding="@dimen/padding_medium"
                 android:text="Retake"
                 android:textColor="#FFFFFF"
-                android:textSize="18sp"
+                android:textSize="@dimen/text_size_body"
                 android:gravity="center" />
         </LinearLayout>
 
@@ -136,15 +136,15 @@
             android:id="@+id/btn_confirm"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:minHeight="56dp"
+            android:layout_marginTop="@dimen/padding_small"
+            android:minHeight="@dimen/button_height_standard"
             android:background="@drawable/bg_button_purple_ripple"
             android:clickable="true"
             android:focusable="true"
-            android:padding="12dp"
+            android:padding="@dimen/padding_medium"
             android:text="Use Photo"
             android:textColor="#FFFFFF"
-            android:textSize="18sp"
+            android:textSize="@dimen/text_size_body"
             android:gravity="center" />
     </LinearLayout>
 
@@ -155,7 +155,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="@drawable/bg_bottom_nav_container"
-        android:elevation="8dp">
+        android:elevation="@dimen/padding_standard">
         
         <!-- Bottom Navigation Bar -->
         <include

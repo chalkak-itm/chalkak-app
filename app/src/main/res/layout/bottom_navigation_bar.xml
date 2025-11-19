@@ -3,11 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/bottom_navigation_bar"
     android:layout_width="match_parent"
-    android:layout_height="56dp"
+    android:layout_height="@dimen/bottom_nav_height"
     android:orientation="horizontal"
     android:background="@android:color/transparent"
-    android:paddingLeft="24dp"
-    android:paddingRight="24dp"
+    android:paddingLeft="@dimen/bottom_nav_padding_horizontal"
+    android:paddingRight="@dimen/bottom_nav_padding_horizontal"
     android:gravity="center">
 
     <LinearLayout
@@ -20,12 +20,12 @@
         android:clickable="true"
         android:focusable="true"
         android:background="@drawable/bg_nav_item_unselected"
-        android:padding="4dp">
+        android:padding="@dimen/bottom_nav_item_padding">
 
         <ImageView
             android:id="@+id/nav_home_icon"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="@dimen/icon_size_medium"
+            android:layout_height="@dimen/icon_size_medium"
             android:src="@drawable/home" />
     </LinearLayout>
 
@@ -39,12 +39,12 @@
         android:clickable="true"
         android:focusable="true"
         android:background="@drawable/bg_nav_item_unselected"
-        android:padding="4dp">
+        android:padding="@dimen/bottom_nav_item_padding">
 
         <ImageView
             android:id="@+id/nav_log_icon"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="@dimen/icon_size_medium"
+            android:layout_height="@dimen/icon_size_medium"
             android:src="@drawable/egg" />
     </LinearLayout>
 
@@ -58,12 +58,12 @@
         android:clickable="true"
         android:focusable="true"
         android:background="@drawable/bg_nav_item_unselected"
-        android:padding="4dp">
+        android:padding="@dimen/bottom_nav_item_padding">
 
         <ImageView
             android:id="@+id/nav_quiz_icon"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="@dimen/icon_size_medium"
+            android:layout_height="@dimen/icon_size_medium"
             android:src="@drawable/hat" />
     </LinearLayout>
 
@@ -77,12 +77,12 @@
         android:clickable="true"
         android:focusable="true"
         android:background="@drawable/bg_nav_item_unselected"
-        android:padding="4dp">
+        android:padding="@dimen/bottom_nav_item_padding">
 
         <ImageView
             android:id="@+id/nav_setting_icon"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="@dimen/icon_size_medium"
+            android:layout_height="@dimen/icon_size_medium"
             android:src="@drawable/setting" />
     </LinearLayout>
 

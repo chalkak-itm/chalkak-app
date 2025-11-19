@@ -71,11 +71,15 @@ class ObjectInputActivity : AppCompatActivity() {
         setupBottomNavigation()
         updateBottomNavigationHighlight(mainNavTag)
 
-        // Apply WindowInsets to root layout
+        // Apply WindowInsets to root layout with camera cutout consideration
         val root = findViewById<View>(R.id.input_root)
         ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0)
+            val displayCutout = insets.getInsets(WindowInsetsCompat.Type.displayCutout())
+            // S23 FE 전면 카메라 영역 고려: systemBars.top과 displayCutout.top 중 큰 값 사용
+            val topPadding = maxOf(systemBars.top, displayCutout.top)
+            val cameraCutoutPadding = resources.getDimensionPixelSize(R.dimen.camera_cutout_padding_top)
+            v.setPadding(systemBars.left, topPadding + cameraCutoutPadding, systemBars.right, 0)
             insets
         }
 

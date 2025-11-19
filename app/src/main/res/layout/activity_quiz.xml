@@ -11,8 +11,8 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="16dp"
-        android:paddingBottom="16dp">
+        android:paddingTop="@dimen/padding_small"
+        android:paddingBottom="@dimen/padding_standard">
 
         <ImageButton
             android:id="@+id/btn_back"
@@ -76,7 +76,7 @@
             <ImageView
                 android:id="@+id/img_quiz"
                 android:layout_width="match_parent"
-                android:layout_height="240dp"
+                android:layout_height="@dimen/image_preview_height"
                 android:scaleType="centerInside"
                 android:contentDescription="Quiz Image"
                 android:src="@drawable/demo" />

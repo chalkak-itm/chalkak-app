@@ -14,55 +14,60 @@
         android:paddingBottom="0dp">
 
         <!-- Header Section with Cloud and Quiz Time -->
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingTop="48dp"
-            android:paddingBottom="16dp">
+            android:orientation="vertical"
+            android:paddingLeft="@dimen/padding_large"
+            android:paddingRight="@dimen/padding_large"
+            android:paddingTop="@dimen/padding_small"
+            android:gravity="center_horizontal">
 
-            <!-- Cloud Background -->
-            <ImageView
-                android:id="@+id/img_cloud"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:layout_centerHorizontal="true"
-                android:src="@drawable/hat"
-                android:contentDescription="Cloud"
-                android:scaleType="centerInside"
-                android:adjustViewBounds="true"
-                android:alpha="0.9" />
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
 
-            <!-- Star on Cloud -->
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_alignTop="@id/img_cloud"
-                android:layout_alignEnd="@id/img_cloud"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="16dp"
-                android:src="@drawable/ic_star"
-                android:contentDescription="Star" />
+                <!-- Cloud Background -->
+                <ImageView
+                    android:id="@+id/img_cloud"
+                    android:layout_width="168dp"
+                    android:layout_height="168dp"
+                    android:src="@drawable/hat"
+                    android:contentDescription="Cloud"
+                    android:scaleType="centerInside"
+                    android:adjustViewBounds="true"
+                    android:alpha="0.9" />
+
+                <!-- Star on Cloud -->
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_alignTop="@id/img_cloud"
+                    android:layout_alignEnd="@id/img_cloud"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:src="@drawable/ic_star"
+                    android:contentDescription="Star" />
+            </RelativeLayout>
 
             <!-- Quiz Time Text -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/img_cloud"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/padding_standard"
                 android:text="Quiz Time"
                 android:textColor="#FFFFFF"
-                android:textSize="36sp"
+                android:textSize="@dimen/text_size_heading"
                 android:textStyle="bold" />
-        </RelativeLayout>
+        </LinearLayout>
 
         <!-- Main Quiz Card -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="24dp"
-            android:layout_marginRight="24dp"
-            android:layout_marginTop="24dp"
+            android:layout_marginLeft="@dimen/padding_large"
+            android:layout_marginRight="@dimen/padding_large"
+            android:layout_marginTop="@dimen/padding_standard"
             android:background="@drawable/bg_card_white"
             android:orientation="vertical"
             android:padding="20dp">
@@ -283,9 +288,9 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="24dp"
-            android:layout_marginRight="24dp"
-            android:layout_marginTop="24dp"
+            android:layout_marginLeft="@dimen/padding_large"
+            android:layout_marginRight="@dimen/padding_large"
+            android:layout_marginTop="@dimen/padding_standard"
             android:background="@drawable/bg_card_white"
             android:orientation="vertical"
             android:padding="20dp">
@@ -321,177 +326,63 @@
                     android:textSize="14sp" />
             </LinearLayout>
 
-            <!-- Activity Dots -->
-            <HorizontalScrollView
+            <!-- Activity Dots (Last 7 Days) -->
+            <LinearLayout
+                android:id="@+id/activity_dots_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:scrollbars="none">
+                android:orientation="horizontal"
+                android:gravity="center">
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                <!-- Day Dots (7 days) -->
+                <View
+                    android:id="@+id/dot_0"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_circle_green" />
 
-                    <!-- Day Dots -->
-                    <View
-                        android:id="@+id/dot_0"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_circle_light_gray" />
+                <View
+                    android:id="@+id/dot_1"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_circle_red" />
 
-                    <View
-                        android:id="@+id/dot_1"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_circle_light_purple" />
+                <View
+                    android:id="@+id/dot_2"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_circle_green" />
 
-                    <View
-                        android:id="@+id/dot_2"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_circle_light_purple" />
+                <View
+                    android:id="@+id/dot_3"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_circle_green" />
 
-                    <View
-                        android:id="@+id/dot_3"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_circle_dark_purple" />
+                <View
+                    android:id="@+id/dot_4"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_circle_red" />
 
-                    <View
-                        android:id="@+id/dot_4"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_circle_light_purple" />
+                <View
+                    android:id="@+id/dot_5"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_circle_green" />
 
-                    <View
-                        android:id="@+id/dot_5"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_circle_light_purple" />
-
-                    <View
-                        android:id="@+id/dot_6"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_circle_light_purple" />
-
-                    <View
-                        android:id="@+id/dot_7"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_circle_dark_purple" />
-
-                    <View
-                        android:id="@+id/dot_8"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_circle_dark_purple" />
-
-                    <View
-                        android:id="@+id/dot_9"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_circle_light_purple" />
-                </LinearLayout>
-            </HorizontalScrollView>
-
-            <!-- Day Labels -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="24dp"
-                    android:text="M"
-                    android:textColor="#AD46FF"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="24dp"
-                    android:text="T"
-                    android:textColor="#AD46FF"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="24dp"
-                    android:text="W"
-                    android:textColor="#AD46FF"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="24dp"
-                    android:text="T"
-                    android:textColor="#AD46FF"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="24dp"
-                    android:text="F"
-                    android:textColor="#AD46FF"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="24dp"
-                    android:text="S"
-                    android:textColor="#AD46FF"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="24dp"
-                    android:text="S"
-                    android:textColor="#AD46FF"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="24dp"
-                    android:text="M"
-                    android:textColor="#AD46FF"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="24dp"
-                    android:text="T"
-                    android:textColor="#AD46FF"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="W"
-                    android:textColor="#AD46FF"
-                    android:textSize="12sp" />
+                <View
+                    android:id="@+id/dot_6"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="@drawable/bg_circle_green" />
             </LinearLayout>
 
             <!-- Legend -->
@@ -513,54 +404,12 @@
                         android:layout_width="12dp"
                         android:layout_height="12dp"
                         android:layout_marginEnd="4dp"
-                        android:background="@drawable/bg_circle_light_gray" />
+                        android:background="@drawable/bg_circle_green" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="없음"
-                        android:textColor="#AD46FF"
-                        android:textSize="12sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <View
-                        android:layout_width="12dp"
-                        android:layout_height="12dp"
-                        android:layout_marginEnd="4dp"
-                        android:background="@drawable/bg_circle_light_purple" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="적음"
-                        android:textColor="#AD46FF"
-                        android:textSize="12sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <View
-                        android:layout_width="12dp"
-                        android:layout_height="12dp"
-                        android:layout_marginEnd="4dp"
-                        android:background="@drawable/bg_circle_medium_purple" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="보통"
+                        android:text="학습함"
                         android:textColor="#AD46FF"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -575,128 +424,15 @@
                         android:layout_width="12dp"
                         android:layout_height="12dp"
                         android:layout_marginEnd="4dp"
-                        android:background="@drawable/bg_circle_dark_purple" />
+                        android:background="@drawable/bg_circle_red" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="많음"
+                        android:text="학습 안함"
                         android:textColor="#AD46FF"
                         android:textSize="12sp" />
                 </LinearLayout>
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- Weekly Summary Section -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="24dp"
-            android:layout_marginRight="24dp"
-            android:layout_marginTop="24dp"
-            android:orientation="horizontal"
-            android:weightSum="2">
-
-            <!-- Completed Quizzes Card -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="8dp"
-                android:background="@drawable/bg_card_white"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_checkmark_green"
-                        android:contentDescription="Checkmark" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:text="이번 주"
-                        android:textColor="#8200DB"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/txt_completed_quizzes"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="68개"
-                    android:textColor="#8200DB"
-                    android:textSize="32sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="완료한 퀴즈"
-                    android:textColor="#AD46FF"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <!-- Learning Days Card -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="8dp"
-                android:background="@drawable/bg_card_white"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_circle_outline"
-                        android:contentDescription="Circle" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:text="이번 주"
-                        android:textColor="#8200DB"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/txt_learning_days"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="5/7일"
-                    android:textColor="#8200DB"
-                    android:textSize="32sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="학습한 날"
-                    android:textColor="#AD46FF"
-                    android:textSize="12sp" />
             </LinearLayout>
         </LinearLayout>
 

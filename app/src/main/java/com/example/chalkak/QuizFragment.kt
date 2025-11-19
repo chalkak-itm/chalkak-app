@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 
 class QuizFragment : Fragment() {
@@ -18,10 +19,7 @@ class QuizFragment : Fragment() {
     
     // Learning activity views
     private lateinit var txtStreakDays: TextView
-    
-    // Weekly summary views
-    private lateinit var txtCompletedQuizzes: TextView
-    private lateinit var txtLearningDays: TextView
+    private val activityDots = mutableListOf<View>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -45,12 +43,15 @@ class QuizFragment : Fragment() {
         // Initialize learning activity views
         txtStreakDays = view.findViewById(R.id.txt_streak_days)
         
-        // Initialize weekly summary views
-        txtCompletedQuizzes = view.findViewById(R.id.txt_completed_quizzes)
-        txtLearningDays = view.findViewById(R.id.txt_learning_days)
+        // Initialize activity dots (7 days)
+        for (i in 0..6) {
+            val dotId = resources.getIdentifier("dot_$i", "id", requireContext().packageName)
+            activityDots.add(view.findViewById(dotId))
+        }
 
         // Load quiz data (placeholder - replace with actual data from DB)
         loadQuizData()
+        updateActivityDots()
 
         // Setup start quiz button click listener
         btnStartQuiz.setOnClickListener {
@@ -80,9 +81,22 @@ class QuizFragment : Fragment() {
         
         // Update learning activity
         txtStreakDays.text = "${consecutiveDays}일 연속"
+    }
+    
+    private fun updateActivityDots() {
+        // Get last 7 days of learning activity
+        // TODO: Replace with actual data from database
+        // Example: [true, false, true, true, false, true, true] for last 7 days
+        val last7DaysActivity = listOf(true, false, true, true, false, true, true)
         
-        // Update weekly summary
-        txtCompletedQuizzes.text = "${completedQuizzes}개"
-        txtLearningDays.text = "$learningDays/${totalDaysInWeek}일"
+        for (i in 0 until minOf(7, activityDots.size)) {
+            val hasLearned = if (i < last7DaysActivity.size) last7DaysActivity[i] else false
+            val drawableRes = if (hasLearned) {
+                R.drawable.bg_circle_green
+            } else {
+                R.drawable.bg_circle_red
+            }
+            activityDots[i].background = ContextCompat.getDrawable(requireContext(), drawableRes)
+        }
     }
 }

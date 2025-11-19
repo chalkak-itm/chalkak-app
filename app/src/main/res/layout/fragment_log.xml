@@ -8,34 +8,11 @@
     android:background="@drawable/bg_magic_gradient">
 
     <!-- Header: Default (Egg) or Selected Item Detail -->
-    <LinearLayout
+    <include
         android:id="@+id/header_default"
+        layout="@layout/header_common"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingLeft="24dp"
-        android:paddingRight="24dp"
-        android:paddingTop="48dp"
-        android:paddingBottom="16dp"
-        android:gravity="center_horizontal">
-
-        <ImageView
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:src="@drawable/egg"
-            android:contentDescription="egg"
-            android:scaleType="centerInside"
-            android:adjustViewBounds="true" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Log"
-            android:textColor="#FFFFFF"
-            android:textSize="36sp"
-            android:textStyle="bold" />
-    </LinearLayout>
+        android:layout_height="wrap_content" />
 
     <!-- Selected Item Detail Card -->
     <LinearLayout
@@ -43,9 +20,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
-        android:paddingTop="16dp"
+        android:paddingLeft="@dimen/padding_standard"
+        android:paddingRight="@dimen/padding_standard"
+        android:paddingTop="@dimen/padding_standard"
         android:visibility="gone">
 
         <!-- Image Card -->
@@ -54,12 +31,12 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="@drawable/bg_card_white_pure"
-            android:padding="16dp">
+            android:padding="@dimen/padding_standard">
 
             <ImageView
                 android:id="@+id/img_selected_photo"
                 android:layout_width="match_parent"
-                android:layout_height="240dp"
+                android:layout_height="@dimen/image_preview_height"
                 android:scaleType="centerInside"
                 android:contentDescription="Selected Photo"
                 android:src="@drawable/demo" />
@@ -70,7 +47,7 @@
             layout="@layout/card_word_detail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp" />
+            android:layout_marginTop="@dimen/padding_medium" />
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
@@ -78,9 +55,9 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
-        android:paddingTop="8dp"
+        android:paddingLeft="@dimen/padding_standard"
+        android:paddingRight="@dimen/padding_standard"
+        android:paddingTop="@dimen/padding_tiny"
         android:paddingBottom="0dp" />
 
 </LinearLayout>

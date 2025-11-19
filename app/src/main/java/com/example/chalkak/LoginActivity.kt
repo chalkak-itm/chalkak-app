@@ -83,9 +83,14 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
+        // Apply WindowInsets with camera cutout consideration
         ViewCompat.setOnApplyWindowInsetsListener(binding.loginRoot) { v, insets ->
-            val sb = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(sb.left, sb.top, sb.right, sb.bottom)
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val displayCutout = insets.getInsets(WindowInsetsCompat.Type.displayCutout())
+            // S23 FE 전면 카메라 영역 고려: systemBars.top과 displayCutout.top 중 큰 값 사용
+            val topPadding = maxOf(systemBars.top, displayCutout.top)
+            val cameraCutoutPadding = resources.getDimensionPixelSize(R.dimen.camera_cutout_padding_top)
+            v.setPadding(systemBars.left, topPadding + cameraCutoutPadding, systemBars.right, systemBars.bottom)
             insets
         }
 

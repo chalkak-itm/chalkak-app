@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -42,6 +43,13 @@ class SettingFragment : Fragment() {
         // Initialize Google Sign-In Client
         val webClientId = getString(R.string.default_web_client_id)
         googleSignInClient = userPreferencesHelper.createGoogleSignInClient(webClientId)
+
+        // Initialize header views from included layout
+        val headerView = view.findViewById<View>(R.id.header_common)
+        val imgMascot = headerView.findViewById<ImageView>(R.id.img_header_mascot)
+        val txtTitle = headerView.findViewById<TextView>(R.id.txt_header_title)
+        imgMascot.setImageResource(R.drawable.setting)
+        txtTitle.text = "Settings"
 
         // Initialize views
         txtUserName = view.findViewById(R.id.txt_user_name)

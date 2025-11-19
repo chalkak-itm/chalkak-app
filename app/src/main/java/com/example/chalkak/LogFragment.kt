@@ -37,6 +37,14 @@ class LogFragment : BaseFragment() {
 
         // Initialize views
         headerDefault = view.findViewById(R.id.header_default)
+        
+        // Initialize header views from included layout
+        val headerView = view.findViewById<View>(R.id.header_default)
+        val imgMascot = headerView.findViewById<ImageView>(R.id.img_header_mascot)
+        val txtTitle = headerView.findViewById<TextView>(R.id.txt_header_title)
+        imgMascot.setImageResource(R.drawable.egg)
+        txtTitle.text = "Log"
+        
         cardSelectedItem = view.findViewById(R.id.card_selected_item)
         imgSelectedPhoto = view.findViewById(R.id.img_selected_photo)
         txtSelectedWord = view.findViewById(R.id.txt_selected_word)

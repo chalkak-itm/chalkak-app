@@ -14,41 +14,20 @@
         android:paddingBottom="0dp">
 
         <!-- Header -->
-        <LinearLayout
+        <include
+            android:id="@+id/header_common"
+            layout="@layout/header_common"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingLeft="24dp"
-            android:paddingRight="24dp"
-            android:paddingTop="48dp"
-            android:gravity="center_horizontal">
-
-            <ImageView
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:src="@drawable/setting"
-                android:contentDescription="Settings"
-                android:scaleType="centerInside"
-                android:adjustViewBounds="true" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Settings"
-                android:textColor="#FFFFFF"
-                android:textSize="36sp"
-                android:textStyle="bold" />
-        </LinearLayout>
+            android:layout_height="wrap_content" />
 
         <!-- Profile Section -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginLeft="24dp"
-            android:layout_marginRight="24dp"
-            android:layout_marginTop="32dp"
+            android:layout_marginLeft="@dimen/padding_large"
+            android:layout_marginRight="@dimen/padding_large"
+            android:layout_marginTop="@dimen/padding_standard"
             android:background="@drawable/bg_card_white"
             android:padding="20dp">
 
@@ -112,9 +91,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginLeft="24dp"
-            android:layout_marginRight="24dp"
-            android:layout_marginTop="24dp"
+            android:layout_marginLeft="@dimen/padding_large"
+            android:layout_marginRight="@dimen/padding_large"
+            android:layout_marginTop="@dimen/padding_standard"
             android:background="@drawable/bg_card_white"
             android:padding="20dp">
 
@@ -159,9 +138,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginLeft="24dp"
-            android:layout_marginRight="24dp"
-            android:layout_marginTop="24dp"
+            android:layout_marginLeft="@dimen/padding_large"
+            android:layout_marginRight="@dimen/padding_large"
+            android:layout_marginTop="@dimen/padding_standard"
             android:background="@drawable/bg_card_white"
             android:padding="20dp">
 
@@ -203,9 +182,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginLeft="24dp"
-            android:layout_marginRight="24dp"
-            android:layout_marginTop="24dp"
+            android:layout_marginLeft="@dimen/padding_large"
+            android:layout_marginRight="@dimen/padding_large"
+            android:layout_marginTop="@dimen/padding_standard"
             android:background="@drawable/bg_card_white"
             android:padding="20dp">
 
@@ -250,9 +229,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginLeft="24dp"
-            android:layout_marginRight="24dp"
-            android:layout_marginTop="24dp"
+            android:layout_marginLeft="@dimen/padding_large"
+            android:layout_marginRight="@dimen/padding_large"
+            android:layout_marginTop="@dimen/padding_standard"
             android:background="@drawable/bg_card_white"
             android:padding="20dp">
 
