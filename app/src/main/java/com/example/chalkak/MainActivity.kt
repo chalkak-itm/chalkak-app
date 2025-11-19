@@ -1,5 +1,6 @@
 package com.example.chalkak
 
+import DetectionResultItem
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
@@ -66,11 +67,18 @@ class MainActivity : AppCompatActivity() {
 
         // Handle Intent to navigate to specific fragment
         val fragmentTag = intent.getStringExtra("fragment_tag")
+        val fragmentType = intent.getStringExtra("fragment_type")
         if (savedInstanceState == null) {
-            if (fragmentTag != null) {
-                navigateToFragmentByTag(fragmentTag)
-            } else {
-                navigateToFragment(HomeFragment(), "home")
+            when {
+                fragmentType != null -> {
+                    handleFragmentType(fragmentType)
+                }
+                fragmentTag != null -> {
+                    navigateToFragmentByTag(fragmentTag)
+                }
+                else -> {
+                    navigateToFragment(HomeFragment(), "home")
+                }
             }
         } else {
             // Restore current fragment tag
@@ -90,8 +98,14 @@ class MainActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         val fragmentTag = intent.getStringExtra("fragment_tag")
-        if (fragmentTag != null) {
-            navigateToFragmentByTag(fragmentTag)
+        val fragmentType = intent.getStringExtra("fragment_type")
+        when {
+            fragmentType != null -> {
+                handleFragmentType(fragmentType)
+            }
+            fragmentTag != null -> {
+                navigateToFragmentByTag(fragmentTag)
+            }
         }
     }
 
@@ -155,6 +169,29 @@ class MainActivity : AppCompatActivity() {
             "quiz" -> QuizFragment()
             "setting" -> SettingFragment()
             else -> HomeFragment()
+        }
+        navigateToFragment(fragment, tag)
+    }
+
+    private fun handleFragmentType(fragmentType: String) {
+        val fragment = when (fragmentType) {
+            "object_input" -> {
+                val imagePath = intent.getStringExtra("image_path")
+                val mainNavTag = intent.getStringExtra("main_nav_tag") ?: "home"
+                ObjectInputFragment.newInstance(imagePath, mainNavTag)
+            }
+            "detection_result" -> {
+                val imagePath = intent.getStringExtra("image_path")
+                val detectionResults = intent.getParcelableArrayListExtra<DetectionResultItem>("detection_results") ?: emptyList()
+                val mainNavTag = intent.getStringExtra("main_nav_tag") ?: "home"
+                DetectionResultFragment.newInstance(imagePath, detectionResults, mainNavTag)
+            }
+            else -> HomeFragment()
+        }
+        val tag = when (fragmentType) {
+            "object_input" -> "object_input"
+            "detection_result" -> "detection_result"
+            else -> "home"
         }
         navigateToFragment(fragment, tag)
     }

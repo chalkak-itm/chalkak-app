@@ -29,6 +29,9 @@
         <activity
             android:name=".ImagePreviewActivity"
             android:exported="false" />
+        <activity
+            android:name=".ObjectInputActivity"
+            android:exported="false" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

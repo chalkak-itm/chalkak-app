@@ -171,21 +171,44 @@ class ImagePreviewActivity : AppCompatActivity() {
 						)
 					}
 
-					// 4. UI Thread --> result Activity
+					// 4. UI Thread --> MainActivity with Fragment
 					runOnUiThread {
 						btnConfirm.isEnabled = true
-						Toast.makeText(
-							this@ImagePreviewActivity,
-							"Executed successfully!",
-							Toast.LENGTH_SHORT
-						).show()
+						
+						if (uiResults.isEmpty()) {
+							// No detection results - go to input Fragment
+							Toast.makeText(
+								this@ImagePreviewActivity,
+								"인식된 객체가 없습니다. 직접 입력해주세요.",
+								Toast.LENGTH_SHORT
+							).show()
 
-						val intent = Intent(this@ImagePreviewActivity, DetectionResultActivity::class.java).apply {
-							putExtra("image_path", imageFile.absolutePath)
-							putParcelableArrayListExtra("detection_results", uiResults)
-							putExtra("main_nav_tag", mainNavTag)
+							val intent = Intent(this@ImagePreviewActivity, MainActivity::class.java).apply {
+								putExtra("fragment_type", "object_input")
+								putExtra("image_path", imageFile.absolutePath)
+								putExtra("main_nav_tag", mainNavTag)
+								flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+							}
+							startActivity(intent)
+							finish()
+						} else {
+							// Has detection results - go to result Fragment
+							Toast.makeText(
+								this@ImagePreviewActivity,
+								"Executed successfully!",
+								Toast.LENGTH_SHORT
+							).show()
+
+							val intent = Intent(this@ImagePreviewActivity, MainActivity::class.java).apply {
+								putExtra("fragment_type", "detection_result")
+								putExtra("image_path", imageFile.absolutePath)
+								putParcelableArrayListExtra("detection_results", uiResults)
+								putExtra("main_nav_tag", mainNavTag)
+								flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+							}
+							startActivity(intent)
+							finish()
 						}
-						startActivity(intent)
 					}
 				} catch (e: Exception) {
 					e.printStackTrace()
