@@ -6,6 +6,7 @@ plugins {
     id("com.google.gms.google-services")
     // Add the Kotlin-parcelize plugin
     id("kotlin-parcelize")
+    id("kotlin-kapt")
 }
 
 android {
@@ -72,4 +73,16 @@ dependencies {
     //Add the dependency for the TensorFlow lite Model
     implementation("org.tensorflow:tensorflow-lite-task-vision:0.4.2")
     implementation("org.tensorflow:tensorflow-lite-support:0.4.2")
+
+    // Google Firestore
+    implementation("com.google.firebase:firebase-firestore")
+
+    // asynchronization
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+
+    // RoomDB
+    val roomVersion = "2.6.1"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    kapt("androidx.room:room-compiler:$roomVersion")
 }
