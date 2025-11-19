@@ -57,8 +57,7 @@ class FirestoreRepository {
             .addOnFailureListener { Log.e(TAG, "update failed", it) }
     }
 
-    // (참고) 만약 기존에 학습한 단어를 복습하는 거라서 카운트를 안 올리고 싶다면?
-    // 아래 함수를 따로 만들어서 쓰면 됩니다.
+    // Existed word not count
     fun onlyUpdateTimestamp(uid: String) {
         val userRef = db.collection("users").document(uid)
         userRef.update("lastStudiedAt", FieldValue.serverTimestamp())
