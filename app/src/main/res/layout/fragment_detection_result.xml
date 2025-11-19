@@ -55,28 +55,35 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Main contents -->
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:orientation="vertical"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
-        android:paddingTop="8dp">
+        android:fillViewport="true"
+        android:scrollbars="vertical"
+        android:paddingBottom="@dimen/bottom_nav_height">
 
-        <!-- image card of result -->
         <LinearLayout
-            android:id="@+id/card_image"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_card_white_pure"
-            android:padding="10dp"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:paddingTop="8dp">
 
-            <FrameLayout
-                android:id="@+id/frame_result_image"
+            <!-- image card of result -->
+            <LinearLayout
+                android:id="@+id/card_image"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/image_preview_height">
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card_white_pure"
+                android:padding="10dp"
+                android:orientation="vertical">
+
+                <FrameLayout
+                    android:id="@+id/frame_result_image"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/image_preview_height_large">
 
                 <ImageView
                     android:id="@+id/img_result"
@@ -125,15 +132,16 @@
                 android:orientation="horizontal" />
         </HorizontalScrollView>
 
-        <!-- Detail card of word -->
-        <include
-            android:id="@+id/card_word_detail"
-            layout="@layout/card_word_detail"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:visibility="gone" />
-    </LinearLayout>
+            <!-- Detail card of word -->
+            <include
+                android:id="@+id/card_word_detail"
+                layout="@layout/card_word_detail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:visibility="gone" />
+        </LinearLayout>
+    </ScrollView>
 
 </LinearLayout>
 

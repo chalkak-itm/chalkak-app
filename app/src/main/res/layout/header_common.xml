@@ -4,8 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingLeft="@dimen/padding_large"
-    android:paddingRight="@dimen/padding_large"
+    android:paddingLeft="@dimen/padding_standard"
+    android:paddingRight="@dimen/padding_standard"
     android:paddingTop="@dimen/padding_small"
     android:gravity="center_horizontal">
 

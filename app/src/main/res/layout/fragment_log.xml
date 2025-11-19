@@ -7,48 +7,12 @@
     android:orientation="vertical"
     android:background="@drawable/bg_magic_gradient">
 
-    <!-- Header: Default (Egg) or Selected Item Detail -->
+    <!-- Header: Default (Egg) -->
     <include
         android:id="@+id/header_default"
         layout="@layout/header_common"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
-
-    <!-- Selected Item Detail Card -->
-    <LinearLayout
-        android:id="@+id/card_selected_item"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingLeft="@dimen/padding_standard"
-        android:paddingRight="@dimen/padding_standard"
-        android:paddingTop="@dimen/padding_standard"
-        android:visibility="gone">
-
-        <!-- Image Card -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/bg_card_white_pure"
-            android:padding="@dimen/padding_standard">
-
-            <ImageView
-                android:id="@+id/img_selected_photo"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/image_preview_height"
-                android:scaleType="centerInside"
-                android:contentDescription="Selected Photo"
-                android:src="@drawable/demo" />
-        </LinearLayout>
-
-        <!-- Word Detail Card -->
-        <include
-            layout="@layout/card_word_detail"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/padding_medium" />
-    </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerLog"

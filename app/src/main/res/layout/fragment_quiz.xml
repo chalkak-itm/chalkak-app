@@ -18,8 +18,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingLeft="@dimen/padding_large"
-            android:paddingRight="@dimen/padding_large"
+            android:paddingLeft="@dimen/padding_standard"
+            android:paddingRight="@dimen/padding_standard"
             android:paddingTop="@dimen/padding_small"
             android:gravity="center_horizontal">
 
@@ -65,12 +65,15 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="@dimen/padding_large"
-            android:layout_marginRight="@dimen/padding_large"
+            android:layout_marginLeft="@dimen/padding_standard"
+            android:layout_marginRight="@dimen/padding_standard"
             android:layout_marginTop="@dimen/padding_standard"
             android:background="@drawable/bg_card_white"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:paddingLeft="@dimen/padding_small"
+            android:paddingRight="@dimen/padding_small"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp">
 
             <!-- Quiz Title Section -->
             <LinearLayout
@@ -249,7 +252,10 @@
                 android:minHeight="64dp"
                 android:gravity="center"
                 android:orientation="horizontal"
-                android:padding="16dp">
+                android:paddingLeft="@dimen/padding_small"
+                android:paddingRight="@dimen/padding_small"
+                android:paddingTop="16dp"
+                android:paddingBottom="16dp">
 
                 <ImageView
                     android:layout_width="24dp"
@@ -288,12 +294,15 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="@dimen/padding_large"
-            android:layout_marginRight="@dimen/padding_large"
+            android:layout_marginLeft="@dimen/padding_standard"
+            android:layout_marginRight="@dimen/padding_standard"
             android:layout_marginTop="@dimen/padding_standard"
             android:background="@drawable/bg_card_white"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:paddingLeft="@dimen/padding_small"
+            android:paddingRight="@dimen/padding_small"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp">
 
             <!-- Section Header -->
             <LinearLayout

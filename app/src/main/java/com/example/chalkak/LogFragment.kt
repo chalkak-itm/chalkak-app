@@ -9,19 +9,17 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import java.io.Serializable
 
 class LogFragment : BaseFragment() {
     private lateinit var headerDefault: LinearLayout
-    private lateinit var cardSelectedItem: LinearLayout
-    private lateinit var imgSelectedPhoto: ImageView
-    private lateinit var txtSelectedWord: TextView
-    private lateinit var txtKoreanMeaning: TextView
-    private lateinit var txtExampleSentence: TextView
-    
-    private var selectedEntry: LogEntry? = null // Track currently selected entry
+    private var dialogFragment: LogItemDetailDialogFragment? = null
 
     override fun getCardWordDetailView(): View {
-        return cardSelectedItem
+        // DialogFragment를 사용하므로 더 이상 필요 없음
+        // 하지만 BaseFragment의 initializeTtsAndSpeechRecognition이 호출되므로
+        // 임시 뷰를 반환하거나 null 처리가 필요할 수 있음
+        return view ?: View(requireContext())
     }
 
     override fun onCreateView(
@@ -44,15 +42,6 @@ class LogFragment : BaseFragment() {
         val txtTitle = headerView.findViewById<TextView>(R.id.txt_header_title)
         imgMascot.setImageResource(R.drawable.egg)
         txtTitle.text = "Log"
-        
-        cardSelectedItem = view.findViewById(R.id.card_selected_item)
-        imgSelectedPhoto = view.findViewById(R.id.img_selected_photo)
-        txtSelectedWord = view.findViewById(R.id.txt_selected_word)
-        txtKoreanMeaning = view.findViewById(R.id.txt_korean_meaning)
-        txtExampleSentence = view.findViewById(R.id.txt_example_sentence)
-
-        // Initialize TTS and Speech Recognition (from BaseFragment)
-        initializeTtsAndSpeechRecognition()
 
         val recycler: RecyclerView = view.findViewById(R.id.recyclerLog)
 
@@ -83,33 +72,15 @@ class LogFragment : BaseFragment() {
     }
 
     private fun showItemDetail(entry: LogEntry) {
-        // If the same item is clicked again, return to initial state
-        if (selectedEntry == entry && cardSelectedItem.visibility == View.VISIBLE) {
-            // Return to initial state
-            headerDefault.visibility = View.VISIBLE
-            cardSelectedItem.visibility = View.GONE
-            selectedEntry = null
-            return
-        }
-
-        // Hide default header, show selected item detail
-        headerDefault.visibility = View.GONE
-        cardSelectedItem.visibility = View.VISIBLE
-        selectedEntry = entry
-
-        // Update detail card with entry data
-        imgSelectedPhoto.setImageResource(entry.imageRes)
-        txtSelectedWord.text = entry.word
-
-        // Placeholder data for meaning and example
-        // TODO: Replace with actual data from database or API
-        txtKoreanMeaning.text = "Meaning" // Replace with actual meaning
-        txtExampleSentence.text = "Example sentence for ${entry.word}" // Replace with actual example
-
-        // Update speech recognition manager with new word
-        updateTargetWord(entry.word)
+        // 기존 다이얼로그가 열려있으면 닫기
+        dialogFragment?.dismiss()
         
-        // Don't scroll - maintain current scroll position
+        // 새 다이얼로그 생성 및 표시
+        dialogFragment = LogItemDetailDialogFragment.newInstance(entry)
+        dialogFragment?.setOnDialogDismissedListener {
+            dialogFragment = null
+        }
+        dialogFragment?.show(parentFragmentManager, "LogItemDetailDialog")
     }
 }
 
@@ -117,7 +88,7 @@ data class LogEntry(
     val dateIso: String, // e.g., 2025-11-06; replace with LocalDate if using java.time with minSdk compat
     val word: String,
     val imageRes: Int
-)
+) : Serializable
 
 // UI items for sectioned list
 sealed class LogUiItem {

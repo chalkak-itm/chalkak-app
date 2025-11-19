@@ -17,8 +17,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingLeft="@dimen/padding_large"
-        android:paddingRight="@dimen/padding_large"
+        android:paddingLeft="@dimen/padding_standard"
+        android:paddingRight="@dimen/padding_standard"
         android:gravity="center_horizontal">
 
         <ImageView
@@ -50,7 +50,7 @@
             android:id="@+id/btn_sign_in"
             android:layout_width="match_parent"
             android:layout_height="@dimen/button_height_large"
-            android:layout_marginTop="@dimen/padding_large"
+            android:layout_marginTop="@dimen/padding_standard"
             android:background="@drawable/bg_button_transparent_ripple"
             android:clickable="true"
             android:focusable="true"

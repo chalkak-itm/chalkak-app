@@ -62,8 +62,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingLeft="@dimen/padding_large"
-        android:paddingRight="@dimen/padding_large"
+        android:paddingLeft="@dimen/padding_standard"
+        android:paddingRight="@dimen/padding_standard"
         android:paddingTop="@dimen/padding_xlarge"
         android:gravity="center_horizontal">
 
@@ -80,10 +80,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingLeft="@dimen/padding_large"
-        android:paddingRight="@dimen/padding_large"
+        android:paddingLeft="@dimen/padding_standard"
+        android:paddingRight="@dimen/padding_standard"
         android:paddingTop="@dimen/padding_xlarge"
-        android:paddingBottom="@dimen/padding_large">
+        android:paddingBottom="@dimen/padding_standard">
 
         <LinearLayout
             android:id="@+id/btn_take_photo"
@@ -93,8 +93,8 @@
             android:clickable="true"
             android:focusable="true"
             android:gravity="center_vertical"
-            android:paddingLeft="@dimen/padding_large"
-            android:paddingRight="@dimen/padding_large"
+            android:paddingLeft="@dimen/padding_small"
+            android:paddingRight="@dimen/padding_small"
             android:minHeight="@dimen/button_height_xlarge">
 
             <ImageView
@@ -126,8 +126,8 @@
             android:clickable="true"
             android:focusable="true"
             android:gravity="center_vertical"
-            android:paddingLeft="@dimen/padding_large"
-            android:paddingRight="@dimen/padding_large"
+            android:paddingLeft="@dimen/padding_small"
+            android:paddingRight="@dimen/padding_small"
             android:minHeight="@dimen/button_height_xlarge">
 
             <ImageView
@@ -159,8 +159,8 @@
         android:layout_height="@dimen/icon_size_large"
         android:orientation="horizontal"
         android:background="#F2F2F2"
-        android:paddingLeft="@dimen/padding_large"
-        android:paddingRight="@dimen/padding_large"
+        android:paddingLeft="@dimen/padding_standard"
+        android:paddingRight="@dimen/padding_standard"
         android:gravity="center">
 
         <TextView
