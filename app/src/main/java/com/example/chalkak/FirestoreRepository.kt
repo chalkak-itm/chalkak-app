@@ -45,7 +45,6 @@ class FirestoreRepository {
 
     // Call Cloud Function (GPT)
     fun fetchWordFromGPT(word: String, onSuccess: (WordDTO) -> Unit, onFailure: (Exception) -> Unit) {
-        // ⚠️ Region must match your functions (asia-northeast3)
         val functions = FirebaseFunctions.getInstance("asia-northeast3")
 
         val data = hashMapOf("word" to word)

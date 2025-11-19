@@ -395,7 +395,6 @@ class MainActivity : AppCompatActivity() {
                 val isKnown = roomDb.detectedObjectDao().isWordExist(detectedWord)
 
                 if (isKnown) {
-                    // [A] Review -> Update Time (Firestore & Room)
                     // 👇 (Here is the fix!)
                     firestoreRepo.updateReviewTime(uid, detectedWord)
 
@@ -425,7 +424,12 @@ class MainActivity : AppCompatActivity() {
                                 Log.d("GPT", "Updated: $detectedWord -> ${wordDto.meaning}")
                             }
                         },
-                        onFailure = { Log.e("GPT", "Fail", it) }
+                        onFailure = { e ->
+                            runOnUiThread {
+                                Toast.makeText(this@MainActivity, "GPT 오류: ${e.message}", Toast.LENGTH_LONG).show()
+                            }
+                            Log.e("GPT", "Fail", e)
+                        }
                     )
                 }
             }

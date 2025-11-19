@@ -2,6 +2,7 @@ const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
 const { OpenAI } = require("openai");
+const functions = require("firebase-functions");
 
 initializeApp();
 const db = getFirestore();
@@ -13,7 +14,8 @@ exports.getWordData = onCall({ region: "asia-northeast3" }, async (request) => {
         throw new HttpsError('invalid-argument', 'No word provided');
     }
 
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const apiKey = functions.config().openai.key;
+    const openai = new OpenAI({ apiKey: apiKey });
 
     const lowerWord = word.toLowerCase();
     const docRef = db.collection("words").doc(lowerWord);
