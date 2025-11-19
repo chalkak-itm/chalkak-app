@@ -175,33 +175,83 @@ class DetectionResultFragment : Fragment() {
      * Add a clickable transparent View to each box location in detectionResults.
      */
     private fun addBoxOverlays() {
-        val width = boxOverlay.width.toFloat()
-        val height = boxOverlay.height.toFloat()
-
         boxOverlay.removeAllViews()
 
-        detectionResults.forEach { item ->
-            val boxWidth = (item.right - item.left) * width
-            val boxHeight = (item.bottom - item.top) * height
-            val leftMargin = item.left * width
-            val topMargin = item.top * height
+        // Create a single clickable overlay that handles all touches
+        val overlayView = View(requireContext()).apply {
+            isClickable = true
+            isFocusable = true
+            setBackgroundColor(Color.TRANSPARENT)
 
-            val boxView = View(requireContext()).apply {
-                isClickable = true
-                isFocusable = true
-                setBackgroundColor(Color.TRANSPARENT)
+            setOnTouchListener { _, event ->
+                if (event.action == android.view.MotionEvent.ACTION_DOWN) {
+                    val touchX = event.x
+                    val touchY = event.y
 
-                setOnClickListener {
-                    showWordDetail(item)
+                    // Calculate the actual image display area considering scaleType="fitCenter"
+                    val imageView = imgResult
+                    val drawable = imageView.drawable
+                    
+                    if (drawable != null) {
+                        val imageWidth = drawable.intrinsicWidth.toFloat()
+                        val imageHeight = drawable.intrinsicHeight.toFloat()
+                        
+                        // If intrinsic dimensions are not available, try to get from bitmap
+                        val actualImageWidth = if (imageWidth > 0 && imageHeight > 0) {
+                            imageWidth
+                        } else {
+                            // Fallback: try to get from bitmap if it's a BitmapDrawable
+                            (drawable as? android.graphics.drawable.BitmapDrawable)?.bitmap?.width?.toFloat() ?: return@setOnTouchListener false
+                        }
+                        val actualImageHeight = if (imageWidth > 0 && imageHeight > 0) {
+                            imageHeight
+                        } else {
+                            (drawable as? android.graphics.drawable.BitmapDrawable)?.bitmap?.height?.toFloat() ?: return@setOnTouchListener false
+                        }
+                        
+                        val viewWidth = imageView.width.toFloat()
+                        val viewHeight = imageView.height.toFloat()
+                        
+                        // Calculate scale factor to maintain aspect ratio (fitCenter)
+                        val scale = minOf(viewWidth / actualImageWidth, viewHeight / actualImageHeight)
+                        val scaledImageWidth = actualImageWidth * scale
+                        val scaledImageHeight = actualImageHeight * scale
+                        
+                        // Calculate offset (centered)
+                        val offsetX = (viewWidth - scaledImageWidth) / 2f
+                        val offsetY = (viewHeight - scaledImageHeight) / 2f
+                        
+                        // Convert touch coordinates to image coordinates (0.0-1.0)
+                        // Clamp to valid range [0.0, 1.0]
+                        val imageX = ((touchX - offsetX) / scaledImageWidth).coerceIn(0f, 1f)
+                        val imageY = ((touchY - offsetY) / scaledImageHeight).coerceIn(0f, 1f)
+                        
+                        // Find which box contains the touch point
+                        // Check in reverse order to prioritize boxes added later (usually smaller or more specific)
+                        val clickedItem = detectionResults.reversed().firstOrNull { item ->
+                            // item.left, top, right, bottom are normalized coordinates (0.0-1.0)
+                            imageX >= item.left && imageX <= item.right &&
+                            imageY >= item.top && imageY <= item.bottom
+                        }
+
+                        clickedItem?.let { item ->
+                            showWordDetail(item)
+                            true
+                        } ?: false
+                    } else {
+                        false
+                    }
+                } else {
+                    false
                 }
             }
-
-            val params = FLP(boxWidth.toInt(), boxHeight.toInt())
-            params.leftMargin = leftMargin.toInt()
-            params.topMargin = topMargin.toInt()
-
-            boxOverlay.addView(boxView, params)
         }
+
+        val params = FLP(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
+        )
+        boxOverlay.addView(overlayView, params)
     }
 
     /**
