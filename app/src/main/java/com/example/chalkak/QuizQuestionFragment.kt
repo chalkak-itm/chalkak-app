@@ -36,9 +36,9 @@ class QuizQuestionFragment : Fragment() {
     private lateinit var cardQuizInfo: LinearLayout
     private lateinit var imgQuiz: ImageView
     private lateinit var layoutWordInfo: LinearLayout
-    private lateinit var txtEnglishWord: TextView
-    private lateinit var txtKoreanWord: TextView
-    private lateinit var txtExampleEnglish: TextView
+    private lateinit var txtSelectedWord: TextView
+    private lateinit var txtKoreanMeaning: TextView
+    private lateinit var txtExampleSentence: TextView
     private lateinit var btnTtsWord: ImageView
     private lateinit var btnTtsExample: ImageView
     private lateinit var btnOption1: LinearLayout
@@ -110,9 +110,9 @@ class QuizQuestionFragment : Fragment() {
         cardQuizInfo = view.findViewById(R.id.card_quiz_info)
         imgQuiz = view.findViewById(R.id.img_quiz)
         layoutWordInfo = view.findViewById(R.id.layout_word_info)
-        txtEnglishWord = view.findViewById(R.id.txt_english_word)
-        txtKoreanWord = view.findViewById(R.id.txt_korean_word)
-        txtExampleEnglish = view.findViewById(R.id.txt_example_english)
+        txtSelectedWord = view.findViewById(R.id.txt_selected_word)
+        txtKoreanMeaning = view.findViewById(R.id.txt_korean_meaning)
+        txtExampleSentence = view.findViewById(R.id.txt_example_sentence)
         btnTtsWord = view.findViewById(R.id.btn_tts_word)
         btnTtsExample = view.findViewById(R.id.btn_tts_example)
         btnOption1 = view.findViewById(R.id.btn_option_1)
@@ -145,14 +145,14 @@ class QuizQuestionFragment : Fragment() {
 
         // Setup TTS buttons
         btnTtsWord.setOnClickListener {
-            val text = txtEnglishWord.text.toString()
+            val text = txtSelectedWord.text.toString()
             if (text.isNotBlank()) {
                 speak(text)
             }
         }
 
         btnTtsExample.setOnClickListener {
-            val text = txtExampleEnglish.text.toString()
+            val text = txtExampleSentence.text.toString()
             if (text.isNotBlank()) {
                 speak(text)
             }
@@ -277,9 +277,9 @@ class QuizQuestionFragment : Fragment() {
         // Show word info in the same card after a short delay
         Handler(Looper.getMainLooper()).postDelayed({
             currentQuestion?.let { question ->
-                txtEnglishWord.text = question.englishWord
-                txtKoreanWord.text = question.koreanWord
-                txtExampleEnglish.text = question.exampleEnglish
+                txtSelectedWord.text = question.englishWord
+                txtKoreanMeaning.text = question.koreanWord
+                txtExampleSentence.text = question.exampleEnglish
                 layoutWordInfo.visibility = View.VISIBLE
             }
 

@@ -66,84 +66,11 @@
         </LinearLayout>
 
         <!-- Word Detail Card -->
-        <LinearLayout
+        <include
+            layout="@layout/card_word_detail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:orientation="vertical"
-            android:background="@drawable/bg_card_white_pure"
-            android:padding="16dp">
-
-            <!-- Word + TTS Icon -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:id="@+id/txt_selected_word"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="word"
-                    android:textColor="#333333"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <ImageView
-                    android:id="@+id/btn_tts_word"
-                    android:layout_width="26dp"
-                    android:layout_height="26dp"
-                    android:layout_marginStart="8dp"
-                    android:src="@drawable/speaker"
-                    android:clickable="true"
-                    android:focusable="true" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/txt_korean_meaning"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="한국어 뜻"
-                android:textColor="#555555"
-                android:textSize="16sp" />
-
-            <!-- Example + TTS Icon -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Example sentence"
-                    android:textColor="#777777"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <ImageView
-                    android:id="@+id/btn_tts_example"
-                    android:layout_width="26dp"
-                    android:layout_height="26dp"
-                    android:layout_marginStart="8dp"
-                    android:src="@drawable/speaker"
-                    android:clickable="true"
-                    android:focusable="true" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/txt_example_sentence"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Example sentence here"
-                android:textColor="#555555"
-                android:textSize="14sp" />
-        </LinearLayout>
+            android:layout_marginTop="12dp" />
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView

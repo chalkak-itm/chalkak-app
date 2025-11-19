@@ -80,86 +80,13 @@
                 android:src="@drawable/egg" />
 
             <!-- Word Translation (initially hidden) -->
-            <LinearLayout
+            <include
                 android:id="@+id/layout_word_info"
+                layout="@layout/card_word_detail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:orientation="vertical"
-                android:visibility="gone">
-
-                <!-- Word Translation -->
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <TextView
-                        android:id="@+id/txt_english_word"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Apple"
-                        android:textColor="#333333"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <ImageView
-                        android:id="@+id/btn_tts_word"
-                        android:layout_width="26dp"
-                        android:layout_height="26dp"
-                        android:layout_marginStart="8dp"
-                        android:src="@drawable/speaker"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:contentDescription="Play audio" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/txt_korean_word"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="사과"
-                    android:textColor="#555555"
-                    android:textSize="16sp" />
-
-                <!-- Example Sentence with TTS -->
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Example sentence"
-                        android:textColor="#777777"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <ImageView
-                        android:id="@+id/btn_tts_example"
-                        android:layout_width="26dp"
-                        android:layout_height="26dp"
-                        android:layout_marginStart="8dp"
-                        android:src="@drawable/speaker"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:contentDescription="Play audio" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/txt_example_english"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="I eat an apple every day."
-                    android:textColor="#555555"
-                    android:textSize="14sp" />
-            </LinearLayout>
+                android:visibility="gone" />
         </LinearLayout>
 
         <!-- Quiz Options (4 buttons in 2x2 grid) -->

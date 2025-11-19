@@ -20,7 +20,7 @@ class DetectionResultFragment : Fragment() {
     private lateinit var layoutObjectButtons: LinearLayout
 
     private lateinit var cardWordDetail: LinearLayout
-    private lateinit var txtSelectedObject: TextView
+    private lateinit var txtSelectedWord: TextView
     private lateinit var txtKoreanMeaning: TextView
     private lateinit var txtExampleSentence: TextView
 
@@ -75,7 +75,7 @@ class DetectionResultFragment : Fragment() {
         layoutObjectButtons = view.findViewById(R.id.layout_object_buttons)
 
         cardWordDetail = view.findViewById(R.id.card_word_detail)
-        txtSelectedObject = view.findViewById(R.id.txt_selected_object)
+        txtSelectedWord = view.findViewById(R.id.txt_selected_word)
         txtKoreanMeaning = view.findViewById(R.id.txt_korean_meaning)
         txtExampleSentence = view.findViewById(R.id.txt_example_sentence)
         btnTtsWord = view.findViewById(R.id.btn_tts_word)
@@ -117,7 +117,7 @@ class DetectionResultFragment : Fragment() {
 
         // Reading word
         btnTtsWord.setOnClickListener {
-            val text = txtSelectedObject.text.toString()
+            val text = txtSelectedWord.text.toString()
             if (text.isNotBlank()) {
                 speak(text)
             }
@@ -213,7 +213,7 @@ class DetectionResultFragment : Fragment() {
         
         cardWordDetail.visibility = View.VISIBLE
 
-        txtSelectedObject.text = item.label
+        txtSelectedWord.text = item.label
 
         // bring the example sentence and korean meaning by GPT
         txtKoreanMeaning.text = "한국어 뜻."

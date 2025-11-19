@@ -8,34 +8,12 @@
     android:focusable="true"
     android:background="?android:attr/selectableItemBackground">
 
-    <LinearLayout
+    <include
+        android:id="@+id/card_word_photo"
+        layout="@layout/item_word_photo_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@drawable/bg_card_white_pure"
-        android:padding="12dp"
-        android:layout_marginTop="6dp">
-
-        <ImageView
-            android:id="@+id/imgPhoto"
-            android:layout_width="match_parent"
-            android:layout_height="140dp"
-            android:scaleType="centerInside"
-            android:layout_marginTop="8dp"
-            android:src="@mipmap/ic_launcher" />
-
-        <TextView
-            android:id="@+id/txtWord"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="4dp"
-            android:minHeight="24dp"
-            android:textColor="#000000"
-            android:textSize="18sp"
-            android:gravity="center" />
-    </LinearLayout>
+        android:layout_marginTop="6dp" />
 
 </LinearLayout>
 
