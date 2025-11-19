@@ -10,14 +10,14 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 
 enum class RecordingState {
-    IDLE,        // 초기 상태 (마이크 버튼)
-    LISTENING    // STT 인식 중 (중지 버튼)
+    IDLE,        // Initial state (mic button)
+    LISTENING    // STT recognition in progress (stop button)
 }
 
 class SpeechRecognitionHelper(
     private val context: Context,
     private val onStateChanged: (RecordingState) -> Unit,
-    private val onSttResult: (String, Boolean) -> Unit // (인식된 텍스트, 정확도 결과)
+    private val onSttResult: (String, Boolean) -> Unit // (recognized text, accuracy result)
 ) {
     private var speechRecognizer: SpeechRecognizer? = null
     private var currentState = RecordingState.IDLE
@@ -30,25 +30,25 @@ class SpeechRecognitionHelper(
 
     fun startSpeechRecognition() {
         if (currentState == RecordingState.LISTENING) {
-            // 이미 인식 중이면 중지
+            // If already recognizing, stop
             stopSpeechRecognition()
             return
         }
         if (targetWord.isEmpty()) {
-            Toast.makeText(context, "대상 단어가 설정되지 않았습니다.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Target word is not set.", Toast.LENGTH_SHORT).show()
             return
         }
 
         if (!SpeechRecognizer.isRecognitionAvailable(context)) {
-            Toast.makeText(context, "음성 인식 기능을 사용할 수 없습니다.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Speech recognition is not available.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // 상태 변경
+        // Change state
         currentState = RecordingState.LISTENING
         onStateChanged(currentState)
 
-        // 로딩 다이얼로그 표시
+        // Show loading dialog
         showLoadingDialog()
 
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context).apply {
@@ -60,30 +60,30 @@ class SpeechRecognitionHelper(
                 override fun onEndOfSpeech() {}
                 override fun onError(error: Int) {
                     val errorMessage = when (error) {
-                        SpeechRecognizer.ERROR_AUDIO -> "오디오 오류"
-                        SpeechRecognizer.ERROR_CLIENT -> "클라이언트 오류"
-                        SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "권한 부족"
-                        SpeechRecognizer.ERROR_NETWORK -> "네트워크 오류"
-                        SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "네트워크 타임아웃"
-                        SpeechRecognizer.ERROR_NO_MATCH -> "인식 결과 없음"
-                        SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "인식기 사용 중"
-                        SpeechRecognizer.ERROR_SERVER -> "서버 오류"
-                        SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "음성 타임아웃"
-                        else -> "알 수 없는 오류"
+                        SpeechRecognizer.ERROR_AUDIO -> "Audio error"
+                        SpeechRecognizer.ERROR_CLIENT -> "Client error"
+                        SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Insufficient permissions"
+                        SpeechRecognizer.ERROR_NETWORK -> "Network error"
+                        SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Network timeout"
+                        SpeechRecognizer.ERROR_NO_MATCH -> "No recognition result"
+                        SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "Recognizer busy"
+                        SpeechRecognizer.ERROR_SERVER -> "Server error"
+                        SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "Speech timeout"
+                        else -> "Unknown error"
                     }
                     
-                    // 에러 로깅 (디버깅용)
+                    // Error logging (for debugging)
                     android.util.Log.d("SpeechRecognition", "STT Error: $errorMessage (code: $error)")
                     
-                    // ERROR_NO_MATCH나 ERROR_SPEECH_TIMEOUT은 정상적인 경우일 수 있으므로 토스트 표시 안 함
+                    // ERROR_NO_MATCH or ERROR_SPEECH_TIMEOUT can be normal cases, so don't show toast
                     if (error != SpeechRecognizer.ERROR_NO_MATCH && error != SpeechRecognizer.ERROR_SPEECH_TIMEOUT) {
-                        Toast.makeText(context, "음성 인식 실패: $errorMessage", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Speech recognition failed: $errorMessage", Toast.LENGTH_SHORT).show()
                     }
-                    // 상태 변경
+                    // Change state
                     currentState = RecordingState.IDLE
                     onStateChanged(currentState)
                     
-                    // 인식 결과가 없어도 콜백 호출
+                    // Call callback even if no recognition result
                     if (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) {
                         dismissLoadingDialog()
                         onSttResult("", false)
@@ -97,7 +97,7 @@ class SpeechRecognitionHelper(
                     val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                     val confidenceScores = results?.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES)
                     
-                    // 디버깅용 로그
+                    // Debug logging
                     android.util.Log.d("SpeechRecognition", "STT Results: $matches")
                     android.util.Log.d("SpeechRecognition", "Target Word: $targetWord")
                     
@@ -108,26 +108,26 @@ class SpeechRecognitionHelper(
                         return
                     }
                     
-                    // 여러 후보 결과 중에서 타겟 단어와 가장 유사한 것을 선택
+                    // Select the most similar result among multiple candidates to the target word
                     val bestMatch = findBestMatch(matches, targetWord)
                     val recognizedText = bestMatch.lowercase().trim()
                     
                     android.util.Log.d("SpeechRecognition", "Best Match: $recognizedText")
                     
-                    // 상태 변경
+                    // Change state
                     currentState = RecordingState.IDLE
                     onStateChanged(currentState)
                     
-                    // 로딩 다이얼로그 닫기
+                    // Close loading dialog
                     dismissLoadingDialog()
                     
                     if (recognizedText.isNotEmpty()) {
-                        // 정확히 일치하거나 유사도가 높으면 정답으로 처리
+                        // Treat as correct if exactly matches or has high similarity
                         val isCorrect = isSimilar(recognizedText, targetWord)
                         android.util.Log.d("SpeechRecognition", "Is Correct: $isCorrect")
                         onSttResult(recognizedText, isCorrect)
                     } else {
-                        // 인식된 텍스트가 없을 때도 콜백 호출
+                        // Call callback even if no recognized text
                         android.util.Log.w("SpeechRecognition", "Empty recognized text")
                         onSttResult("", false)
                     }
@@ -135,10 +135,10 @@ class SpeechRecognitionHelper(
                 }
 
                 override fun onPartialResults(partialResults: android.os.Bundle?) {
-                    // 부분 결과도 확인하여 더 나은 결과가 있으면 사용
+                    // Check partial results and use if better result is available
                     val partialMatches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                     if (partialMatches != null && partialMatches.isNotEmpty()) {
-                        // 부분 결과는 로깅만 하고 최종 결과는 onResults에서 처리
+                        // Only log partial results, final results are processed in onResults
                     }
                 }
                 
@@ -148,11 +148,11 @@ class SpeechRecognitionHelper(
 
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, java.util.Locale.US.toString()) // "en-US" 명시적 설정
-            putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 10) // 더 많은 후보 결과 받기
-            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true) // 부분 결과도 받기
-            // 인식 정확도 향상을 위한 추가 설정
-            putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false) // 온라인 인식 사용 (더 정확)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, java.util.Locale.US.toString()) // Explicit "en-US" setting
+            putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 10) // Get more candidate results
+            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true) // Also receive partial results
+            // Additional settings to improve recognition accuracy
+            putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false) // Use online recognition (more accurate)
         }
 
         speechRecognizer?.startListening(intent)
@@ -181,7 +181,7 @@ class SpeechRecognitionHelper(
     }
 
     /**
-     * 로딩 다이얼로그를 표시합니다.
+     * Shows the loading dialog.
      */
     private fun showLoadingDialog() {
         if (loadingDialog?.isShowing == true) return
@@ -195,7 +195,7 @@ class SpeechRecognitionHelper(
     }
 
     /**
-     * 로딩 다이얼로그를 닫습니다.
+     * Closes the loading dialog.
      */
     private fun dismissLoadingDialog() {
         loadingDialog?.dismiss()
@@ -203,19 +203,19 @@ class SpeechRecognitionHelper(
     }
 
     /**
-     * 여러 인식 후보 중에서 타겟 단어와 가장 유사한 것을 찾습니다.
+     * Finds the most similar result among multiple recognition candidates to the target word.
      */
     private fun findBestMatch(matches: java.util.ArrayList<String>?, targetWord: String): String {
         if (matches == null || matches.isEmpty()) return ""
         
-        // 정확히 일치하는 것이 있으면 우선 반환
+        // Return exact match first if exists
         matches.forEach { match ->
             if (match.lowercase().trim() == targetWord.lowercase().trim()) {
                 return match
             }
         }
         
-        // 유사도가 가장 높은 것을 찾기
+        // Find the one with highest similarity
         var bestMatch = matches.first()
         var bestSimilarity = calculateSimilarity(bestMatch.lowercase().trim(), targetWord.lowercase().trim())
         
@@ -231,24 +231,24 @@ class SpeechRecognitionHelper(
     }
 
     /**
-     * 두 단어가 유사한지 판단합니다 (정확히 일치하거나 유사도가 높으면 true).
+     * Determines if two words are similar (returns true if exactly matches or has high similarity).
      */
     private fun isSimilar(text1: String, text2: String): Boolean {
-        // 정확히 일치
+        // Exact match
         if (text1 == text2) return true
         
-        // 포함 관계 확인 (예: "apple"과 "an apple")
+        // Check containment relationship (e.g., "apple" and "an apple")
         if (text1.contains(text2) || text2.contains(text1)) return true
         
-        // 유사도 계산 (Levenshtein distance 기반)
+        // Calculate similarity (based on Levenshtein distance)
         val similarity = calculateSimilarity(text1, text2)
-        // 80% 이상 유사하면 정답으로 처리
+        // Treat as correct if similarity is 80% or higher
         return similarity >= 0.8
     }
 
     /**
-     * 두 문자열의 유사도를 계산합니다 (0.0 ~ 1.0).
-     * Levenshtein distance를 사용합니다.
+     * Calculates the similarity between two strings (0.0 ~ 1.0).
+     * Uses Levenshtein distance.
      */
     private fun calculateSimilarity(str1: String, str2: String): Double {
         if (str1 == str2) return 1.0
@@ -261,7 +261,7 @@ class SpeechRecognitionHelper(
     }
 
     /**
-     * Levenshtein distance를 계산합니다.
+     * Calculates Levenshtein distance.
      */
     private fun levenshteinDistance(str1: String, str2: String): Int {
         val m = str1.length

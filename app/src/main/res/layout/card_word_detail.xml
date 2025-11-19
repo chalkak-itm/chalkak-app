@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 공통 단어 상세 정보 카드 레이아웃 -->
+<!-- Common word detail card layout -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -47,7 +47,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="한국어 뜻"
+            android:text="Meaning"
             android:textColor="#555555"
             android:textSize="16sp" />
 

@@ -272,7 +272,7 @@ class MainActivity : AppCompatActivity() {
                         backPressedTime = currentTime
                         Toast.makeText(
                             this@MainActivity,
-                            "한 번 더 누르면 종료됩니다",
+                            "Press again to exit",
                             Toast.LENGTH_SHORT
                         ).show()
                         

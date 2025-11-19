@@ -14,9 +14,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 
 /**
- * 녹음/재생/STT 기능을 관리하는 매니저 클래스
- * UI 바인딩과 이벤트 처리를 포함하여 코드 중복을 제거합니다.
- * card_word_detail 레이아웃의 루트 뷰를 받아서 내부에서 모든 버튼을 찾습니다.
+ * Manager class for recording/playback/STT functionality
+ * Reduces code duplication by handling UI binding and event processing.
+ * Receives the root view of card_word_detail layout and finds all buttons internally.
  */
 class SpeechRecognitionManager(
     private val context: Context,
@@ -28,7 +28,7 @@ class SpeechRecognitionManager(
     private var speechHelperMeaning: SpeechRecognitionHelper? = null
     private var speechHelperExample: SpeechRecognitionHelper? = null
     
-    // 버튼들을 내부에서 찾아서 저장
+    // Find and store buttons internally
     private lateinit var btnRecordMeaning: ImageView
     private lateinit var btnRecordExample: ImageView
     private lateinit var txtSelectedWord: TextView
@@ -40,7 +40,7 @@ class SpeechRecognitionManager(
     }
     
     private fun initializeViews() {
-        // card_word_detail 레이아웃 내부의 모든 뷰를 찾습니다
+        // Find all views inside card_word_detail layout
         btnRecordMeaning = cardWordDetail.findViewById(R.id.btn_record_meaning)
         btnRecordExample = cardWordDetail.findViewById(R.id.btn_record_example)
         txtSelectedWord = cardWordDetail.findViewById(R.id.txt_selected_word)
@@ -56,7 +56,7 @@ class SpeechRecognitionManager(
             },
             onSttResult = { recognizedText, isCorrect ->
                 onWordSttResult?.invoke(recognizedText, isCorrect)
-                // 단어 비교 결과도 다이얼로그로 표시
+                // Also show word comparison result in dialog
                 val targetWord = txtSelectedWord.text.toString().lowercase().trim()
                 showSttResultDialog(recognizedText, isCorrect, targetWord)
             }
@@ -69,11 +69,11 @@ class SpeechRecognitionManager(
                 updateButtonsForExample(state)
             },
             onSttResult = { recognizedText, isCorrect ->
-                // 기본 예문 비교 로직
+                // Basic example sentence comparison logic
                 val exampleText = txtExampleSentence.text.toString().lowercase().trim()
                 val isExampleCorrect = recognizedText.contains(exampleText) || exampleText.contains(recognizedText)
                 
-                // 커스텀 핸들러가 있으면 사용, 없으면 다이얼로그 표시
+                // Use custom handler if available, otherwise show dialog
                 if (onExampleSttResult != null) {
                     onExampleSttResult.invoke(recognizedText, isExampleCorrect)
                 } else {
@@ -104,11 +104,11 @@ class SpeechRecognitionManager(
 
         when (currentState) {
             RecordingState.IDLE -> {
-                // STT 시작
+                // Start STT
                 helper.startSpeechRecognition()
             }
             RecordingState.LISTENING -> {
-                // STT 중지
+                // Stop STT
                 helper.stopSpeechRecognition()
             }
         }
@@ -174,12 +174,12 @@ class SpeechRecognitionManager(
         val txtTargetWord = dialogView.findViewById<TextView>(R.id.txt_target_word)
         val btnClose = dialogView.findViewById<Button>(R.id.btn_close)
         
-        // 인식된 텍스트 표시
-        txtRecognized.text = if (recognizedText.isNotEmpty()) recognizedText else "인식된 텍스트가 없습니다"
+        // Display recognized text
+        txtRecognized.text = if (recognizedText.isNotEmpty()) recognizedText else "No recognized text"
         
-        // 결과 상태 표시
+        // Display result status
         if (isCorrect) {
-            txtResultStatus.text = "정확합니다! ✓"
+            txtResultStatus.text = "Correct! ✓"
             txtResultStatus.setTextColor(0xFF4CAF50.toInt()) // Green
             try {
                 iconResult.setImageResource(R.drawable.ic_checkmark_green)
@@ -189,7 +189,7 @@ class SpeechRecognitionManager(
             txtTargetWordLabel.visibility = View.GONE
             txtTargetWord.visibility = View.GONE
         } else {
-            txtResultStatus.text = "틀렸습니다"
+            txtResultStatus.text = "Incorrect"
             txtResultStatus.setTextColor(0xFFFF6B6B.toInt()) // Red
             iconResult.setImageResource(android.R.drawable.ic_delete)
             txtTargetWordLabel.visibility = View.VISIBLE

@@ -43,7 +43,7 @@ class ImagePreviewActivity : AppCompatActivity() {
 		}
 	}
 
-	// 이미지 표시를 업데이트하는 헬퍼 함수
+	// Helper function to update image display
 	private fun updateImageDisplay(uri: Uri) {
 		val imgQuiz = findViewById<ImageView>(R.id.img_quiz)
 		val txtNoImage = findViewById<TextView>(R.id.txt_no_image)
@@ -83,12 +83,12 @@ class ImagePreviewActivity : AppCompatActivity() {
 			isGalleryMode = true
 			updateImageDisplay(imageUri)
 		} else {
-			// 사진이 없을 때 "No Image" 텍스트 표시
+			// Show "No Image" text when there's no photo
 			imgQuiz.visibility = android.view.View.GONE
 			txtNoImage.visibility = android.view.View.VISIBLE
 		}
 		
-		// 버튼 텍스트는 항상 "Upload"와 "Retake"로 유지
+		// Button text is always "Upload" and "Retake"
 		btnCapture.text = "Upload"
 		btnRetake.text = "Retake"
 
@@ -115,11 +115,11 @@ class ImagePreviewActivity : AppCompatActivity() {
 		}
 
 		findViewById<android.widget.TextView>(R.id.btn_capture)?.setOnClickListener {
-			// Upload 버튼: 갤러리에서 사진 선택
+			// Upload button: select photo from gallery
 			pickImage.launch("image/*")
 		}
 		findViewById<android.widget.TextView>(R.id.btn_retake)?.setOnClickListener {
-			// Retake 버튼: 카메라 실행
+			// Retake button: launch camera
 			launchCamera()
 		}
 		btnConfirm.setOnClickListener {
@@ -179,7 +179,7 @@ class ImagePreviewActivity : AppCompatActivity() {
 							// No detection results - go to input Fragment
 							Toast.makeText(
 								this@ImagePreviewActivity,
-								"인식된 객체가 없습니다. 직접 입력해주세요.",
+								"No objects detected. Please enter manually.",
 								Toast.LENGTH_SHORT
 							).show()
 
@@ -224,7 +224,7 @@ class ImagePreviewActivity : AppCompatActivity() {
 			}.start()
 		}
 
-		// 자동으로 카메라를 실행하지 않음 (사용자가 버튼을 눌러야 함)
+		// Don't launch camera automatically (user must press button)
 	}
 
 	private fun launchCamera() {

@@ -70,7 +70,7 @@ class QuizQuestionFragment : Fragment() {
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (!isGranted) {
-            Toast.makeText(requireContext(), "녹음 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Recording permission is required.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -141,7 +141,7 @@ class QuizQuestionFragment : Fragment() {
         btnNextQuestion = view.findViewById(R.id.btn_next_question)
 
         // Initialize TTS helper
-        // layoutWordInfo가 card_word_detail을 포함하고 있으므로 전달
+        // layoutWordInfo contains card_word_detail, so pass it
         ttsHelper = TtsHelper(requireContext(), layoutWordInfo)
 
         // Setup option button click listeners
@@ -151,12 +151,12 @@ class QuizQuestionFragment : Fragment() {
         btnOption4.setOnClickListener { onOptionSelected(3) }
 
         // Initialize speech recognition manager
-        // layoutWordInfo가 card_word_detail을 포함하고 있으므로 전달
+        // layoutWordInfo contains card_word_detail, so pass it
         speechRecognitionManager = SpeechRecognitionManager(
             context = requireContext(),
             cardWordDetail = layoutWordInfo,
             requestPermissionLauncher = requestPermissionLauncher
-            // 기본 다이얼로그가 표시됩니다
+            // Default dialog will be displayed
         )
 
         // Setup next question button
@@ -270,7 +270,7 @@ class QuizQuestionFragment : Fragment() {
         isAnswered = true
 
         // Show popup feedback
-        showFeedbackPopup(true, "정답입니다! ✨")
+        showFeedbackPopup(true, "Correct! ✨")
 
         // Update selected button to correct state
         updateOptionButton(optionIndex, true)
@@ -296,7 +296,7 @@ class QuizQuestionFragment : Fragment() {
         isAnswered = true
 
         // Show popup feedback
-        showFeedbackPopup(false, "틀렸습니다. 다시 선택해주세요.")
+        showFeedbackPopup(false, "Incorrect. Please select again.")
 
         // Update selected button to incorrect state
         updateOptionButton(optionIndex, false)

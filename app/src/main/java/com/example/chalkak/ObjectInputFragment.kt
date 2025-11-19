@@ -110,7 +110,7 @@ class ObjectInputFragment : Fragment() {
     private fun handleConfirm() {
         val objectName = edtObjectName.text.toString().trim()
         if (objectName.isBlank()) {
-            Toast.makeText(requireContext(), "객체 이름을 입력해주세요.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Please enter the object name.", Toast.LENGTH_SHORT).show()
             return
         }
 

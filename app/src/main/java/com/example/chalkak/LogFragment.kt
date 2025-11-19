@@ -35,7 +35,7 @@ class LogFragment : Fragment() {
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (!isGranted) {
-            Toast.makeText(requireContext(), "녹음 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Recording permission is required.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -59,16 +59,16 @@ class LogFragment : Fragment() {
         txtExampleSentence = view.findViewById(R.id.txt_example_sentence)
 
         // Initialize TTS helper
-        // card_word_detail은 include로 포함되어 있으므로 cardSelectedItem을 전달
+        // card_word_detail is included via include tag, so pass cardSelectedItem
         ttsHelper = TtsHelper(requireContext(), cardSelectedItem)
 
         // Initialize speech recognition manager
-        // card_word_detail은 include로 포함되어 있으므로 cardSelectedItem을 전달
+        // card_word_detail is included via include tag, so pass cardSelectedItem
         speechRecognitionManager = SpeechRecognitionManager(
             context = requireContext(),
             cardWordDetail = cardSelectedItem,
             requestPermissionLauncher = requestPermissionLauncher
-            // 기본 다이얼로그가 표시됩니다
+            // Default dialog will be displayed
         )
 
         val recycler: RecyclerView = view.findViewById(R.id.recyclerLog)
@@ -120,7 +120,7 @@ class LogFragment : Fragment() {
 
         // Placeholder data for meaning and example
         // TODO: Replace with actual data from database or API
-        txtKoreanMeaning.text = "한국어 뜻" // Replace with actual meaning
+        txtKoreanMeaning.text = "Meaning" // Replace with actual meaning
         txtExampleSentence.text = "Example sentence for ${entry.word}" // Replace with actual example
 
         // Update speech recognition manager with new word

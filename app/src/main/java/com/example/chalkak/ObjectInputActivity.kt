@@ -91,7 +91,7 @@ class ObjectInputActivity : AppCompatActivity() {
     private fun handleConfirm() {
         val objectName = edtObjectName.text.toString().trim()
         if (objectName.isBlank()) {
-            Toast.makeText(this, "객체 이름을 입력해주세요.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Please enter the object name.", Toast.LENGTH_SHORT).show()
             return
         }
 

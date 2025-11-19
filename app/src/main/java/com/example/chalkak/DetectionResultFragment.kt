@@ -44,7 +44,7 @@ class DetectionResultFragment : Fragment() {
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (!isGranted) {
-            Toast.makeText(requireContext(), "녹음 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Recording permission is required.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -125,7 +125,7 @@ class DetectionResultFragment : Fragment() {
             context = requireContext(),
             cardWordDetail = cardWordDetail,
             requestPermissionLauncher = requestPermissionLauncher
-            // 기본 다이얼로그가 표시됩니다
+            // Default dialog will be displayed
         )
     }
 
@@ -263,7 +263,7 @@ class DetectionResultFragment : Fragment() {
         txtSelectedWord.text = item.label
 
         // bring the example sentence and korean meaning by GPT
-        txtKoreanMeaning.text = "한국어 뜻."
+        txtKoreanMeaning.text = "Meaning"
         txtExampleSentence.text = "It is a space for example sentence."
 
         // Update speech recognition manager with new word

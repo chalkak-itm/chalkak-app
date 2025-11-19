@@ -19,7 +19,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="음성을 인식하고 있습니다..."
+        android:text="Recognizing speech..."
         android:textColor="#333333"
         android:textSize="16sp"
         android:gravity="center" />
