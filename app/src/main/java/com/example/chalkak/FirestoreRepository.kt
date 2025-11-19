@@ -55,10 +55,18 @@ class FirestoreRepository {
             .addOnSuccessListener { task ->
                 val result = task.data as? Map<String, Any>
                 if (result != null && result["isError"] != true) {
+                    val examplesData = result["examples"] as? List<Map<String, Any>> ?: emptyList()
+                    val examples = examplesData.mapNotNull { exampleMap ->
+                        val sentence = exampleMap["sentence"] as? String ?: ""
+                        val translation = exampleMap["translation"] as? String ?: ""
+                        if (sentence.isNotEmpty() && translation.isNotEmpty()) {
+                            ExampleItem(sentence = sentence, translation = translation)
+                        } else null
+                    }
                     val dto = WordDTO(
                         originalWord = result["originalWord"] as? String ?: "",
-                        meaning = result["meaning"] as? String ?: ""
-                        // Add examples parsing if needed
+                        meaning = result["meaning"] as? String ?: "",
+                        examples = examples
                     )
                     onSuccess(dto)
                 } else {
@@ -66,5 +74,59 @@ class FirestoreRepository {
                 }
             }
             .addOnFailureListener { onFailure(it) }
+    }
+
+    // Save word to Firebase Firestore
+    suspend fun saveWordToFirebase(wordDto: WordDTO) {
+        try {
+            val wordRef = db.collection("words").document(wordDto.originalWord.lowercase())
+            val examplesList = wordDto.examples.map { example ->
+                hashMapOf(
+                    "sentence" to example.sentence,
+                    "translation" to example.translation
+                )
+            }
+            val wordData = hashMapOf(
+                "originalWord" to wordDto.originalWord,
+                "meaning" to wordDto.meaning,
+                "examples" to examplesList
+            )
+            wordRef.set(wordData, SetOptions.merge()).await()
+            Log.d(TAG, "Saved word to Firebase: ${wordDto.originalWord}")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error saving word to Firebase: ${wordDto.originalWord}", e)
+            throw e
+        }
+    }
+
+    // Get all words from Firebase Firestore
+    suspend fun getAllWordsFromFirebase(): List<WordDTO> {
+        return try {
+            val wordsSnapshot = db.collection("words").get().await()
+            wordsSnapshot.documents.mapNotNull { document ->
+                val data = document.data
+                val originalWord = data?.get("originalWord") as? String ?: ""
+                val meaning = data?.get("meaning") as? String ?: ""
+                val examplesData = data?.get("examples") as? List<Map<String, Any>> ?: emptyList()
+
+                if (originalWord.isNotEmpty() && meaning.isNotEmpty()) {
+                    val examples = examplesData.mapNotNull { exampleMap ->
+                        val sentence = exampleMap["sentence"] as? String ?: ""
+                        val translation = exampleMap["translation"] as? String ?: ""
+                        if (sentence.isNotEmpty() && translation.isNotEmpty()) {
+                            ExampleItem(sentence = sentence, translation = translation)
+                        } else null
+                    }
+                    WordDTO(
+                        originalWord = originalWord,
+                        meaning = meaning,
+                        examples = examples
+                    )
+                } else null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting words from Firebase", e)
+            emptyList()
+        }
     }
 }

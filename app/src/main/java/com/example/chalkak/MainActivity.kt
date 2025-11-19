@@ -104,6 +104,9 @@ class MainActivity : AppCompatActivity() {
 
         // Initialize navigation icons with default color
         initializeNavigationIcons()
+
+        // Sync words from Firebase on app start
+        syncWordsFromFirebase()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -373,36 +376,92 @@ class MainActivity : AppCompatActivity() {
             // 2. Process Items (Max 2)
             results.take(2).forEach { item ->
                 val detectedWord = item.label
-                val isKnown = roomDb.detectedObjectDao().isWordExist(detectedWord)
+                val existingObject = roomDb.detectedObjectDao().getObjectByEnglishWord(detectedWord)
+                val isKnown = existingObject != null
 
-                if (isKnown) {
-                    // 👇 (Here is the fix!)
-                    firestoreRepo.updateReviewTime(uid, detectedWord)
-
-                    roomDb.detectedObjectDao().updateLastStudied(detectedWord, System.currentTimeMillis())
+                val hasEnoughExamples = if (isKnown) {
+                    val examples = roomDb.exampleSentenceDao().getSentencesByWordId(existingObject!!.objectId)
+                    examples.size >= 3
                 } else {
-                    // [B] New Word -> Count +1
-                    firestoreRepo.addNewWordCount(uid)
+                    false
+                }
 
+                if (isKnown && hasEnoughExamples) {
+                    // 단어가 이미 있고 예문이 3개 이상이면 GPT 호출 스킵
+                    existingObject?.let { obj ->
+                        val boxString = "[${item.left}, ${item.top}, ${item.right}, ${item.bottom}]"
+                        roomDb.detectedObjectDao().insert(
+                            DetectedObject(
+                                parentPhotoId = newPhotoId,
+                                englishWord = detectedWord,
+                                koreanMeaning = obj.koreanMeaning,
+                                boundingBox = boxString
+                            )
+                        )
+                    }
+                    firestoreRepo.updateReviewTime(uid, detectedWord)
+                    roomDb.detectedObjectDao().updateLastStudied(detectedWord, System.currentTimeMillis())
+                    Log.d("WordCheck", "$detectedWord: Already exists with ${roomDb.exampleSentenceDao().getSentencesByWordId(existingObject!!.objectId).size} examples, skipping GPT")
+                } else {
+                    // 새 단어이거나 예문이 3개 미만이면 GPT 호출
+                    if (!isKnown) {
+                        firestoreRepo.addNewWordCount(uid)
+                    }
                     val boxString = "[${item.left}, ${item.top}, ${item.right}, ${item.bottom}]"
-
-                    // 1) Save "Searching..." to Room
-                    val newObject = DetectedObject(
-                        parentPhotoId = newPhotoId,
-                        englishWord = detectedWord,
-                        koreanMeaning = "Searching...",
-                        boundingBox = boxString
-                    )
-                    roomDb.detectedObjectDao().insert(newObject)
-
-                    // 2) Fetch GPT & Update Room
+                    if (!isKnown) {
+                        val newObject = DetectedObject(
+                            parentPhotoId = newPhotoId,
+                            englishWord = detectedWord,
+                            koreanMeaning = "Searching...",
+                            boundingBox = boxString
+                        )
+                        roomDb.detectedObjectDao().insert(newObject)
+                    } else {
+                        existingObject?.let { obj ->
+                            roomDb.detectedObjectDao().insert(
+                                DetectedObject(
+                                    parentPhotoId = newPhotoId,
+                                    englishWord = detectedWord,
+                                    koreanMeaning = obj.koreanMeaning,
+                                    boundingBox = boxString
+                                )
+                            )
+                        }
+                    }
                     firestoreRepo.fetchWordFromGPT(
                         word = detectedWord,
                         onSuccess = { wordDto ->
                             lifecycleScope.launch {
-                                // Update "Searching..." to Real Meaning
-                                roomDb.detectedObjectDao().updateMeaning(detectedWord, wordDto.meaning)
-                                Log.d("GPT", "Updated: $detectedWord -> ${wordDto.meaning}")
+                                try {
+                                    firestoreRepo.saveWordToFirebase(wordDto)
+                                    Log.d("GPT", "Saved to Firebase: $detectedWord")
+                                    if (!isKnown) {
+                                        roomDb.detectedObjectDao().updateMeaning(detectedWord, wordDto.meaning)
+                                    }
+                                    val detectedObject = roomDb.detectedObjectDao().getObjectByEnglishWord(detectedWord)
+                                    detectedObject?.let { obj ->
+                                        val existingExamples = roomDb.exampleSentenceDao().getSentencesByWordId(obj.objectId)
+                                        val existingSentences = existingExamples.map { it.sentence }.toSet()
+                                        wordDto.examples.forEach { example ->
+                                            if (!existingSentences.contains(example.sentence)) {
+                                                roomDb.exampleSentenceDao().insert(
+                                                    ExampleSentence(
+                                                        wordId = obj.objectId,
+                                                        sentence = example.sentence,
+                                                        translation = example.translation
+                                                    )
+                                                )
+                                            }
+                                        }
+                                        val totalExamples = roomDb.exampleSentenceDao().getSentencesByWordId(obj.objectId).size
+                                        Log.d("GPT", "Saved ${wordDto.examples.size} examples to Room DB for: $detectedWord (Total: $totalExamples)")
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("GPT", "Error saving word data", e)
+                                    runOnUiThread {
+                                        Toast.makeText(this@MainActivity, "저장 오류: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
                             }
                         },
                         onFailure = { e ->
@@ -413,6 +472,75 @@ class MainActivity : AppCompatActivity() {
                         }
                     )
                 }
+            }
+        }
+    }
+
+    private fun syncWordsFromFirebase() {
+        lifecycleScope.launch {
+            try {
+                val words = firestoreRepo.getAllWordsFromFirebase()
+                val existingPhotos = roomDb.photoLogDao().getAllPhotos()
+                val dummyPhoto = existingPhotos.find { it.localImagePath == "firebase_sync" }
+
+                val dummyPhotoId = if (dummyPhoto == null) {
+                    roomDb.photoLogDao().insert(
+                        PhotoLog(
+                            localImagePath = "firebase_sync",
+                            createdAt = 0
+                        )
+                    )
+                } else {
+                    dummyPhoto.photoId
+                }
+
+                words.forEach { wordDto ->
+                    val exists = roomDb.detectedObjectDao().isWordExist(wordDto.originalWord)
+                    if (!exists) {
+                        val objectId = roomDb.detectedObjectDao().insert(
+                            DetectedObject(
+                                parentPhotoId = dummyPhotoId,
+                                englishWord = wordDto.originalWord,
+                                koreanMeaning = wordDto.meaning,
+                                boundingBox = "",
+                                lastStudied = 0
+                            )
+                        )
+                        wordDto.examples.forEach { example ->
+                            roomDb.exampleSentenceDao().insert(
+                                ExampleSentence(
+                                    wordId = objectId,
+                                    sentence = example.sentence,
+                                    translation = example.translation
+                                )
+                            )
+                        }
+                    } else {
+                        roomDb.detectedObjectDao().updateMeaning(
+                            wordDto.originalWord,
+                            wordDto.meaning
+                        )
+                        val existingObject = roomDb.detectedObjectDao().getObjectByEnglishWord(wordDto.originalWord)
+                        existingObject?.let { obj ->
+                            val existingExamples = roomDb.exampleSentenceDao().getSentencesByWordId(obj.objectId)
+                            val existingSentences = existingExamples.map { it.sentence }.toSet()
+                            wordDto.examples.forEach { example ->
+                                if (!existingSentences.contains(example.sentence)) {
+                                    roomDb.exampleSentenceDao().insert(
+                                        ExampleSentence(
+                                            wordId = obj.objectId,
+                                            sentence = example.sentence,
+                                            translation = example.translation
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                Log.d("Sync", "Synced ${words.size} words from Firebase")
+            } catch (e: Exception) {
+                Log.e("Sync", "Error syncing words from Firebase", e)
             }
         }
     }

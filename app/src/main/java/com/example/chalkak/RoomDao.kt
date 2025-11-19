@@ -37,6 +37,10 @@ interface DetectedObjectDao {
     // update words
     @Query("UPDATE detected_objects SET korean_meaning = :meaning WHERE english_word = :word")
     suspend fun updateMeaning(word: String, meaning: String)
+
+    // get object by english word
+    @Query("SELECT * FROM detected_objects WHERE english_word = :word LIMIT 1")
+    suspend fun getObjectByEnglishWord(word: String): DetectedObject?
 }
 
 // For examples
