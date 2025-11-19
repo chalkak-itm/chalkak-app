@@ -70,7 +70,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_card_white_pure"
-            android:padding="10dp"
+            android:paddingLeft="@dimen/padding_small"
+            android:paddingRight="@dimen/padding_small"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
             android:orientation="vertical">
 
             <ImageView
@@ -124,7 +127,10 @@
                 android:textColor="#333333"
                 android:textColorHint="#999999"
                 android:textSize="18sp"
-                android:padding="16dp"
+                android:paddingLeft="@dimen/padding_small"
+                android:paddingRight="@dimen/padding_small"
+                android:paddingTop="@dimen/padding_standard"
+                android:paddingBottom="@dimen/padding_standard"
                 android:background="@drawable/bg_card_white"
                 android:inputType="text"
                 android:maxLines="1"
@@ -144,7 +150,10 @@
             android:textSize="18sp"
             android:textStyle="bold"
             android:gravity="center"
-            android:padding="16dp"
+            android:paddingLeft="@dimen/padding_small"
+            android:paddingRight="@dimen/padding_small"
+            android:paddingTop="@dimen/padding_standard"
+            android:paddingBottom="@dimen/padding_standard"
             android:background="@drawable/bg_button_purple_ripple"
             android:clickable="true"
             android:focusable="true" />

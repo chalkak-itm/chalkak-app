@@ -5,7 +5,10 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:padding="24dp"
+    android:paddingLeft="@dimen/padding_small"
+    android:paddingRight="@dimen/padding_small"
+    android:paddingTop="24dp"
+    android:paddingBottom="24dp"
     android:minWidth="240dp"
     android:minHeight="72dp"
     android:elevation="8dp">

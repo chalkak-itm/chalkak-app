@@ -16,8 +16,8 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingLeft="24dp"
-        android:paddingRight="24dp"
+        android:paddingLeft="@dimen/padding_standard"
+        android:paddingRight="@dimen/padding_standard"
         android:paddingTop="48dp">
 
         <!-- 기존 환영 레이아웃(마스코트 + 텍스트) -->

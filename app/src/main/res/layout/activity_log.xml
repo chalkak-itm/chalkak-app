@@ -12,8 +12,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingLeft="24dp"
-        android:paddingRight="24dp"
+        android:paddingLeft="@dimen/padding_standard"
+        android:paddingRight="@dimen/padding_standard"
         android:paddingTop="48dp"
         android:paddingBottom="16dp"
         android:gravity="center_horizontal">
@@ -41,8 +41,8 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
+        android:paddingLeft="@dimen/padding_standard"
+        android:paddingRight="@dimen/padding_standard"
         android:paddingTop="8dp"
         android:paddingBottom="8dp" />
 
@@ -52,8 +52,8 @@
         android:layout_height="64dp"
         android:orientation="horizontal"
         android:background="#F7F7F7"
-        android:paddingLeft="24dp"
-        android:paddingRight="24dp"
+        android:paddingLeft="@dimen/padding_standard"
+        android:paddingRight="@dimen/padding_standard"
         android:gravity="center">
 
         <TextView

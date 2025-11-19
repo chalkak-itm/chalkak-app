@@ -5,7 +5,10 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@drawable/bg_card_white_pure"
-    android:padding="16dp">
+    android:paddingLeft="@dimen/padding_small"
+    android:paddingRight="@dimen/padding_small"
+    android:paddingTop="@dimen/padding_standard"
+    android:paddingBottom="@dimen/padding_standard">
 
     <!-- Word + TTS Icon -->
     <LinearLayout
