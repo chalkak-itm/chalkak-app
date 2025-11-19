@@ -15,6 +15,9 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
+import com.google.firebase.auth.FirebaseAuth
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private var currentFragmentTag: String = "home"
@@ -23,7 +26,9 @@ class MainActivity : AppCompatActivity() {
     private val backPressHandler = Handler(Looper.getMainLooper())
     private val backPressRunnable = Runnable { backPressedTime = 0 }
     private var bottomNavContainer: View? = null
-    
+    private val roomDb by lazy { AppDatabase.getInstance(this) }
+    private val firestoreRepo = FirestoreRepository()
+
     companion object {
         private val MAIN_NAVIGATION_TAGS = setOf("home", "log", "quiz", "setting")
     }
@@ -184,6 +189,11 @@ class MainActivity : AppCompatActivity() {
                 val imagePath = intent.getStringExtra("image_path")
                 val detectionResults = intent.getParcelableArrayListExtra<DetectionResultItem>("detection_results") ?: emptyList()
                 val mainNavTag = intent.getStringExtra("main_nav_tag") ?: "home"
+
+                if (detectionResults.isNotEmpty() && imagePath != null) {
+                    processDetectedWords(detectionResults, imagePath)
+                }
+
                 DetectionResultFragment.newInstance(imagePath, detectionResults, mainNavTag)
             }
             else -> HomeFragment()
@@ -364,6 +374,46 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 applyPaddingToScrollableViews(child, padding)
+            }
+        }
+    }
+
+    // Update: Added imagePath parameter
+    private fun processDetectedWords(results: List<DetectionResultItem>, imagePath: String) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+        lifecycleScope.launch {
+            // Save Photo & Get ID
+            val photoLog = PhotoLog(localImagePath = imagePath)
+            val newPhotoId = roomDb.photoLogDao().insert(photoLog)
+
+            // Process items (Max 2)
+            results.take(2).forEach { item ->
+                val detectedWord = item.label
+
+                // Check existence
+                val isKnown = roomDb.detectedObjectDao().isWordExist(detectedWord)
+
+                if (isKnown) {
+                    // Known: update time only
+                    firestoreRepo.onlyUpdateTimestamp(uid)
+                    roomDb.detectedObjectDao().updateLastStudied(detectedWord, System.currentTimeMillis())
+                } else {
+                    // New: update time & count
+                    firestoreRepo.updateLastStudied(uid)
+
+                    // BBox to String
+                    val boxString = "[${item.left}, ${item.top}, ${item.right}, ${item.bottom}]"
+
+                    // Insert object linked to Photo ID
+                    val newObject = DetectedObject(
+                        parentPhotoId = newPhotoId,
+                        englishWord = detectedWord,
+                        koreanMeaning = "Searching...",
+                        boundingBox = boxString
+                    )
+                    roomDb.detectedObjectDao().insert(newObject)
+                }
             }
         }
     }
