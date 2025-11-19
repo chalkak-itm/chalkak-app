@@ -1,19 +1,15 @@
 package com.example.chalkak
 
 import DetectionResultItem
-import android.Manifest
-import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import androidx.fragment.app.Fragment
-import androidx.activity.result.contract.ActivityResultContracts
 import android.widget.FrameLayout.LayoutParams as FLP
 
-class DetectionResultFragment : Fragment() {
+class DetectionResultFragment : BaseFragment() {
 
     private lateinit var imgResult: ImageView
     private lateinit var boxOverlay: FrameLayout
@@ -28,24 +24,13 @@ class DetectionResultFragment : Fragment() {
 
     private lateinit var btnBack: ImageButton
 
-    // TTS helper
-    private var ttsHelper: TtsHelper? = null
-
-    // Speech recognition manager
-    private var speechRecognitionManager: SpeechRecognitionManager? = null
-
     private var detectionResults: List<DetectionResultItem> = emptyList()
     private var mainNavTag: String = "home"
     private val wordButtons = mutableMapOf<String, TextView>() // Map to store buttons by label
     private var selectedButton: TextView? = null // Currently selected button
 
-    // Permission launcher
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (!isGranted) {
-            Toast.makeText(requireContext(), "Recording permission is required.", Toast.LENGTH_SHORT).show()
-        }
+    override fun getCardWordDetailView(): View {
+        return cardWordDetail
     }
 
     companion object {
@@ -98,15 +83,12 @@ class DetectionResultFragment : Fragment() {
             detectionResults = it.getParcelableArrayList<DetectionResultItem>(ARG_DETECTION_RESULTS) ?: emptyList()
             mainNavTag = it.getString(ARG_MAIN_NAV_TAG, "home")
 
-            // Image setting
-            if (imagePath != null) {
-                val bitmap = BitmapFactory.decodeFile(imagePath)
-                imgResult.setImageBitmap(bitmap)
-            }
+            // Image setting using ImageLoaderHelper
+            ImageLoaderHelper.loadImageToView(imgResult, imagePath)
         }
 
-        // Initialize TTS helper
-        ttsHelper = TtsHelper(requireContext(), cardWordDetail)
+        // Initialize TTS and Speech Recognition (from BaseFragment)
+        initializeTtsAndSpeechRecognition()
 
         // Initialize word buttons for all detected objects
         initializeWordButtons()
@@ -119,14 +101,6 @@ class DetectionResultFragment : Fragment() {
         btnBack.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
-
-        // Initialize speech recognition manager
-        speechRecognitionManager = SpeechRecognitionManager(
-            context = requireContext(),
-            cardWordDetail = cardWordDetail,
-            requestPermissionLauncher = requestPermissionLauncher
-            // Default dialog will be displayed
-        )
     }
 
     /**
@@ -267,7 +241,7 @@ class DetectionResultFragment : Fragment() {
         txtExampleSentence.text = "It is a space for example sentence."
 
         // Update speech recognition manager with new word
-        speechRecognitionManager?.updateTargetWord(item.label)
+        updateTargetWord(item.label)
     }
     
     /**
@@ -300,12 +274,6 @@ class DetectionResultFragment : Fragment() {
                 scrollObjectButtons.smoothScrollTo(scrollX, 0)
             }
         }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        ttsHelper?.cleanup()
-        speechRecognitionManager?.cleanup()
     }
 }
 

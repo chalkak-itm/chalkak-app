@@ -8,51 +8,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.LinearLayout
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
-import java.io.File
 
 class MagicAdventureFragment : Fragment() {
-    private var photoUri: Uri? = null
-
-    private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-        if (success && photoUri != null) {
-            val mainActivity = activity as? MainActivity
-            val mainNavTag = mainActivity?.getCurrentMainNavigationTag() ?: "home"
-            val intent = Intent(requireContext(), ImagePreviewActivity::class.java).apply {
-                putExtra("image_uri", photoUri)
-                putExtra("main_nav_tag", mainNavTag)
-            }
-            startActivity(intent)
-        }
-    }
-
-    private val pickImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let {
-            val mainActivity = activity as? MainActivity
-            val mainNavTag = mainActivity?.getCurrentMainNavigationTag() ?: "home"
-            val intent = Intent(requireContext(), ImagePreviewActivity::class.java).apply {
-                putExtra("image_uri", it)
-                putExtra("main_nav_tag", mainNavTag)
-            }
-            startActivity(intent)
-        }
-    }
-
-    private fun launchCamera() {
-        val photoFile = File.createTempFile("capture_", ".jpg", requireContext().cacheDir).apply {
-            deleteOnExit()
-        }
-        photoUri = FileProvider.getUriForFile(
-            requireContext(),
-            "${requireContext().packageName}.fileprovider",
-            photoFile
-        )
-        photoUri?.let { uri ->
-            takePicture.launch(uri)
-        }
-    }
+    private lateinit var imagePickerHelper: ImagePickerHelper
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -65,15 +24,32 @@ class MagicAdventureFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Initialize ImagePickerHelper
+        imagePickerHelper = ImagePickerHelper(
+            context = requireContext(),
+            packageName = requireContext().packageName,
+            onImageSelected = { uri, mainNavTag ->
+                val intent = Intent(requireContext(), ImagePreviewActivity::class.java).apply {
+                    putExtra("image_uri", uri)
+                    putExtra("main_nav_tag", mainNavTag)
+                }
+                startActivity(intent)
+            }
+        )
+        
+        imagePickerHelper.initializeForFragment(this) {
+            (activity as? MainActivity)?.getCurrentMainNavigationTag() ?: "home"
+        }
+
         val takePhoto: LinearLayout = view.findViewById(R.id.btn_take_photo)
         val upload: LinearLayout = view.findViewById(R.id.btn_upload)
         val backButton: ImageButton = view.findViewById(R.id.btn_back)
 
         takePhoto.setOnClickListener {
-            launchCamera()
+            imagePickerHelper.launchCamera()
         }
         upload.setOnClickListener {
-            pickImage.launch("image/*")
+            imagePickerHelper.pickImage()
         }
 
         backButton.setOnClickListener {

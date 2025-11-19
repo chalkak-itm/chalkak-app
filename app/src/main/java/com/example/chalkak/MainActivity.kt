@@ -198,63 +198,38 @@ class MainActivity : AppCompatActivity() {
 
     private fun initializeNavigationIcons() {
         // Clear any color filters to show original icon colors
-        findViewById<android.widget.ImageView>(R.id.nav_home_icon)?.clearColorFilter()
-        findViewById<android.widget.ImageView>(R.id.nav_log_icon)?.clearColorFilter()
-        findViewById<android.widget.ImageView>(R.id.nav_quiz_icon)?.clearColorFilter()
-        findViewById<android.widget.ImageView>(R.id.nav_setting_icon)?.clearColorFilter()
+        val iconIds = listOf(
+            R.id.nav_home_icon,
+            R.id.nav_log_icon,
+            R.id.nav_quiz_icon,
+            R.id.nav_setting_icon
+        )
+        iconIds.forEach { iconId ->
+            findViewById<android.widget.ImageView>(iconId)?.clearColorFilter()
+        }
     }
 
     private fun updateNavigationHighlight(tag: String) {
-        // Update home
-        val homeLayout = findViewById<android.view.View>(R.id.nav_home)
-        val homeIcon = findViewById<android.widget.ImageView>(R.id.nav_home_icon)
-        if (tag == "home") {
-            homeLayout?.setBackgroundResource(R.drawable.bg_nav_item_selected)
-            homeLayout?.elevation = 4f
-            homeIcon?.alpha = 1.0f
-        } else {
-            homeLayout?.setBackgroundResource(R.drawable.bg_nav_item_unselected)
-            homeLayout?.elevation = 0f
-            homeIcon?.alpha = 1.0f
-        }
-
-        // Update log
-        val logLayout = findViewById<android.view.View>(R.id.nav_log)
-        val logIcon = findViewById<android.widget.ImageView>(R.id.nav_log_icon)
-        if (tag == "log") {
-            logLayout?.setBackgroundResource(R.drawable.bg_nav_item_selected)
-            logLayout?.elevation = 4f
-            logIcon?.alpha = 1.0f
-        } else {
-            logLayout?.setBackgroundResource(R.drawable.bg_nav_item_unselected)
-            logLayout?.elevation = 0f
-            logIcon?.alpha = 1.0f
-        }
-
-        // Update quiz
-        val quizLayout = findViewById<android.view.View>(R.id.nav_quiz)
-        val quizIcon = findViewById<android.widget.ImageView>(R.id.nav_quiz_icon)
-        if (tag == "quiz") {
-            quizLayout?.setBackgroundResource(R.drawable.bg_nav_item_selected)
-            quizLayout?.elevation = 4f
-            quizIcon?.alpha = 1.0f
-        } else {
-            quizLayout?.setBackgroundResource(R.drawable.bg_nav_item_unselected)
-            quizLayout?.elevation = 0f
-            quizIcon?.alpha = 1.0f
-        }
-
-        // Update setting
-        val settingLayout = findViewById<android.view.View>(R.id.nav_setting)
-        val settingIcon = findViewById<android.widget.ImageView>(R.id.nav_setting_icon)
-        if (tag == "setting") {
-            settingLayout?.setBackgroundResource(R.drawable.bg_nav_item_selected)
-            settingLayout?.elevation = 4f
-            settingIcon?.alpha = 1.0f
-        } else {
-            settingLayout?.setBackgroundResource(R.drawable.bg_nav_item_unselected)
-            settingLayout?.elevation = 0f
-            settingIcon?.alpha = 1.0f
+        val navigationItems = listOf(
+            Triple("home", R.id.nav_home, R.id.nav_home_icon),
+            Triple("log", R.id.nav_log, R.id.nav_log_icon),
+            Triple("quiz", R.id.nav_quiz, R.id.nav_quiz_icon),
+            Triple("setting", R.id.nav_setting, R.id.nav_setting_icon)
+        )
+        
+        navigationItems.forEach { (itemTag, layoutId, iconId) ->
+            val layout = findViewById<android.view.View>(layoutId)
+            val icon = findViewById<android.widget.ImageView>(iconId)
+            
+            if (tag == itemTag) {
+                layout?.setBackgroundResource(R.drawable.bg_nav_item_selected)
+                layout?.elevation = 4f
+                icon?.alpha = 1.0f
+            } else {
+                layout?.setBackgroundResource(R.drawable.bg_nav_item_unselected)
+                layout?.elevation = 0f
+                icon?.alpha = 1.0f
+            }
         }
     }
 

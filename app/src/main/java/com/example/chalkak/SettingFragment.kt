@@ -1,8 +1,6 @@
 package com.example.chalkak
 
-import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.text.InputType
 import android.view.LayoutInflater
@@ -13,15 +11,11 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
-import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.firebase.auth.FirebaseAuth
 
 class SettingFragment : Fragment() {
-    private lateinit var auth: FirebaseAuth
+    private lateinit var userPreferencesHelper: UserPreferencesHelper
     private lateinit var googleSignInClient: GoogleSignInClient
-    private lateinit var sharedPreferences: SharedPreferences
 
     private lateinit var txtUserName: TextView
     private lateinit var txtNickname: TextView
@@ -42,19 +36,12 @@ class SettingFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Initialize Firebase Auth
-        auth = FirebaseAuth.getInstance()
-
-        // Initialize SharedPreferences
-        sharedPreferences = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        // Initialize UserPreferencesHelper
+        userPreferencesHelper = UserPreferencesHelper(requireContext())
 
         // Initialize Google Sign-In Client
         val webClientId = getString(R.string.default_web_client_id)
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(webClientId)
-            .requestEmail()
-            .build()
-        googleSignInClient = GoogleSignIn.getClient(requireContext(), gso)
+        googleSignInClient = userPreferencesHelper.createGoogleSignInClient(webClientId)
 
         // Initialize views
         txtUserName = view.findViewById(R.id.txt_user_name)
@@ -91,18 +78,17 @@ class SettingFragment : Fragment() {
     }
 
     private fun loadUserInfo() {
-        val user = auth.currentUser
-        if (user != null) {
+        if (userPreferencesHelper.isLoggedIn()) {
             // Display user name
-            val displayName = user.displayName ?: "User"
+            val displayName = userPreferencesHelper.getDisplayName()
             txtUserName.text = displayName
 
             // Display nickname (from SharedPreferences) or displayName
-            val nickname = sharedPreferences.getString("user_nickname", null) ?: displayName
+            val nickname = userPreferencesHelper.getNickname()
             txtNickname.text = nickname
 
             // Display email
-            txtUserEmail.text = user.email ?: "No email"
+            txtUserEmail.text = userPreferencesHelper.getEmail()
         } else {
             // User not logged in
             txtUserName.text = "Guest"
@@ -112,8 +98,8 @@ class SettingFragment : Fragment() {
     }
 
     private fun showEditNicknameDialog() {
-        val currentNickname = sharedPreferences.getString("user_nickname", null)
-            ?: auth.currentUser?.displayName
+        val currentNickname = userPreferencesHelper.getStoredNickname()
+            ?: userPreferencesHelper.getCurrentUser()?.displayName
             ?: ""
 
         val input = android.widget.EditText(requireContext()).apply {
@@ -138,10 +124,7 @@ class SettingFragment : Fragment() {
     }
 
     private fun saveNickname(nickname: String) {
-        sharedPreferences.edit()
-            .putString("user_nickname", nickname)
-            .apply()
-        
+        userPreferencesHelper.saveNickname(nickname)
         txtNickname.text = nickname
         Toast.makeText(requireContext(), "Nickname saved", Toast.LENGTH_SHORT).show()
     }
@@ -159,7 +142,7 @@ class SettingFragment : Fragment() {
 
     private fun logout() {
         // Sign out from Firebase Auth
-        auth.signOut()
+        userPreferencesHelper.signOut()
         
         // Sign out from Google
         googleSignInClient.signOut().addOnCompleteListener {

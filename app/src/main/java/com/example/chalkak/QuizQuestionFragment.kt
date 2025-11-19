@@ -1,6 +1,5 @@
 package com.example.chalkak
 
-import android.Manifest
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
@@ -16,9 +15,6 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.fragment.app.Fragment
 
 data class QuizQuestion(
     val imageRes: Int,
@@ -30,7 +26,7 @@ data class QuizQuestion(
     val options: List<String>
 )
 
-class QuizQuestionFragment : Fragment() {
+class QuizQuestionFragment : BaseFragment() {
     private lateinit var txtProgress: TextView
     private lateinit var txtProgressPercent: TextView
     private lateinit var progressBar: android.widget.ProgressBar
@@ -41,11 +37,6 @@ class QuizQuestionFragment : Fragment() {
     private lateinit var txtKoreanMeaning: TextView
     private lateinit var txtExampleSentence: TextView
     
-    // TTS helper
-    private var ttsHelper: TtsHelper? = null
-    
-    // Speech recognition manager
-    private var speechRecognitionManager: SpeechRecognitionManager? = null
     private lateinit var btnOption1: LinearLayout
     private lateinit var btnOption2: LinearLayout
     private lateinit var btnOption3: LinearLayout
@@ -65,13 +56,8 @@ class QuizQuestionFragment : Fragment() {
     private var selectedAnswer: String? = null
     private var currentQuestionIndex = 0
 
-    // Permission launcher
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (!isGranted) {
-            Toast.makeText(requireContext(), "Recording permission is required.", Toast.LENGTH_SHORT).show()
-        }
+    override fun getCardWordDetailView(): View {
+        return layoutWordInfo
     }
 
     // Placeholder quiz data - replace with actual data from database
@@ -140,24 +126,14 @@ class QuizQuestionFragment : Fragment() {
         iconOption4 = view.findViewById(R.id.icon_option_4)
         btnNextQuestion = view.findViewById(R.id.btn_next_question)
 
-        // Initialize TTS helper
-        // layoutWordInfo contains card_word_detail, so pass it
-        ttsHelper = TtsHelper(requireContext(), layoutWordInfo)
+        // Initialize TTS and Speech Recognition (from BaseFragment)
+        initializeTtsAndSpeechRecognition()
 
         // Setup option button click listeners
         btnOption1.setOnClickListener { onOptionSelected(0) }
         btnOption2.setOnClickListener { onOptionSelected(1) }
         btnOption3.setOnClickListener { onOptionSelected(2) }
         btnOption4.setOnClickListener { onOptionSelected(3) }
-
-        // Initialize speech recognition manager
-        // layoutWordInfo contains card_word_detail, so pass it
-        speechRecognitionManager = SpeechRecognitionManager(
-            context = requireContext(),
-            cardWordDetail = layoutWordInfo,
-            requestPermissionLauncher = requestPermissionLauncher
-            // Default dialog will be displayed
-        )
 
         // Setup next question button
         btnNextQuestion.setOnClickListener {
@@ -284,7 +260,7 @@ class QuizQuestionFragment : Fragment() {
                 layoutWordInfo.visibility = View.VISIBLE
 
                 // Update speech recognition manager with new word
-                speechRecognitionManager?.updateTargetWord(question.englishWord)
+                updateTargetWord(question.englishWord)
             }
 
             // Show next question button
@@ -491,10 +467,5 @@ class QuizQuestionFragment : Fragment() {
         loadQuestion(currentQuestionIndex + 1)
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        ttsHelper?.cleanup()
-        speechRecognitionManager?.cleanup()
-    }
 }
 

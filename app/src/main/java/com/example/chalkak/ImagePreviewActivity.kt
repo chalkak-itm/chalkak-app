@@ -3,22 +3,17 @@ package com.example.chalkak
 import DetectionResultItem
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.ImageDecoder
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.chalkak.ml.ObjectDetectionHelper
-import java.io.File
 
 class ImagePreviewActivity : AppCompatActivity() {
 	private var photoUri: Uri? = null
@@ -28,6 +23,10 @@ class ImagePreviewActivity : AppCompatActivity() {
 	//variables for detection model
 	private lateinit var detectionHelper: ObjectDetectionHelper
 	private var currentBitmap: Bitmap? = null
+	
+	// Helpers
+	private lateinit var imagePickerHelper: ImagePickerHelper
+	private lateinit var bottomNavigationHelper: BottomNavigationHelper
 
 	private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
 		if (success && photoUri != null) {
@@ -48,7 +47,7 @@ class ImagePreviewActivity : AppCompatActivity() {
 		val imgQuiz = findViewById<ImageView>(R.id.img_quiz)
 		val txtNoImage = findViewById<TextView>(R.id.txt_no_image)
 		
-		currentBitmap = loadBitmapFromUri(uri)
+		currentBitmap = ImageLoaderHelper.loadBitmapFromUri(uri, contentResolver)
 		if (currentBitmap != null) {
 			imgQuiz.setImageBitmap(currentBitmap)
 			imgQuiz.visibility = android.view.View.VISIBLE
@@ -94,9 +93,27 @@ class ImagePreviewActivity : AppCompatActivity() {
 
 		findViewById<android.widget.ImageButton>(R.id.btn_back)?.setOnClickListener { finish() }
 
-		// Setup bottom navigation
-		setupBottomNavigation()
-		updateBottomNavigationHighlight(mainNavTag)
+		// Initialize ImagePickerHelper
+		imagePickerHelper = ImagePickerHelper(
+			context = this,
+			packageName = packageName,
+			onImageSelected = { uri, _ ->
+				photoUri = uri
+				isGalleryMode = true
+				updateImageDisplay(uri)
+			}
+		)
+		imagePickerHelper.initializeForActivity(
+			activity = this,
+			takePictureLauncher = takePicture,
+			pickImageLauncher = pickImage,
+			getMainNavTag = { mainNavTag }
+		)
+
+		// Initialize BottomNavigationHelper
+		bottomNavigationHelper = BottomNavigationHelper(this, BottomNavigationHelper.createDefaultItems())
+		bottomNavigationHelper.setupBottomNavigation()
+		bottomNavigationHelper.updateNavigationHighlightAlpha(mainNavTag)
 
 		// Apply WindowInsets to root layout
 		val root = findViewById<android.view.View>(R.id.camera_root)
@@ -116,11 +133,11 @@ class ImagePreviewActivity : AppCompatActivity() {
 
 		findViewById<android.widget.TextView>(R.id.btn_capture)?.setOnClickListener {
 			// Upload button: select photo from gallery
-			pickImage.launch("image/*")
+			imagePickerHelper.pickImage()
 		}
 		findViewById<android.widget.TextView>(R.id.btn_retake)?.setOnClickListener {
 			// Retake button: launch camera
-			launchCamera()
+			imagePickerHelper.launchCamera()
 		}
 		btnConfirm.setOnClickListener {
 			val bitmap = currentBitmap
@@ -225,78 +242,5 @@ class ImagePreviewActivity : AppCompatActivity() {
 		}
 
 		// Don't launch camera automatically (user must press button)
-	}
-
-	private fun launchCamera() {
-		val photoFile = File.createTempFile("capture_", ".jpg", cacheDir).apply {
-			deleteOnExit()
-		}
-		photoUri = FileProvider.getUriForFile(
-			this,
-			"${packageName}.fileprovider",
-			photoFile
-		)
-		photoUri?.let { uri ->
-			takePicture.launch(uri)
-		}
-	}
-
-	//function for transfer the uri into bitmap
-	private fun loadBitmapFromUri(uri: Uri): Bitmap? {
-		return try {
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-				val source = ImageDecoder.createSource(contentResolver, uri)
-				ImageDecoder.decodeBitmap(source)
-			} else {
-				@Suppress("DEPRECATION")
-				MediaStore.Images.Media.getBitmap(contentResolver, uri)
-			}
-		} catch (e: Exception) {
-			e.printStackTrace()
-			null
-		}
-	}
-
-	private fun setupBottomNavigation() {
-		findViewById<android.view.View>(R.id.nav_home)?.setOnClickListener {
-			val intent = Intent(this, MainActivity::class.java).apply {
-				putExtra("fragment_tag", "home")
-				flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-			}
-			startActivity(intent)
-			finish()
-		}
-		findViewById<android.view.View>(R.id.nav_log)?.setOnClickListener {
-			val intent = Intent(this, MainActivity::class.java).apply {
-				putExtra("fragment_tag", "log")
-				flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-			}
-			startActivity(intent)
-			finish()
-		}
-		findViewById<android.view.View>(R.id.nav_quiz)?.setOnClickListener {
-			val intent = Intent(this, MainActivity::class.java).apply {
-				putExtra("fragment_tag", "quiz")
-				flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-			}
-			startActivity(intent)
-			finish()
-		}
-		findViewById<android.view.View>(R.id.nav_setting)?.setOnClickListener {
-			val intent = Intent(this, MainActivity::class.java).apply {
-				putExtra("fragment_tag", "setting")
-				flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-			}
-			startActivity(intent)
-			finish()
-		}
-	}
-	
-	private fun updateBottomNavigationHighlight(tag: String) {
-		// Icons remain in original color, use alpha to show selection state
-		findViewById<android.widget.ImageView>(R.id.nav_home_icon)?.alpha = if (tag == "home") 1.0f else 0.5f
-		findViewById<android.widget.ImageView>(R.id.nav_log_icon)?.alpha = if (tag == "log") 1.0f else 0.5f
-		findViewById<android.widget.ImageView>(R.id.nav_quiz_icon)?.alpha = if (tag == "quiz") 1.0f else 0.5f
-		findViewById<android.widget.ImageView>(R.id.nav_setting_icon)?.alpha = if (tag == "setting") 1.0f else 0.5f
 	}
 }

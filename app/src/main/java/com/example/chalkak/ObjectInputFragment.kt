@@ -1,7 +1,6 @@
 package com.example.chalkak
 
 import DetectionResultItem
-import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -60,11 +59,8 @@ class ObjectInputFragment : Fragment() {
         // Set arrow icon to pure white
         btnConfirm.setColorFilter(android.graphics.Color.WHITE, android.graphics.PorterDuff.Mode.SRC_IN)
 
-        // Set image
-        if (imagePath != null) {
-            val bitmap = BitmapFactory.decodeFile(imagePath)
-            imgPreview.setImageBitmap(bitmap)
-        }
+        // Set image using ImageLoaderHelper
+        ImageLoaderHelper.loadImageToView(imgPreview, imagePath)
 
         // Back button
         btnBack.setOnClickListener {

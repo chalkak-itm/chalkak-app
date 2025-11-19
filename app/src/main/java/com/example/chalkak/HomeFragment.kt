@@ -1,8 +1,5 @@
 package com.example.chalkak
 
-import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,11 +7,9 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import com.google.firebase.auth.FirebaseAuth
 
 class HomeFragment : Fragment() {
-    private lateinit var auth: FirebaseAuth
-    private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var userPreferencesHelper: UserPreferencesHelper
     private lateinit var txtWelcome: TextView
 
     override fun onCreateView(
@@ -28,11 +23,8 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Initialize Firebase Auth
-        auth = FirebaseAuth.getInstance()
-
-        // Initialize SharedPreferences
-        sharedPreferences = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        // Initialize UserPreferencesHelper
+        userPreferencesHelper = UserPreferencesHelper(requireContext())
 
         // Initialize views
         txtWelcome = view.findViewById(R.id.txtWelcome)
@@ -66,16 +58,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun updateWelcomeMessage() {
-        val user = auth.currentUser
-        val nickname = if (user != null) {
-            // Get nickname from SharedPreferences, or use displayName as fallback
-            sharedPreferences.getString("user_nickname", null) 
-                ?: user.displayName 
-                ?: "User"
-        } else {
-            "Guest"
-        }
-        
+        val nickname = userPreferencesHelper.getNickname()
         txtWelcome.text = "Welcome back,\n$nickname"
     }
 }

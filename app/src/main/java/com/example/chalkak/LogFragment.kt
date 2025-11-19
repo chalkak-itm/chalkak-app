@@ -1,6 +1,5 @@
 package com.example.chalkak
 
-import android.Manifest
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,13 +7,10 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
-class LogFragment : Fragment() {
+class LogFragment : BaseFragment() {
     private lateinit var headerDefault: LinearLayout
     private lateinit var cardSelectedItem: LinearLayout
     private lateinit var imgSelectedPhoto: ImageView
@@ -22,21 +18,10 @@ class LogFragment : Fragment() {
     private lateinit var txtKoreanMeaning: TextView
     private lateinit var txtExampleSentence: TextView
     
-    // TTS helper
-    private var ttsHelper: TtsHelper? = null
-    
-    // Speech recognition manager
-    private var speechRecognitionManager: SpeechRecognitionManager? = null
-    
     private var selectedEntry: LogEntry? = null // Track currently selected entry
 
-    // Permission launcher
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (!isGranted) {
-            Toast.makeText(requireContext(), "Recording permission is required.", Toast.LENGTH_SHORT).show()
-        }
+    override fun getCardWordDetailView(): View {
+        return cardSelectedItem
     }
 
     override fun onCreateView(
@@ -58,18 +43,8 @@ class LogFragment : Fragment() {
         txtKoreanMeaning = view.findViewById(R.id.txt_korean_meaning)
         txtExampleSentence = view.findViewById(R.id.txt_example_sentence)
 
-        // Initialize TTS helper
-        // card_word_detail is included via include tag, so pass cardSelectedItem
-        ttsHelper = TtsHelper(requireContext(), cardSelectedItem)
-
-        // Initialize speech recognition manager
-        // card_word_detail is included via include tag, so pass cardSelectedItem
-        speechRecognitionManager = SpeechRecognitionManager(
-            context = requireContext(),
-            cardWordDetail = cardSelectedItem,
-            requestPermissionLauncher = requestPermissionLauncher
-            // Default dialog will be displayed
-        )
+        // Initialize TTS and Speech Recognition (from BaseFragment)
+        initializeTtsAndSpeechRecognition()
 
         val recycler: RecyclerView = view.findViewById(R.id.recyclerLog)
 
@@ -124,15 +99,9 @@ class LogFragment : Fragment() {
         txtExampleSentence.text = "Example sentence for ${entry.word}" // Replace with actual example
 
         // Update speech recognition manager with new word
-        speechRecognitionManager?.updateTargetWord(entry.word)
+        updateTargetWord(entry.word)
         
         // Don't scroll - maintain current scroll position
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        ttsHelper?.cleanup()
-        speechRecognitionManager?.cleanup()
     }
 }
 
