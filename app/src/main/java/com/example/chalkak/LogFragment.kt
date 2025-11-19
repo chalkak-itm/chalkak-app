@@ -7,13 +7,19 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.launch
 import java.io.Serializable
+import java.text.SimpleDateFormat
+import java.util.*
 
 class LogFragment : BaseFragment() {
     private lateinit var headerDefault: LinearLayout
     private var dialogFragment: LogItemDetailDialogFragment? = null
+    private val roomDb by lazy { AppDatabase.getInstance(requireContext()) }
+    private lateinit var recycler: RecyclerView
 
     override fun getCardWordDetailView(): View {
         // DialogFragment를 사용하므로 더 이상 필요 없음
@@ -43,32 +49,54 @@ class LogFragment : BaseFragment() {
         imgMascot.setImageResource(R.drawable.egg)
         txtTitle.text = "Log"
 
-        val recycler: RecyclerView = view.findViewById(R.id.recyclerLog)
+        recycler = view.findViewById(R.id.recyclerLog)
 
-        // Placeholder data; replace with DB-backed repository later
-        val sampleEntries = listOf(
-            LogEntry(dateIso = "2025-11-06", word = "apple", imageRes = R.drawable.camera),
-            LogEntry(dateIso = "2025-11-06", word = "banana", imageRes = R.drawable.frame),
-            LogEntry(dateIso = "2025-11-05", word = "cat", imageRes = R.drawable.camera),
-            LogEntry(dateIso = "2025-11-05", word = "dog", imageRes = R.drawable.frame),
-            LogEntry(dateIso = "2025-11-02", word = "elephant", imageRes = R.drawable.camera),
-            LogEntry(dateIso = "2025-11-02", word = "flower", imageRes = R.drawable.frame),
-            LogEntry(dateIso = "2025-11-02", word = "guitar", imageRes = R.drawable.camera)
-        )
+        // Load data from Room database
+        loadDataFromDatabase()
+    }
 
-        val items: List<LogUiItem> = buildSectionedItems(sampleEntries)
-        val adapter = SectionedLogAdapter(items) { entry ->
-            showItemDetail(entry)
-        }
+    private fun loadDataFromDatabase() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val photos = roomDb.photoLogDao().getAllPhotos()
+                val entries = mutableListOf<LogEntry>()
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
-        val grid = GridLayoutManager(requireContext(), 2)
-        grid.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
-            override fun getSpanSize(position: Int): Int {
-                return if (items[position] is LogUiItem.Header) 2 else 1
+                photos.forEach { photo ->
+                    if (photo.localImagePath != "firebase_sync") {
+                        val detectedObjects = roomDb.detectedObjectDao().getObjectsByPhotoId(photo.photoId)
+                        detectedObjects.forEach { obj ->
+                            val dateStr = dateFormat.format(Date(photo.createdAt))
+                            entries.add(
+                                LogEntry(
+                                    dateIso = dateStr,
+                                    word = obj.englishWord,
+                                    imagePath = photo.localImagePath,
+                                    koreanMeaning = obj.koreanMeaning,
+                                    objectId = obj.objectId
+                                )
+                            )
+                        }
+                    }
+                }
+
+                val items: List<LogUiItem> = buildSectionedItems(entries)
+                val adapter = SectionedLogAdapter(items) { entry ->
+                    showItemDetail(entry)
+                }
+
+                val grid = GridLayoutManager(requireContext(), 2)
+                grid.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+                    override fun getSpanSize(position: Int): Int {
+                        return if (items[position] is LogUiItem.Header) 2 else 1
+                    }
+                }
+                recycler.layoutManager = grid
+                recycler.adapter = adapter
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
-        recycler.layoutManager = grid
-        recycler.adapter = adapter
     }
 
     private fun showItemDetail(entry: LogEntry) {
@@ -87,7 +115,10 @@ class LogFragment : BaseFragment() {
 data class LogEntry(
     val dateIso: String, // e.g., 2025-11-06; replace with LocalDate if using java.time with minSdk compat
     val word: String,
-    val imageRes: Int
+    val imagePath: String? = null, // 실제 이미지 경로
+    val imageRes: Int? = null, // 더미 데이터용 (하위 호환성)
+    val koreanMeaning: String? = null, // 한국어 의미
+    val objectId: Long? = null // DetectedObject의 ID
 ) : Serializable
 
 // UI items for sectioned list
@@ -149,7 +180,13 @@ class LogEntryViewHolder(itemView: android.view.View) : RecyclerView.ViewHolder(
     fun bind(entry: LogEntry, onItemClick: (LogEntry) -> Unit) {
         wordView.text = entry.word
         wordView.visibility = View.VISIBLE
-        imageView.setImageResource(entry.imageRes)
+        
+        // 실제 이미지 경로가 있으면 사용, 없으면 더미 이미지
+        if (entry.imagePath != null) {
+            ImageLoaderHelper.loadImageToView(imageView, entry.imagePath)
+        } else if (entry.imageRes != null) {
+            imageView.setImageResource(entry.imageRes)
+        }
 
         // Set click listener on the card
         itemView.setOnClickListener {

@@ -8,6 +8,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import android.widget.FrameLayout.LayoutParams as FLP
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 class DetectionResultFragment : BaseFragment() {
 
@@ -28,6 +30,7 @@ class DetectionResultFragment : BaseFragment() {
     private var mainNavTag: String = "home"
     private val wordButtons = mutableMapOf<String, TextView>() // Map to store buttons by label
     private var selectedButton: TextView? = null // Currently selected button
+    private val roomDb by lazy { AppDatabase.getInstance(requireContext()) }
 
     override fun getCardWordDetailView(): View {
         return cardWordDetail
@@ -236,12 +239,39 @@ class DetectionResultFragment : BaseFragment() {
 
         txtSelectedWord.text = item.label
 
-        // bring the example sentence and korean meaning by GPT
-        txtKoreanMeaning.text = "Meaning"
-        txtExampleSentence.text = "It is a space for example sentence."
+        // Load word data from local database
+        loadWordDataFromLocal(item.label)
 
         // Update speech recognition manager with new word
         updateTargetWord(item.label)
+    }
+
+    /**
+     * Load word data (meaning and example) from local Room database
+     */
+    private fun loadWordDataFromLocal(word: String) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val detectedObject = roomDb.detectedObjectDao().getObjectByEnglishWord(word)
+                if (detectedObject != null) {
+                    txtKoreanMeaning.text = detectedObject.koreanMeaning.ifEmpty { "의미를 불러오는 중..." }
+                    val examples = roomDb.exampleSentenceDao().getSentencesByWordId(detectedObject.objectId)
+                    if (examples.isNotEmpty()) {
+                        val randomExample = examples.random()
+                        txtExampleSentence.text = "${randomExample.sentence}\n(${randomExample.translation})"
+                    } else {
+                        txtExampleSentence.text = "예문이 없습니다."
+                    }
+                } else {
+                    txtKoreanMeaning.text = "의미를 불러오는 중..."
+                    txtExampleSentence.text = "예문을 불러오는 중..."
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                txtKoreanMeaning.text = "한국어 뜻."
+                txtExampleSentence.text = "It is a space for example sentence."
+            }
+        }
     }
     
     /**

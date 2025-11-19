@@ -59,9 +59,11 @@ class TtsHelper(
         }
 
         btnTtsExample.setOnClickListener {
-            val text = txtExampleSentence.text.toString()
-            if (text.isNotBlank()) {
-                speak(text)
+            val fullText = txtExampleSentence.text.toString()
+            if (fullText.isNotBlank()) {
+                // Extract only English part (before newline or parenthesis)
+                val englishOnly = fullText.split("\n").firstOrNull()?.split("(")?.firstOrNull()?.trim() ?: fullText
+                speak(englishOnly)
             }
         }
     }
