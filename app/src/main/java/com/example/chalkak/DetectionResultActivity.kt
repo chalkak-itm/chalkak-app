@@ -2,12 +2,14 @@
 package com.example.chalkak
 
 import DetectionResultItem
+import android.Manifest
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -29,15 +31,25 @@ class DetectionResultActivity : AppCompatActivity() {
 
     private lateinit var btnBack: ImageButton
 
-    // TTS + Speaker buttons
-    private lateinit var btnTtsWord: ImageView
-    private lateinit var btnTtsExample: ImageView
-    private lateinit var tts: android.speech.tts.TextToSpeech
+    // TTS helper
+    private var ttsHelper: TtsHelper? = null
+
+    // Speech recognition manager
+    private var speechRecognitionManager: SpeechRecognitionManager? = null
 
     private var detectionResults: List<DetectionResultItem> = emptyList()
     private var mainNavTag: String = "home"
     private val wordButtons = mutableMapOf<String, TextView>() // Map to store buttons by label
     private var selectedButton: TextView? = null // Currently selected button
+
+    // Permission launcher
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (!isGranted) {
+            Toast.makeText(this, "녹음 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,17 +67,10 @@ class DetectionResultActivity : AppCompatActivity() {
         txtSelectedWord = findViewById(R.id.txt_selected_word)
         txtKoreanMeaning = findViewById(R.id.txt_korean_meaning)
         txtExampleSentence = findViewById(R.id.txt_example_sentence)
-        btnTtsWord = findViewById(R.id.btn_tts_word)
-        btnTtsExample = findViewById(R.id.btn_tts_example)
         btnBack = findViewById(R.id.btn_back)
 
-        // Initialization of TTS
-        tts = android.speech.tts.TextToSpeech(this) { status ->
-            if (status == android.speech.tts.TextToSpeech.SUCCESS) {
-                val result = tts.setLanguage(java.util.Locale.US)
-                tts.setSpeechRate(0.7f)
-            }
-        }
+        // Initialize TTS helper
+        ttsHelper = TtsHelper(this, cardWordDetail)
 
         // Take Data from the Intent
         val imagePath = intent.getStringExtra("image_path")
@@ -111,21 +116,14 @@ class DetectionResultActivity : AppCompatActivity() {
             insets
         }
 
-        // Reading word
-        btnTtsWord.setOnClickListener {
-            val text = txtSelectedWord.text.toString()
-            if (text.isNotBlank()) {
-                speak(text)
-            }
-        }
 
-        // Reading Example text
-        btnTtsExample.setOnClickListener {
-            val text = txtExampleSentence.text.toString()
-            if (text.isNotBlank()) {
-                speak(text)
-            }
-        }
+        // Initialize speech recognition manager
+        speechRecognitionManager = SpeechRecognitionManager(
+            context = this,
+            cardWordDetail = cardWordDetail,
+            requestPermissionLauncher = requestPermissionLauncher
+            // 기본 다이얼로그가 표시됩니다
+        )
     }
 
     /**
@@ -264,6 +262,9 @@ class DetectionResultActivity : AppCompatActivity() {
         // bring the example sentence and korean meaning by GPT
         txtKoreanMeaning.text = "한국어 뜻."
         txtExampleSentence.text = "It is a space for example sentence."
+
+        // Update speech recognition manager with new word
+        speechRecognitionManager?.updateTargetWord(item.label)
     }
     
     /**
@@ -298,17 +299,6 @@ class DetectionResultActivity : AppCompatActivity() {
         }
     }
 
-    private fun speak(text: String) {
-        if (!::tts.isInitialized) return
-
-        tts.stop()
-        tts.speak(
-            text,
-            android.speech.tts.TextToSpeech.QUEUE_FLUSH,
-            null,
-            "chalkak_tts"
-        )
-    }
 
     private fun setupBottomNavigation() {
         findViewById<View>(R.id.nav_home)?.setOnClickListener {
@@ -354,10 +344,8 @@ class DetectionResultActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        if (::tts.isInitialized) {
-            tts.stop()
-            tts.shutdown()
-        }
+        ttsHelper?.cleanup()
+        speechRecognitionManager?.cleanup()
         super.onDestroy()
     }
 

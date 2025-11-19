@@ -1,5 +1,6 @@
 package com.example.chalkak
 
+import android.Manifest
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -7,6 +8,8 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -18,10 +21,23 @@ class LogFragment : Fragment() {
     private lateinit var txtSelectedWord: TextView
     private lateinit var txtKoreanMeaning: TextView
     private lateinit var txtExampleSentence: TextView
-    private lateinit var btnTtsWord: ImageView
-    private lateinit var btnTtsExample: ImageView
-    private lateinit var tts: android.speech.tts.TextToSpeech
+    
+    // TTS helper
+    private var ttsHelper: TtsHelper? = null
+    
+    // Speech recognition manager
+    private var speechRecognitionManager: SpeechRecognitionManager? = null
+    
     private var selectedEntry: LogEntry? = null // Track currently selected entry
+
+    // Permission launcher
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (!isGranted) {
+            Toast.makeText(requireContext(), "녹음 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -41,31 +57,19 @@ class LogFragment : Fragment() {
         txtSelectedWord = view.findViewById(R.id.txt_selected_word)
         txtKoreanMeaning = view.findViewById(R.id.txt_korean_meaning)
         txtExampleSentence = view.findViewById(R.id.txt_example_sentence)
-        btnTtsWord = view.findViewById(R.id.btn_tts_word)
-        btnTtsExample = view.findViewById(R.id.btn_tts_example)
 
-        // Initialize TTS
-        tts = android.speech.tts.TextToSpeech(requireContext()) { status ->
-            if (status == android.speech.tts.TextToSpeech.SUCCESS) {
-                val result = tts.setLanguage(java.util.Locale.US)
-                tts.setSpeechRate(0.7f)
-            }
-        }
+        // Initialize TTS helper
+        // card_word_detail은 include로 포함되어 있으므로 cardSelectedItem을 전달
+        ttsHelper = TtsHelper(requireContext(), cardSelectedItem)
 
-        // Setup TTS buttons
-        btnTtsWord.setOnClickListener {
-            val text = txtSelectedWord.text.toString()
-            if (text.isNotBlank()) {
-                speak(text)
-            }
-        }
-
-        btnTtsExample.setOnClickListener {
-            val text = txtExampleSentence.text.toString()
-            if (text.isNotBlank()) {
-                speak(text)
-            }
-        }
+        // Initialize speech recognition manager
+        // card_word_detail은 include로 포함되어 있으므로 cardSelectedItem을 전달
+        speechRecognitionManager = SpeechRecognitionManager(
+            context = requireContext(),
+            cardWordDetail = cardSelectedItem,
+            requestPermissionLauncher = requestPermissionLauncher
+            // 기본 다이얼로그가 표시됩니다
+        )
 
         val recycler: RecyclerView = view.findViewById(R.id.recyclerLog)
 
@@ -118,28 +122,17 @@ class LogFragment : Fragment() {
         // TODO: Replace with actual data from database or API
         txtKoreanMeaning.text = "한국어 뜻" // Replace with actual meaning
         txtExampleSentence.text = "Example sentence for ${entry.word}" // Replace with actual example
+
+        // Update speech recognition manager with new word
+        speechRecognitionManager?.updateTargetWord(entry.word)
         
         // Don't scroll - maintain current scroll position
     }
 
-    private fun speak(text: String) {
-        if (!::tts.isInitialized) return
-
-        tts.stop()
-        tts.speak(
-            text,
-            android.speech.tts.TextToSpeech.QUEUE_FLUSH,
-            null,
-            "chalkak_tts"
-        )
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
-        if (::tts.isInitialized) {
-            tts.stop()
-            tts.shutdown()
-        }
+        ttsHelper?.cleanup()
+        speechRecognitionManager?.cleanup()
     }
 }
 

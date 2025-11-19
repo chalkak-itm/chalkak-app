@@ -1,12 +1,12 @@
 package com.example.chalkak
 
+import android.Manifest
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.speech.tts.TextToSpeech
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -16,8 +16,9 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
-import java.util.Locale
 
 data class QuizQuestion(
     val imageRes: Int,
@@ -39,8 +40,12 @@ class QuizQuestionFragment : Fragment() {
     private lateinit var txtSelectedWord: TextView
     private lateinit var txtKoreanMeaning: TextView
     private lateinit var txtExampleSentence: TextView
-    private lateinit var btnTtsWord: ImageView
-    private lateinit var btnTtsExample: ImageView
+    
+    // TTS helper
+    private var ttsHelper: TtsHelper? = null
+    
+    // Speech recognition manager
+    private var speechRecognitionManager: SpeechRecognitionManager? = null
     private lateinit var btnOption1: LinearLayout
     private lateinit var btnOption2: LinearLayout
     private lateinit var btnOption3: LinearLayout
@@ -55,11 +60,19 @@ class QuizQuestionFragment : Fragment() {
     private lateinit var iconOption4: ImageView
     private lateinit var btnNextQuestion: LinearLayout
 
-    private var tts: TextToSpeech? = null
     private var currentQuestion: QuizQuestion? = null
     private var isAnswered = false
     private var selectedAnswer: String? = null
     private var currentQuestionIndex = 0
+
+    // Permission launcher
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (!isGranted) {
+            Toast.makeText(requireContext(), "녹음 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     // Placeholder quiz data - replace with actual data from database
     private val quizQuestions = listOf(
@@ -113,8 +126,6 @@ class QuizQuestionFragment : Fragment() {
         txtSelectedWord = view.findViewById(R.id.txt_selected_word)
         txtKoreanMeaning = view.findViewById(R.id.txt_korean_meaning)
         txtExampleSentence = view.findViewById(R.id.txt_example_sentence)
-        btnTtsWord = view.findViewById(R.id.btn_tts_word)
-        btnTtsExample = view.findViewById(R.id.btn_tts_example)
         btnOption1 = view.findViewById(R.id.btn_option_1)
         btnOption2 = view.findViewById(R.id.btn_option_2)
         btnOption3 = view.findViewById(R.id.btn_option_3)
@@ -129,13 +140,9 @@ class QuizQuestionFragment : Fragment() {
         iconOption4 = view.findViewById(R.id.icon_option_4)
         btnNextQuestion = view.findViewById(R.id.btn_next_question)
 
-        // Initialize TTS
-        tts = TextToSpeech(requireContext()) { status ->
-            if (status == TextToSpeech.SUCCESS) {
-                val result = tts?.setLanguage(Locale.US)
-                tts?.setSpeechRate(0.7f)
-            }
-        }
+        // Initialize TTS helper
+        // layoutWordInfo가 card_word_detail을 포함하고 있으므로 전달
+        ttsHelper = TtsHelper(requireContext(), layoutWordInfo)
 
         // Setup option button click listeners
         btnOption1.setOnClickListener { onOptionSelected(0) }
@@ -143,20 +150,14 @@ class QuizQuestionFragment : Fragment() {
         btnOption3.setOnClickListener { onOptionSelected(2) }
         btnOption4.setOnClickListener { onOptionSelected(3) }
 
-        // Setup TTS buttons
-        btnTtsWord.setOnClickListener {
-            val text = txtSelectedWord.text.toString()
-            if (text.isNotBlank()) {
-                speak(text)
-            }
-        }
-
-        btnTtsExample.setOnClickListener {
-            val text = txtExampleSentence.text.toString()
-            if (text.isNotBlank()) {
-                speak(text)
-            }
-        }
+        // Initialize speech recognition manager
+        // layoutWordInfo가 card_word_detail을 포함하고 있으므로 전달
+        speechRecognitionManager = SpeechRecognitionManager(
+            context = requireContext(),
+            cardWordDetail = layoutWordInfo,
+            requestPermissionLauncher = requestPermissionLauncher
+            // 기본 다이얼로그가 표시됩니다
+        )
 
         // Setup next question button
         btnNextQuestion.setOnClickListener {
@@ -281,6 +282,9 @@ class QuizQuestionFragment : Fragment() {
                 txtKoreanMeaning.text = question.koreanWord
                 txtExampleSentence.text = question.exampleEnglish
                 layoutWordInfo.visibility = View.VISIBLE
+
+                // Update speech recognition manager with new word
+                speechRecognitionManager?.updateTargetWord(question.englishWord)
             }
 
             // Show next question button
@@ -487,21 +491,10 @@ class QuizQuestionFragment : Fragment() {
         loadQuestion(currentQuestionIndex + 1)
     }
 
-    private fun speak(text: String) {
-        tts?.stop()
-        tts?.speak(
-            text,
-            TextToSpeech.QUEUE_FLUSH,
-            null,
-            "chalkak_tts"
-        )
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
-        tts?.stop()
-        tts?.shutdown()
-        tts = null
+        ttsHelper?.cleanup()
+        speechRecognitionManager?.cleanup()
     }
 }
 

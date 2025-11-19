@@ -34,14 +34,51 @@
             android:contentDescription="Play audio" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/txt_korean_meaning"
-        android:layout_width="wrap_content"
+    <!-- Korean Meaning + Record/Play Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="한국어 뜻"
-        android:textColor="#555555"
-        android:textSize="16sp" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/txt_korean_meaning"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="한국어 뜻"
+            android:textColor="#555555"
+            android:textSize="16sp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:id="@+id/btn_play_meaning"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:src="@drawable/ic_play"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="Play recording"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/btn_record_meaning"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_marginStart="4dp"
+                android:src="@drawable/ic_mic"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="Record pronunciation" />
+        </LinearLayout>
+    </LinearLayout>
 
     <!-- Example + TTS Icon -->
     <LinearLayout
@@ -70,13 +107,50 @@
             android:contentDescription="Play audio" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/txt_example_sentence"
+    <!-- Example Sentence + Record/Play Buttons -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:text="Example sentence here"
-        android:textColor="#555555"
-        android:textSize="14sp" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/txt_example_sentence"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Example sentence here"
+            android:textColor="#555555"
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:id="@+id/btn_play_example"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:src="@drawable/ic_play"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="Play recording"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/btn_record_example"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_marginStart="4dp"
+                android:src="@drawable/ic_mic"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="Record pronunciation" />
+        </LinearLayout>
+    </LinearLayout>
 </LinearLayout>
 

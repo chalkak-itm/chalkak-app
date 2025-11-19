@@ -1,6 +1,7 @@
 package com.example.chalkak
 
 import DetectionResultItem
+import android.Manifest
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Bundle
@@ -9,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
+import androidx.activity.result.contract.ActivityResultContracts
 import android.widget.FrameLayout.LayoutParams as FLP
 
 class DetectionResultFragment : Fragment() {
@@ -26,15 +28,25 @@ class DetectionResultFragment : Fragment() {
 
     private lateinit var btnBack: ImageButton
 
-    // TTS + Speaker buttons
-    private lateinit var btnTtsWord: ImageView
-    private lateinit var btnTtsExample: ImageView
-    private lateinit var tts: android.speech.tts.TextToSpeech
+    // TTS helper
+    private var ttsHelper: TtsHelper? = null
+
+    // Speech recognition manager
+    private var speechRecognitionManager: SpeechRecognitionManager? = null
 
     private var detectionResults: List<DetectionResultItem> = emptyList()
     private var mainNavTag: String = "home"
     private val wordButtons = mutableMapOf<String, TextView>() // Map to store buttons by label
     private var selectedButton: TextView? = null // Currently selected button
+
+    // Permission launcher
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (!isGranted) {
+            Toast.makeText(requireContext(), "녹음 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     companion object {
         private const val ARG_IMAGE_PATH = "image_path"
@@ -78,8 +90,6 @@ class DetectionResultFragment : Fragment() {
         txtSelectedWord = view.findViewById(R.id.txt_selected_word)
         txtKoreanMeaning = view.findViewById(R.id.txt_korean_meaning)
         txtExampleSentence = view.findViewById(R.id.txt_example_sentence)
-        btnTtsWord = view.findViewById(R.id.btn_tts_word)
-        btnTtsExample = view.findViewById(R.id.btn_tts_example)
         btnBack = view.findViewById(R.id.btn_back)
 
         // Get arguments
@@ -95,13 +105,8 @@ class DetectionResultFragment : Fragment() {
             }
         }
 
-        // Initialization of TTS
-        tts = android.speech.tts.TextToSpeech(requireContext()) { status ->
-            if (status == android.speech.tts.TextToSpeech.SUCCESS) {
-                val result = tts.setLanguage(java.util.Locale.US)
-                tts.setSpeechRate(0.7f)
-            }
-        }
+        // Initialize TTS helper
+        ttsHelper = TtsHelper(requireContext(), cardWordDetail)
 
         // Initialize word buttons for all detected objects
         initializeWordButtons()
@@ -115,21 +120,13 @@ class DetectionResultFragment : Fragment() {
             parentFragmentManager.popBackStack()
         }
 
-        // Reading word
-        btnTtsWord.setOnClickListener {
-            val text = txtSelectedWord.text.toString()
-            if (text.isNotBlank()) {
-                speak(text)
-            }
-        }
-
-        // Reading Example text
-        btnTtsExample.setOnClickListener {
-            val text = txtExampleSentence.text.toString()
-            if (text.isNotBlank()) {
-                speak(text)
-            }
-        }
+        // Initialize speech recognition manager
+        speechRecognitionManager = SpeechRecognitionManager(
+            context = requireContext(),
+            cardWordDetail = cardWordDetail,
+            requestPermissionLauncher = requestPermissionLauncher
+            // 기본 다이얼로그가 표시됩니다
+        )
     }
 
     /**
@@ -268,6 +265,9 @@ class DetectionResultFragment : Fragment() {
         // bring the example sentence and korean meaning by GPT
         txtKoreanMeaning.text = "한국어 뜻."
         txtExampleSentence.text = "It is a space for example sentence."
+
+        // Update speech recognition manager with new word
+        speechRecognitionManager?.updateTargetWord(item.label)
     }
     
     /**
@@ -302,24 +302,10 @@ class DetectionResultFragment : Fragment() {
         }
     }
 
-    private fun speak(text: String) {
-        if (!::tts.isInitialized) return
-
-        tts.stop()
-        tts.speak(
-            text,
-            android.speech.tts.TextToSpeech.QUEUE_FLUSH,
-            null,
-            "chalkak_tts"
-        )
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
-        if (::tts.isInitialized) {
-            tts.stop()
-            tts.shutdown()
-        }
+        ttsHelper?.cleanup()
+        speechRecognitionManager?.cleanup()
     }
 }
 
