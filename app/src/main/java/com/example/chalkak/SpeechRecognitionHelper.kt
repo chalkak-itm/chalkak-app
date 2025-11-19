@@ -58,6 +58,9 @@ class SpeechRecognitionHelper(
                     start()
                     currentState = RecordingState.RECORDING
                     onStateChanged(currentState)
+                    
+                    // 녹음 시작과 동시에 STT도 시작
+                    startSpeechRecognition()
                 } catch (e: IOException) {
                     e.printStackTrace()
                     Toast.makeText(context, "녹음 시작 실패: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -80,12 +83,15 @@ class SpeechRecognitionHelper(
             }
             mediaRecorder = null
             
+            // STT는 이미 녹음 중에 시작되었으므로, 여기서는 상태만 변경
+            // STT 결과는 RecognitionListener의 onResults에서 처리됨
             currentState = RecordingState.RECORDED
             onStateChanged(currentState)
         } catch (e: Exception) {
             e.printStackTrace()
             Toast.makeText(context, "녹음 중지 실패: ${e.message}", Toast.LENGTH_SHORT).show()
             releaseRecorder()
+            releaseRecognizer() // STT도 중지
             currentState = RecordingState.IDLE
             onStateChanged(currentState)
         }
@@ -158,7 +164,14 @@ class SpeechRecognitionHelper(
                         SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "음성 타임아웃"
                         else -> "알 수 없는 오류"
                     }
-                    Toast.makeText(context, "음성 인식 실패: $errorMessage", Toast.LENGTH_SHORT).show()
+                    // ERROR_NO_MATCH나 ERROR_SPEECH_TIMEOUT은 정상적인 경우일 수 있으므로 토스트 표시 안 함
+                    if (error != SpeechRecognizer.ERROR_NO_MATCH && error != SpeechRecognizer.ERROR_SPEECH_TIMEOUT) {
+                        Toast.makeText(context, "음성 인식 실패: $errorMessage", Toast.LENGTH_SHORT).show()
+                    }
+                    // 인식 결과가 없어도 콜백 호출
+                    if (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) {
+                        onSttResult("", false)
+                    }
                     releaseRecognizer()
                 }
 

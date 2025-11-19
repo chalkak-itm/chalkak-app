@@ -120,8 +120,7 @@ class SpeechRecognitionManager(
             }
             RecordingState.RECORDING -> {
                 helper.stopRecording()
-                // 녹음 완료 후 자동으로 STT 수행
-                helper.startSpeechRecognition()
+                // STT는 녹음 시작과 동시에 시작되므로 여기서는 중지만 함
             }
             RecordingState.RECORDED -> {
                 // 재녹음 시작
