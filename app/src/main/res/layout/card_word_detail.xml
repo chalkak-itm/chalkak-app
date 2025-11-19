@@ -51,33 +51,15 @@
             android:textColor="#555555"
             android:textSize="16sp" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <ImageView
+            android:id="@+id/btn_record_meaning"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
             android:layout_marginStart="8dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <ImageView
-                android:id="@+id/btn_play_meaning"
-                android:layout_width="26dp"
-                android:layout_height="26dp"
-                android:src="@drawable/ic_play"
-                android:clickable="true"
-                android:focusable="true"
-                android:contentDescription="Play recording"
-                android:visibility="gone" />
-
-            <ImageView
-                android:id="@+id/btn_record_meaning"
-                android:layout_width="26dp"
-                android:layout_height="26dp"
-                android:layout_marginStart="4dp"
-                android:src="@drawable/ic_mic"
-                android:clickable="true"
-                android:focusable="true"
-                android:contentDescription="Record pronunciation" />
-        </LinearLayout>
+            android:src="@drawable/ic_mic"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Start speech recognition" />
     </LinearLayout>
 
     <!-- Example + TTS Icon -->
@@ -124,33 +106,15 @@
             android:textColor="#555555"
             android:textSize="14sp" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <ImageView
+            android:id="@+id/btn_record_example"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
             android:layout_marginStart="8dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <ImageView
-                android:id="@+id/btn_play_example"
-                android:layout_width="26dp"
-                android:layout_height="26dp"
-                android:src="@drawable/ic_play"
-                android:clickable="true"
-                android:focusable="true"
-                android:contentDescription="Play recording"
-                android:visibility="gone" />
-
-            <ImageView
-                android:id="@+id/btn_record_example"
-                android:layout_width="26dp"
-                android:layout_height="26dp"
-                android:layout_marginStart="4dp"
-                android:src="@drawable/ic_mic"
-                android:clickable="true"
-                android:focusable="true"
-                android:contentDescription="Record pronunciation" />
-        </LinearLayout>
+            android:src="@drawable/ic_mic"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Start speech recognition" />
     </LinearLayout>
 </LinearLayout>
 

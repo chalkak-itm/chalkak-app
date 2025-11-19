@@ -31,8 +31,6 @@ class SpeechRecognitionManager(
     // 버튼들을 내부에서 찾아서 저장
     private lateinit var btnRecordMeaning: ImageView
     private lateinit var btnRecordExample: ImageView
-    private lateinit var btnPlayMeaning: ImageView
-    private lateinit var btnPlayExample: ImageView
     private lateinit var txtSelectedWord: TextView
     private lateinit var txtExampleSentence: TextView
 
@@ -45,8 +43,6 @@ class SpeechRecognitionManager(
         // card_word_detail 레이아웃 내부의 모든 뷰를 찾습니다
         btnRecordMeaning = cardWordDetail.findViewById(R.id.btn_record_meaning)
         btnRecordExample = cardWordDetail.findViewById(R.id.btn_record_example)
-        btnPlayMeaning = cardWordDetail.findViewById(R.id.btn_play_meaning)
-        btnPlayExample = cardWordDetail.findViewById(R.id.btn_play_example)
         txtSelectedWord = cardWordDetail.findViewById(R.id.txt_selected_word)
         txtExampleSentence = cardWordDetail.findViewById(R.id.txt_example_sentence)
     }
@@ -87,23 +83,15 @@ class SpeechRecognitionManager(
         )
 
         btnRecordMeaning.setOnClickListener {
-            handleRecordButtonClick(speechHelperMeaning, txtSelectedWord.text.toString())
+            handleSttButtonClick(speechHelperMeaning, txtSelectedWord.text.toString())
         }
 
         btnRecordExample.setOnClickListener {
-            handleRecordButtonClick(speechHelperExample, txtSelectedWord.text.toString())
-        }
-
-        btnPlayMeaning.setOnClickListener {
-            handlePlayButtonClick(speechHelperMeaning)
-        }
-
-        btnPlayExample.setOnClickListener {
-            handlePlayButtonClick(speechHelperExample)
+            handleSttButtonClick(speechHelperExample, txtSelectedWord.text.toString())
         }
     }
 
-    private fun handleRecordButtonClick(helper: SpeechRecognitionHelper?, targetWord: String) {
+    private fun handleSttButtonClick(helper: SpeechRecognitionHelper?, targetWord: String) {
         if (helper == null) return
 
         if (!checkPermission()) {
@@ -116,38 +104,12 @@ class SpeechRecognitionManager(
 
         when (currentState) {
             RecordingState.IDLE -> {
-                helper.startRecording()
+                // STT 시작
+                helper.startSpeechRecognition()
             }
-            RecordingState.RECORDING -> {
-                helper.stopRecording()
-                // STT는 녹음 시작과 동시에 시작되므로 여기서는 중지만 함
-            }
-            RecordingState.RECORDED -> {
-                // 재녹음 시작
-                helper.reset()
-                helper.setTargetWord(targetWord)
-                helper.startRecording()
-            }
-            RecordingState.PLAYING -> {
-                // 재생 중에는 녹음 불가
-            }
-        }
-    }
-
-    private fun handlePlayButtonClick(helper: SpeechRecognitionHelper?) {
-        if (helper == null) return
-
-        val currentState = helper.getCurrentState()
-
-        when (currentState) {
-            RecordingState.RECORDED -> {
-                helper.startPlaying()
-            }
-            RecordingState.PLAYING -> {
-                helper.stopPlaying()
-            }
-            else -> {
-                // 재생 가능한 상태가 아님
+            RecordingState.LISTENING -> {
+                // STT 중지
+                helper.stopSpeechRecognition()
             }
         }
     }
@@ -156,25 +118,9 @@ class SpeechRecognitionManager(
         when (state) {
             RecordingState.IDLE -> {
                 btnRecordMeaning.setImageResource(R.drawable.ic_mic)
-                btnRecordMeaning.visibility = View.VISIBLE
-                btnPlayMeaning.visibility = View.GONE
             }
-            RecordingState.RECORDING -> {
+            RecordingState.LISTENING -> {
                 btnRecordMeaning.setImageResource(R.drawable.ic_stop)
-                btnRecordMeaning.visibility = View.VISIBLE
-                btnPlayMeaning.visibility = View.GONE
-            }
-            RecordingState.RECORDED -> {
-                btnRecordMeaning.setImageResource(R.drawable.ic_mic)
-                btnRecordMeaning.visibility = View.VISIBLE
-                btnPlayMeaning.setImageResource(R.drawable.ic_play)
-                btnPlayMeaning.visibility = View.VISIBLE
-            }
-            RecordingState.PLAYING -> {
-                btnRecordMeaning.setImageResource(R.drawable.ic_mic)
-                btnRecordMeaning.visibility = View.VISIBLE
-                btnPlayMeaning.setImageResource(R.drawable.ic_stop)
-                btnPlayMeaning.visibility = View.VISIBLE
             }
         }
     }
@@ -183,25 +129,9 @@ class SpeechRecognitionManager(
         when (state) {
             RecordingState.IDLE -> {
                 btnRecordExample.setImageResource(R.drawable.ic_mic)
-                btnRecordExample.visibility = View.VISIBLE
-                btnPlayExample.visibility = View.GONE
             }
-            RecordingState.RECORDING -> {
+            RecordingState.LISTENING -> {
                 btnRecordExample.setImageResource(R.drawable.ic_stop)
-                btnRecordExample.visibility = View.VISIBLE
-                btnPlayExample.visibility = View.GONE
-            }
-            RecordingState.RECORDED -> {
-                btnRecordExample.setImageResource(R.drawable.ic_mic)
-                btnRecordExample.visibility = View.VISIBLE
-                btnPlayExample.setImageResource(R.drawable.ic_play)
-                btnPlayExample.visibility = View.VISIBLE
-            }
-            RecordingState.PLAYING -> {
-                btnRecordExample.setImageResource(R.drawable.ic_mic)
-                btnRecordExample.visibility = View.VISIBLE
-                btnPlayExample.setImageResource(R.drawable.ic_stop)
-                btnPlayExample.visibility = View.VISIBLE
             }
         }
     }
