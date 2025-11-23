@@ -14,12 +14,24 @@ import kotlinx.coroutines.launch
 import java.io.Serializable
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 class LogFragment : BaseFragment() {
     private lateinit var headerDefault: LinearLayout
     private var dialogFragment: LogItemDetailDialogFragment? = null
     private val roomDb by lazy { AppDatabase.getInstance(requireContext()) }
     private lateinit var recycler: RecyclerView
+    
+    companion object {
+        // Thread-safe SimpleDateFormat cache to avoid creating new instances
+        private val dateFormatCache = ConcurrentHashMap<String, SimpleDateFormat>()
+        
+        private fun getDateFormat(pattern: String): SimpleDateFormat {
+            return dateFormatCache.getOrPut(pattern) {
+                SimpleDateFormat(pattern, Locale.getDefault())
+            }
+        }
+    }
 
     override fun getCardWordDetailView(): View {
         // DialogFragment를 사용하므로 더 이상 필요 없음
@@ -58,13 +70,21 @@ class LogFragment : BaseFragment() {
     private fun loadDataFromDatabase() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
+                // Load all data in parallel to avoid N+1 query problem
                 val photos = roomDb.photoLogDao().getAllPhotos()
+                val allDetectedObjects = roomDb.detectedObjectDao().getAllDetectedObjects()
+                
+                // Group detected objects by photoId for efficient lookup
+                val objectsByPhotoId = allDetectedObjects.groupBy { it.parentPhotoId }
+                
                 val entries = mutableListOf<LogEntry>()
-                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                // Reuse SimpleDateFormat instance from cache
+                val dateFormat = getDateFormat("yyyy-MM-dd")
 
                 photos.forEach { photo ->
                     if (photo.localImagePath != "firebase_sync") {
-                        val detectedObjects = roomDb.detectedObjectDao().getObjectsByPhotoId(photo.photoId)
+                        // Get objects from memory map instead of querying database
+                        val detectedObjects = objectsByPhotoId[photo.photoId] ?: emptyList()
                         detectedObjects.forEach { obj ->
                             val dateStr = dateFormat.format(Date(photo.createdAt))
                             entries.add(

@@ -20,6 +20,7 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
 
 data class QuizQuestion(
     val imagePath: String? = null,
@@ -34,6 +35,11 @@ data class QuizQuestion(
 )
 
 class QuizQuestionFragment : BaseFragment() {
+    companion object {
+        // Constants for quiz configuration
+        private const val NUM_OPTIONS = 4
+    }
+    
     private lateinit var txtProgress: TextView
     private lateinit var txtProgressPercent: TextView
     private lateinit var progressBar: android.widget.ProgressBar
@@ -64,6 +70,8 @@ class QuizQuestionFragment : BaseFragment() {
     private var currentQuestionIndex = 0
     private var quizQuestions = emptyList<QuizQuestion>()
     private val roomDb by lazy { AppDatabase.getInstance(requireContext()) }
+    // Spaced repetition manager for learning algorithm
+    private lateinit var spacedRepetitionManager: SpacedRepetitionManager
 
     override fun getCardWordDetailView(): View {
         // Return a temporary view if layoutWordInfo is not initialized yet
@@ -124,225 +132,135 @@ class QuizQuestionFragment : BaseFragment() {
             loadNextQuestion()
         }
 
+        // Initialize spaced repetition manager
+        spacedRepetitionManager = SpacedRepetitionManager(roomDb, viewLifecycleOwner.lifecycleScope)
+
         // Load quiz questions from database
         loadQuizQuestionsFromDatabase()
     }
     
     private fun loadQuizQuestionsFromDatabase() {
-        viewLifecycleOwner.lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val questions = withContext(Dispatchers.IO) {
-                    generateQuizQuestions()
-                }
+                // Use QuizQuestionGenerator to generate questions
+                val wordToObjectIdMap = mutableMapOf<String, Long>()
+                val questions = QuizQuestionGenerator.generateQuizQuestions(roomDb, wordToObjectIdMap)
                 quizQuestions = questions
                 
-                if (quizQuestions.isEmpty()) {
-                    // No data available - show message or navigate back
-                    (activity as? MainActivity)?.navigateToFragment(QuizFragment(), "quiz")
-                } else {
-                    // Load first question
-                    loadQuestion(0)
+                // Initialize spaced repetition manager with questions
+                spacedRepetitionManager.initializeQuestions(questions, wordToObjectIdMap)
+                spacedRepetitionManager.setTotalCount(questions.size)
+                
+                // Switch to Main dispatcher for UI operations
+                withContext(Dispatchers.Main) {
+                    if (spacedRepetitionManager.isEmpty()) {
+                        // No data available - show message and navigate back
+                        ToastHelper.showCenterToast(
+                            requireContext(),
+                            "No quiz questions available. Please take photos first."
+                        )
+                        (activity as? MainActivity)?.navigateToFragment(QuizFragment(), "quiz")
+                    } else {
+                        // Load first question from queue
+                        loadNextQuestionFromQueue()
+                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                // On error, navigate back to quiz screen
-                (activity as? MainActivity)?.navigateToFragment(QuizFragment(), "quiz")
+                // On error, navigate back to quiz screen (on Main thread)
+                withContext(Dispatchers.Main) {
+                    ToastHelper.showCenterToast(
+                        requireContext(),
+                        "Failed to load quiz questions. Please try again."
+                    )
+                    (activity as? MainActivity)?.navigateToFragment(QuizFragment(), "quiz")
+                }
             }
         }
     }
     
-    private suspend fun generateQuizQuestions(): List<QuizQuestion> {
-        // Get all photos first
-        val allPhotos = roomDb.photoLogDao().getAllPhotos()
-        val photosMap = allPhotos.associateBy { it.photoId }
-        
-        // Get all detected objects with valid korean meaning AND existing photo
-        val allDetectedObjects = roomDb.detectedObjectDao().getAllDetectedObjects()
-            .filter { 
-                it.koreanMeaning.isNotEmpty() && 
-                it.koreanMeaning != "Searching..." &&
-                photosMap.containsKey(it.parentPhotoId) && // Photo must exist
-                photosMap[it.parentPhotoId]?.localImagePath != null // Image path must exist
-            }
-        
-        if (allDetectedObjects.size < 4) {
-            // Need at least 4 objects with photos to create questions
-            return emptyList()
-        }
-        
-        // Get all unique English words from DB for options
-        val allUniqueWords = allDetectedObjects
-            .map { it.englishWord }
-            .distinct()
-            .filter { it.isNotEmpty() }
-        
-        if (allUniqueWords.size < 4) {
-            // Need at least 4 unique words for options
-            return emptyList()
-        }
-        
-        // Group objects by english word to select one object per word
-        val wordsGrouped = allDetectedObjects.groupBy { it.englishWord.lowercase() }
-        
-        // For each word, select one object (prefer the most recently studied)
-        val selectedObjects = wordsGrouped.values.mapNotNull { objects ->
-            objects.sortedByDescending { it.lastStudied }.firstOrNull()
-        }.shuffled().take(10) // Limit to 10 questions
-        
-        if (selectedObjects.size < 4) {
-            return emptyList()
-        }
-        
-        val questions = mutableListOf<QuizQuestion>()
-        
-        for (wordObj in selectedObjects) {
-            // Get image path from photo - use the EXACT photo for this specific object
-            val photo = photosMap[wordObj.parentPhotoId]
-            val imagePath = photo?.localImagePath
-            
-            // Skip if photo or image path is null (shouldn't happen due to filter, but double check)
-            if (imagePath == null || photo == null) {
-                continue // Skip this question
-            }
-            
-            // Get bounding box for THIS SPECIFIC object - ensure it matches exactly
-            val boundingBox = wordObj.boundingBox
-            
-            // Get example sentence - try to get from any object with the same word
-            val allObjectsWithSameWord = roomDb.detectedObjectDao().getAllObjectsByEnglishWord(wordObj.englishWord)
-            var example: ExampleSentence? = null
-            for (obj in allObjectsWithSameWord) {
-                val examples = roomDb.exampleSentenceDao().getSentencesByWordId(obj.objectId)
-                if (examples.isNotEmpty()) {
-                    example = examples.random()
-                    break
-                }
-            }
-            
-            // Generate wrong options from ALL words in DB (not just selectedObjects)
-            // Exclude the current word and words from the same photo to avoid confusion
-            val objectsInSamePhoto = roomDb.detectedObjectDao().getObjectsByPhotoId(wordObj.parentPhotoId)
-            val wordsInSamePhoto = objectsInSamePhoto.map { it.englishWord.lowercase() }.toSet()
-            
-            val otherWords = allUniqueWords
-                .filter { 
-                    it.lowercase() != wordObj.englishWord.lowercase() && 
-                    !wordsInSamePhoto.contains(it.lowercase())
-                }
-                .shuffled()
-                .take(3)
-            
-            if (otherWords.size < 3) {
-                // If not enough words excluding same photo, use any other words
-                val fallbackWords = allUniqueWords
-                    .filter { it.lowercase() != wordObj.englishWord.lowercase() }
-                    .shuffled()
-                    .take(3)
-                
-                if (fallbackWords.size < 3) {
-                    continue // Skip if still not enough options
-                }
-                
-                // Create options list (correct answer + 3 wrong answers, shuffled) - all English
-                val options = (listOf(wordObj.englishWord) + fallbackWords).shuffled()
-                
-                questions.add(
-                    QuizQuestion(
-                        imagePath = imagePath,
-                        imageRes = null,
-                        boundingBox = boundingBox,
-                        englishWord = wordObj.englishWord,
-                        koreanWord = wordObj.koreanMeaning,
-                        exampleEnglish = example?.sentence ?: "",
-                        exampleKorean = example?.translation ?: "",
-                        correctAnswer = wordObj.englishWord,
-                        options = options
-                    )
-                )
-            } else {
-                // Create options list (correct answer + 3 wrong answers, shuffled) - all English
-                val options = (listOf(wordObj.englishWord) + otherWords).shuffled()
-                
-                questions.add(
-                    QuizQuestion(
-                        imagePath = imagePath,
-                        imageRes = null,
-                        boundingBox = boundingBox,
-                        englishWord = wordObj.englishWord,
-                        koreanWord = wordObj.koreanMeaning,
-                        exampleEnglish = example?.sentence ?: "",
-                        exampleKorean = example?.translation ?: "",
-                        correctAnswer = wordObj.englishWord,
-                        options = options
-                    )
-                )
-            }
-        }
-        
-        return questions
-    }
 
-    private fun loadQuestion(index: Int) {
-        if (index >= quizQuestions.size) {
+    private fun loadNextQuestionFromQueue() {
+        // Get next question from spaced repetition manager
+        val question = spacedRepetitionManager.getNextQuestion()
+        
+        if (question == null) {
             // Quiz completed - navigate back or show completion screen
+            ToastHelper.showCenterToast(
+                requireContext(),
+                "Great job! You've completed all questions! 🎉"
+            )
             (activity as? MainActivity)?.navigateToFragment(QuizFragment(), "quiz")
             return
         }
 
-        currentQuestionIndex = index
-        currentQuestion = quizQuestions[index]
+        currentQuestion = question
+        val remaining = spacedRepetitionManager.getRemainingCount()
+        currentQuestionIndex = quizQuestions.size - remaining - 1 // Track progress
         isAnswered = false
         selectedAnswer = null
 
         // Reset UI
         resetUI()
 
-        // Load question data
-        currentQuestion?.let { question ->
-            // Load image from path or use resource
-            if (question.imagePath != null) {
-                // Try to crop image using bounding box if available
-                if (question.boundingBox != null) {
-                    loadImageWithBoundingBox(question.imagePath, question.boundingBox)
-                } else {
-                    ImageLoaderHelper.loadImageToView(imgQuiz, question.imagePath)
-                }
-            } else if (question.imageRes != null) {
-                imgQuiz.setImageResource(question.imageRes)
+        // Verify file exists before loading image
+        if (question.imagePath != null) {
+            val imageFile = java.io.File(question.imagePath)
+            if (!imageFile.exists()) {
+                // File doesn't exist, skip to next question
+                loadNextQuestionFromQueue()
+                return
             }
             
-            // Ensure we have exactly 4 options
-            if (question.options.size >= 4) {
-                txtOption1.text = question.options[0]
-                txtOption2.text = question.options[1]
-                txtOption3.text = question.options[2]
-                txtOption4.text = question.options[3]
+            // Try to crop image using bounding box if available
+            if (question.boundingBox != null) {
+                loadImageWithBoundingBox(question.imagePath, question.boundingBox)
             } else {
-                // Fallback: fill with available options and empty strings
-                txtOption1.text = question.options.getOrNull(0) ?: ""
-                txtOption2.text = question.options.getOrNull(1) ?: ""
-                txtOption3.text = question.options.getOrNull(2) ?: ""
-                txtOption4.text = question.options.getOrNull(3) ?: ""
+                ImageLoaderHelper.loadImageToView(imgQuiz, question.imagePath)
             }
-
-            // Hide word info
-            layoutWordInfo.visibility = View.GONE
-            btnNextQuestion.visibility = View.GONE
-
-            // Enable all option buttons
-            enableAllOptions()
+        } else if (question.imageRes != null) {
+            imgQuiz.setImageResource(question.imageRes)
         }
+        
+        // Ensure we have exactly NUM_OPTIONS options
+        if (question.options.size >= NUM_OPTIONS) {
+            txtOption1.text = question.options[0]
+            txtOption2.text = question.options[1]
+            txtOption3.text = question.options[2]
+            txtOption4.text = question.options[3]
+        } else {
+            // Fallback: fill with available options and empty strings
+            txtOption1.text = question.options.getOrNull(0) ?: ""
+            txtOption2.text = question.options.getOrNull(1) ?: ""
+            txtOption3.text = question.options.getOrNull(2) ?: ""
+            txtOption4.text = question.options.getOrNull(3) ?: ""
+        }
+
+        // Hide word info
+        layoutWordInfo.visibility = View.GONE
+        btnNextQuestion.visibility = View.GONE
+
+        // Enable all option buttons
+        enableAllOptions()
 
         // Update progress
         updateProgress()
     }
 
     private fun updateProgress() {
-        val current = currentQuestionIndex + 1
         val total = quizQuestions.size
-        val percent = (current * 100) / total
+        if (total == 0) {
+            txtProgress.text = "0 / 0"
+            txtProgressPercent.text = "0%"
+            progressBar.progress = 0
+            return
+        }
+        
+        val remaining = spacedRepetitionManager.getRemainingCount()
+        val completed = total - remaining
+        val percent = if (total > 0) (completed * 100 / total) else 0
 
-        txtProgress.text = "$current / $total"
+        txtProgress.text = "$completed / $total"
         txtProgressPercent.text = "$percent%"
         progressBar.progress = percent
     }
@@ -409,6 +327,11 @@ class QuizQuestionFragment : BaseFragment() {
         // Update selected button to correct state
         updateOptionButton(optionIndex, true)
 
+        // Spaced Repetition Algorithm: Update lastStudied date in DB
+        currentQuestion?.let { question ->
+            spacedRepetitionManager.handleCorrectAnswer(question.englishWord)
+        }
+
         // Show word info in the same card after a short delay
         Handler(Looper.getMainLooper()).postDelayed({
             currentQuestion?.let { question ->
@@ -442,6 +365,12 @@ class QuizQuestionFragment : BaseFragment() {
 
         // Update selected button to incorrect state
         updateOptionButton(optionIndex, false)
+
+        // Spaced Repetition Algorithm: Add question back to end of queue
+        // (Don't update lastStudied - word will appear again soon)
+        currentQuestion?.let { question ->
+            spacedRepetitionManager.handleWrongAnswer(question)
+        }
 
         // Don't show correct answer - let user try again
         // Re-enable all options for retry
@@ -630,12 +559,23 @@ class QuizQuestionFragment : BaseFragment() {
     }
 
     private fun loadNextQuestion() {
-        loadQuestion(currentQuestionIndex + 1)
+        // Load next question from queue (spaced repetition algorithm)
+        loadNextQuestionFromQueue()
     }
     
     private fun loadImageWithBoundingBox(imagePath: String, boundingBoxString: String) {
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             try {
+                // Verify file exists before attempting to load
+                val imageFile = java.io.File(imagePath)
+                if (!imageFile.exists()) {
+                    // File doesn't exist, skip to next question
+                    withContext(Dispatchers.Main) {
+                        loadNextQuestion()
+                    }
+                    return@launch
+                }
+                
                 // Load original bitmap
                 val originalBitmap = ImageLoaderHelper.loadBitmapFromPath(imagePath)
                 if (originalBitmap != null) {
@@ -651,15 +591,23 @@ class QuizQuestionFragment : BaseFragment() {
                         }
                     }
                 }
-                // Fallback to full image
+                // Fallback to full image (file exists but loading failed)
                 withContext(Dispatchers.Main) {
                     ImageLoaderHelper.loadImageToView(imgQuiz, imagePath)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                // Fallback to full image on error
-                withContext(Dispatchers.Main) {
-                    ImageLoaderHelper.loadImageToView(imgQuiz, imagePath)
+                // On error, try to load full image if file exists
+                val imageFile = java.io.File(imagePath)
+                if (imageFile.exists()) {
+                    withContext(Dispatchers.Main) {
+                        ImageLoaderHelper.loadImageToView(imgQuiz, imagePath)
+                    }
+                } else {
+                    // File doesn't exist, skip to next question
+                    withContext(Dispatchers.Main) {
+                        loadNextQuestion()
+                    }
                 }
             }
         }

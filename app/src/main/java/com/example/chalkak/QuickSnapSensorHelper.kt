@@ -23,7 +23,7 @@ class QuickSnapSensorHelper(
         sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
     
     // Quick snap sensitivity settings
-    private val quickSnapThresholdGravity = 1f   // How strongly shaking
+    private val quickSnapThresholdGravity = 2f   // How strongly shaking
     private val quickSnapSlopTimeMs = 800L       // Detection term (prevent too many actions)
     private var lastQuickSnapTime: Long = 0L
     

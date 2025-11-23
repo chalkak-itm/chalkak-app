@@ -28,7 +28,12 @@ object BoundingBoxHelper {
             val parts = cleaned.split(",").map { it.trim().toFloatOrNull() }
             
             if (parts.size == 4 && parts.all { it != null }) {
-                RectF(parts[0]!!, parts[1]!!, parts[2]!!, parts[3]!!)
+                // Safe unwrap since we checked all parts are not null
+                val left = parts[0] ?: return null
+                val top = parts[1] ?: return null
+                val right = parts[2] ?: return null
+                val bottom = parts[3] ?: return null
+                RectF(left, top, right, bottom)
             } else {
                 null
             }

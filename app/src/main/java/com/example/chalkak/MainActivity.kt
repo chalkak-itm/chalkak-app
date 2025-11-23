@@ -32,6 +32,10 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private val MAIN_NAVIGATION_TAGS = setOf("home", "log", "quiz", "setting")
+        
+        // Constants for word processing
+        private const val MAX_DETECTED_ITEMS = 2
+        private const val MIN_EXAMPLES_REQUIRED = 3
     }
     
     fun getCurrentMainNavigationTag(): String {
@@ -354,6 +358,7 @@ class MainActivity : AppCompatActivity() {
 
     // Update: Added imagePath parameter
     // Update: Logic changed to use addNewWordCount & updateReviewTime
+    // Optimized: Batch loading to avoid N+1 queries
     fun processDetectedWords(results: List<DetectionResultItem>, imagePath: String) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
@@ -362,15 +367,39 @@ class MainActivity : AppCompatActivity() {
             val photoLog = PhotoLog(localImagePath = imagePath)
             val newPhotoId = roomDb.photoLogDao().insert(photoLog)
 
-            // 2. Process Items (Max 2)
-            results.take(2).forEach { item ->
+            // 2. Process Items (Max MAX_DETECTED_ITEMS)
+            val itemsToProcess = results.take(MAX_DETECTED_ITEMS)
+            
+            // Batch load all existing objects for detected words to avoid N+1 queries
+            val detectedWords = itemsToProcess.map { it.label }
+            val allExistingObjects = roomDb.detectedObjectDao().getAllDetectedObjects()
+                .filter { it.englishWord in detectedWords }
+            
+            // Group by english word for efficient lookup
+            val existingObjectsMap = allExistingObjects.groupBy { it.englishWord.lowercase() }
+                .mapValues { it.value.firstOrNull() } // Get first object for each word
+            
+            // Batch load all example sentences for existing objects
+            val existingObjectIds = allExistingObjects.map { it.objectId }
+            val allExampleSentences = if (existingObjectIds.isNotEmpty()) {
+                roomDb.exampleSentenceDao().getAllExampleSentences()
+                    .filter { it.wordId in existingObjectIds }
+            } else {
+                emptyList()
+            }
+            
+            // Group examples by wordId for efficient lookup
+            val examplesByWordId = allExampleSentences.groupBy { it.wordId }
+            
+            itemsToProcess.forEach { item ->
                 val detectedWord = item.label
-                val existingObject = roomDb.detectedObjectDao().getObjectByEnglishWord(detectedWord)
+                val wordLowercase = detectedWord.lowercase()
+                val existingObject = existingObjectsMap[wordLowercase]
                 val isKnown = existingObject != null
 
-                val hasEnoughExamples = if (isKnown) {
-                    val examples = roomDb.exampleSentenceDao().getSentencesByWordId(existingObject!!.objectId)
-                    examples.size >= 3
+                val hasEnoughExamples = if (isKnown && existingObject != null) {
+                    val examples = examplesByWordId[existingObject.objectId] ?: emptyList()
+                    examples.size >= MIN_EXAMPLES_REQUIRED
                 } else {
                     false
                 }
@@ -390,7 +419,12 @@ class MainActivity : AppCompatActivity() {
                     }
                     firestoreRepo.updateReviewTime(uid, detectedWord)
                     roomDb.detectedObjectDao().updateLastStudied(detectedWord, System.currentTimeMillis())
-                    Log.d("WordCheck", "$detectedWord: Already exists with ${roomDb.exampleSentenceDao().getSentencesByWordId(existingObject!!.objectId).size} examples, skipping GPT")
+                    val exampleCount = if (existingObject != null) {
+                        examplesByWordId[existingObject.objectId]?.size ?: 0
+                    } else {
+                        0
+                    }
+                    Log.d("WordCheck", "$detectedWord: Already exists with $exampleCount examples, skipping GPT")
                 } else {
                     // 새 단어이거나 예문이 3개 미만이면 GPT 호출
                     if (!isKnown) {
@@ -427,8 +461,10 @@ class MainActivity : AppCompatActivity() {
                                     if (!isKnown) {
                                         roomDb.detectedObjectDao().updateMeaning(detectedWord, wordDto.meaning)
                                     }
+                                    // Reload object to get updated data (including newly inserted ones)
                                     val detectedObject = roomDb.detectedObjectDao().getObjectByEnglishWord(detectedWord)
                                     detectedObject?.let { obj ->
+                                        // Reload examples for this specific object
                                         val existingExamples = roomDb.exampleSentenceDao().getSentencesByWordId(obj.objectId)
                                         val existingSentences = existingExamples.map { it.sentence }.toSet()
                                         wordDto.examples.forEach { example ->

@@ -8,7 +8,7 @@ import androidx.room.RoomDatabase
 // synchronize three table
 @Database(
     entities = [PhotoLog::class, DetectedObject::class, ExampleSentence::class],
-    version = 1,
+    version = 2, // Incremented version due to index addition
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

@@ -46,33 +46,32 @@ class WordDataLoaderHelper(
         objectId: Long? = null,
         callback: WordDataCallback
     ) {
-        lifecycleOwner.lifecycleScope.launch {
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             try {
                 callback.onLoading()
 
                 // Try to get object by objectId first, then by word
-                val detectedObject = withContext(Dispatchers.IO) {
-                    if (objectId != null) {
-                        roomDb.detectedObjectDao().getObjectById(objectId)
-                            ?: roomDb.detectedObjectDao().getObjectByEnglishWord(word)
-                    } else {
-                        roomDb.detectedObjectDao().getObjectByEnglishWord(word)
-                    }
+                // Room suspend functions automatically use IO dispatcher
+                val detectedObject = if (objectId != null) {
+                    roomDb.detectedObjectDao().getObjectById(objectId)
+                        ?: roomDb.detectedObjectDao().getObjectByEnglishWord(word)
+                } else {
+                    roomDb.detectedObjectDao().getObjectByEnglishWord(word)
                 }
 
                 if (detectedObject != null) {
                     val koreanMeaning = detectedObject.koreanMeaning.ifEmpty { "Loading meaning..." }
 
                     // Search for examples across all objectIds with the same word
-                    val allObjectsWithSameWord = withContext(Dispatchers.IO) {
-                        roomDb.detectedObjectDao().getAllObjectsByEnglishWord(word)
-                    }
+                    val allObjectsWithSameWord = roomDb.detectedObjectDao().getAllObjectsByEnglishWord(word)
+
+                    // Load all example sentences at once to avoid N+1 queries
+                    val allExampleSentences = roomDb.exampleSentenceDao().getAllExampleSentences()
+                    val examplesByWordId = allExampleSentences.groupBy { it.wordId }
 
                     var examples = emptyList<ExampleSentence>()
                     for (obj in allObjectsWithSameWord) {
-                        val objExamples = withContext(Dispatchers.IO) {
-                            roomDb.exampleSentenceDao().getSentencesByWordId(obj.objectId)
-                        }
+                        val objExamples = examplesByWordId[obj.objectId] ?: emptyList()
                         if (objExamples.isNotEmpty()) {
                             examples = objExamples
                             break
@@ -81,13 +80,16 @@ class WordDataLoaderHelper(
 
                     if (examples.isNotEmpty()) {
                         val randomExample = examples.random()
-                        callback.onSuccess(
-                            WordData(
-                                koreanMeaning = koreanMeaning,
-                                exampleSentence = randomExample.sentence,
-                                exampleTranslation = randomExample.translation
+                        // Switch to Main dispatcher for UI callback
+                        withContext(Dispatchers.Main) {
+                            callback.onSuccess(
+                                WordData(
+                                    koreanMeaning = koreanMeaning,
+                                    exampleSentence = randomExample.sentence,
+                                    exampleTranslation = randomExample.translation
+                                )
                             )
-                        )
+                        }
                     } else {
                         // No examples found, load from Firebase
                         loadWordDataFromFirebase(word, detectedObject.objectId, callback)
@@ -158,43 +160,48 @@ class WordDataLoaderHelper(
                                 roomDb.exampleSentenceDao().getSentencesByWordId(targetObjectId)
                             }
 
-                            if (allExamples.isNotEmpty()) {
-                                val randomExample = allExamples.random()
-                                callback.onSuccess(
-                                    WordData(
-                                        koreanMeaning = wordDto.meaning,
-                                        exampleSentence = randomExample.sentence,
-                                        exampleTranslation = randomExample.translation
+                            // Switch to Main dispatcher for UI callback
+                            withContext(Dispatchers.Main) {
+                                if (allExamples.isNotEmpty()) {
+                                    val randomExample = allExamples.random()
+                                    callback.onSuccess(
+                                        WordData(
+                                            koreanMeaning = wordDto.meaning,
+                                            exampleSentence = randomExample.sentence,
+                                            exampleTranslation = randomExample.translation
+                                        )
                                     )
-                                )
-                            } else {
-                                callback.onSuccess(
-                                    WordData(
-                                        koreanMeaning = wordDto.meaning,
-                                        exampleSentence = "",
-                                        exampleTranslation = ""
+                                } else {
+                                    callback.onSuccess(
+                                        WordData(
+                                            koreanMeaning = wordDto.meaning,
+                                            exampleSentence = "",
+                                            exampleTranslation = ""
+                                        )
                                     )
-                                )
+                                }
                             }
                         } else {
                             // New word (shouldn't normally happen)
-                            if (wordDto.examples.isNotEmpty()) {
-                                val randomExample = wordDto.examples.random()
-                                callback.onSuccess(
-                                    WordData(
-                                        koreanMeaning = wordDto.meaning,
-                                        exampleSentence = randomExample.sentence,
-                                        exampleTranslation = randomExample.translation
+                            withContext(Dispatchers.Main) {
+                                if (wordDto.examples.isNotEmpty()) {
+                                    val randomExample = wordDto.examples.random()
+                                    callback.onSuccess(
+                                        WordData(
+                                            koreanMeaning = wordDto.meaning,
+                                            exampleSentence = randomExample.sentence,
+                                            exampleTranslation = randomExample.translation
+                                        )
                                     )
-                                )
-                            } else {
-                                callback.onSuccess(
-                                    WordData(
-                                        koreanMeaning = wordDto.meaning,
-                                        exampleSentence = "",
-                                        exampleTranslation = ""
+                                } else {
+                                    callback.onSuccess(
+                                        WordData(
+                                            koreanMeaning = wordDto.meaning,
+                                            exampleSentence = "",
+                                            exampleTranslation = ""
+                                        )
                                     )
-                                )
+                                }
                             }
                         }
                     } catch (e: Exception) {
@@ -210,7 +217,9 @@ class WordDataLoaderHelper(
                                 "Invalid word data. Please try again."
                             else -> "Failed to load data. Please try again later."
                         }
-                        callback.onError(errorMessage)
+                        withContext(Dispatchers.Main) {
+                            callback.onError(errorMessage)
+                        }
                     }
                 }
             },
@@ -227,7 +236,9 @@ class WordDataLoaderHelper(
                         "Invalid word data. Please try again."
                     else -> "Failed to load data. Please try again later."
                 }
-                callback.onError(errorMessage)
+                lifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                    callback.onError(errorMessage)
+                }
             }
         )
     }

@@ -12,15 +12,61 @@ import android.widget.ImageView
 /**
  * Helper class for loading images from various sources
  * Reduces code duplication for bitmap loading operations
+ * Optimized for memory efficiency using inSampleSize
  */
 object ImageLoaderHelper {
+    // Maximum dimensions for loaded images to prevent memory issues
+    private const val MAX_IMAGE_WIDTH = 2048
+    private const val MAX_IMAGE_HEIGHT = 2048
+    
     /**
-     * Load bitmap from file path
+     * Calculate inSampleSize for bitmap decoding to reduce memory usage
      */
-    fun loadBitmapFromPath(imagePath: String?): Bitmap? {
+    private fun calculateInSampleSize(
+        options: BitmapFactory.Options,
+        reqWidth: Int,
+        reqHeight: Int
+    ): Int {
+        val (height: Int, width: Int) = options.run { outHeight to outWidth }
+        var inSampleSize = 1
+        
+        if (height > reqHeight || width > reqWidth) {
+            val halfHeight: Int = height / 2
+            val halfWidth: Int = width / 2
+            
+            while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
+                inSampleSize *= 2
+            }
+        }
+        
+        return inSampleSize
+    }
+    
+    /**
+     * Load bitmap from file path with memory optimization
+     * @param imagePath Path to the image file
+     * @param maxWidth Maximum width for the loaded bitmap (default: MAX_IMAGE_WIDTH)
+     * @param maxHeight Maximum height for the loaded bitmap (default: MAX_IMAGE_HEIGHT)
+     */
+    fun loadBitmapFromPath(
+        imagePath: String?,
+        maxWidth: Int = MAX_IMAGE_WIDTH,
+        maxHeight: Int = MAX_IMAGE_HEIGHT
+    ): Bitmap? {
         if (imagePath == null) return null
         return try {
-            BitmapFactory.decodeFile(imagePath)
+            // First, decode with inJustDecodeBounds=true to get image dimensions
+            val options = BitmapFactory.Options().apply {
+                inJustDecodeBounds = true
+            }
+            BitmapFactory.decodeFile(imagePath, options)
+            
+            // Calculate inSampleSize to reduce memory usage
+            options.inSampleSize = calculateInSampleSize(options, maxWidth, maxHeight)
+            
+            // Decode bitmap with inSampleSize set
+            options.inJustDecodeBounds = false
+            BitmapFactory.decodeFile(imagePath, options)
         } catch (e: Exception) {
             e.printStackTrace()
             null
@@ -28,21 +74,76 @@ object ImageLoaderHelper {
     }
     
     /**
-     * Load bitmap from Uri
+     * Load bitmap from Uri with memory optimization
+     * @param uri Uri of the image
+     * @param contentResolver ContentResolver to access the URI
+     * @param maxWidth Maximum width for the loaded bitmap (default: MAX_IMAGE_WIDTH)
+     * @param maxHeight Maximum height for the loaded bitmap (default: MAX_IMAGE_HEIGHT)
      */
-    fun loadBitmapFromUri(uri: Uri, contentResolver: ContentResolver): Bitmap? {
+    fun loadBitmapFromUri(
+        uri: Uri,
+        contentResolver: ContentResolver,
+        maxWidth: Int = MAX_IMAGE_WIDTH,
+        maxHeight: Int = MAX_IMAGE_HEIGHT
+    ): Bitmap? {
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 val source = ImageDecoder.createSource(contentResolver, uri)
-                ImageDecoder.decodeBitmap(source)
+                // ImageDecoder supports scaling via OnHeaderDecodedListener
+                ImageDecoder.decodeBitmap(source) { decoder, info, source ->
+                    val sampleSize = calculateInSampleSizeForDecoder(
+                        info.size.width,
+                        info.size.height,
+                        maxWidth,
+                        maxHeight
+                    )
+                    decoder.setTargetSampleSize(sampleSize)
+                }
             } else {
                 @Suppress("DEPRECATION")
-                MediaStore.Images.Media.getBitmap(contentResolver, uri)
+                // For older versions, use BitmapFactory with options
+                val inputStream = contentResolver.openInputStream(uri) ?: return null
+                val options = BitmapFactory.Options().apply {
+                    inJustDecodeBounds = true
+                }
+                BitmapFactory.decodeStream(inputStream, null, options)
+                inputStream.close()
+                
+                options.inSampleSize = calculateInSampleSize(options, maxWidth, maxHeight)
+                options.inJustDecodeBounds = false
+                
+                val inputStream2 = contentResolver.openInputStream(uri) ?: return null
+                val bitmap = BitmapFactory.decodeStream(inputStream2, null, options)
+                inputStream2.close()
+                bitmap
             }
         } catch (e: Exception) {
             e.printStackTrace()
             null
         }
+    }
+    
+    /**
+     * Calculate sample size for ImageDecoder
+     */
+    private fun calculateInSampleSizeForDecoder(
+        width: Int,
+        height: Int,
+        reqWidth: Int,
+        reqHeight: Int
+    ): Int {
+        var inSampleSize = 1
+        
+        if (height > reqHeight || width > reqWidth) {
+            val halfHeight: Int = height / 2
+            val halfWidth: Int = width / 2
+            
+            while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
+                inSampleSize *= 2
+            }
+        }
+        
+        return inSampleSize
     }
     
     /**

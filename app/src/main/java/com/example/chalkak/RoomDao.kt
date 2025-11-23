@@ -63,4 +63,8 @@ interface ExampleSentenceDao {
 
     @Query("SELECT * FROM example_sentences WHERE word_id = :wordId")
     suspend fun getSentencesByWordId(wordId: Long): List<ExampleSentence>
+    
+    // Get all example sentences for batch loading
+    @Query("SELECT * FROM example_sentences")
+    suspend fun getAllExampleSentences(): List<ExampleSentence>
 }
