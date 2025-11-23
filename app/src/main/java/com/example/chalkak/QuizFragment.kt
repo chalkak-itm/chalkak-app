@@ -76,11 +76,11 @@ class QuizFragment : Fragment() {
         txtWordCount.text = wordCount.toString()
         txtAccuracyRate.text = "$accuracyRate%"
         txtTotalLearning.text = totalLearning.toString()
-        txtConsecutiveDays.text = "${consecutiveDays}일"
-        txtQuizSubtitle.text = "${wordCount}개의 마법 주문을 복습해요"
+        txtConsecutiveDays.text = "${consecutiveDays} days"
+        txtQuizSubtitle.text = "Review ${wordCount} magic spells"
         
         // Update learning activity
-        txtStreakDays.text = "${consecutiveDays}일 연속"
+        txtStreakDays.text = "${consecutiveDays} days streak"
     }
     
     private fun updateActivityDots() {

@@ -144,7 +144,7 @@
                 android:layout_marginTop="12dp"
                 android:visibility="gone" />
 
-            <!-- 다시 매직 어드벤처 버튼 -->
+            <!-- Restart Magic Adventure Button -->
             <LinearLayout
                 android:id="@+id/btn_restart_magic_adventure"
                 android:layout_width="match_parent"
@@ -174,7 +174,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/padding_standard"
-                    android:text="다시 매직 어드벤처 실행"
+                    android:text="Restart Magic Adventure"
                     android:textColor="#FFFFFF"
                     android:textSize="@dimen/text_size_large" />
             </LinearLayout>

@@ -96,7 +96,7 @@ class DetectionResultActivity : AppCompatActivity() {
             finish()
         }
 
-        // 다시 매직 어드벤처 버튼 설정
+        // Restart Magic Adventure button setup
         findViewById<LinearLayout>(R.id.btn_restart_magic_adventure)?.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java).apply {
                 putExtra("fragment_tag", "magic_adventure")

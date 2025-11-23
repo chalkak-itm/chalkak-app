@@ -105,7 +105,7 @@ class DetectionResultFragment : BaseFragment() {
             parentFragmentManager.popBackStack()
         }
 
-        // 다시 매직 어드벤처 버튼 설정
+        // Restart Magic Adventure button setup
         view.findViewById<LinearLayout>(R.id.btn_restart_magic_adventure)?.setOnClickListener {
             (activity as? MainActivity)?.navigateToFragment(
                 MagicAdventureFragment(),
@@ -262,21 +262,21 @@ class DetectionResultFragment : BaseFragment() {
             try {
                 val detectedObject = roomDb.detectedObjectDao().getObjectByEnglishWord(word)
                 if (detectedObject != null) {
-                    txtKoreanMeaning.text = detectedObject.koreanMeaning.ifEmpty { "의미를 불러오는 중..." }
+                    txtKoreanMeaning.text = detectedObject.koreanMeaning.ifEmpty { "Loading meaning..." }
                     val examples = roomDb.exampleSentenceDao().getSentencesByWordId(detectedObject.objectId)
                     if (examples.isNotEmpty()) {
                         val randomExample = examples.random()
                         txtExampleSentence.text = "${randomExample.sentence}\n(${randomExample.translation})"
                     } else {
-                        txtExampleSentence.text = "예문이 없습니다."
+                        txtExampleSentence.text = "No example sentences."
                     }
                 } else {
-                    txtKoreanMeaning.text = "의미를 불러오는 중..."
-                    txtExampleSentence.text = "예문을 불러오는 중..."
+                    txtKoreanMeaning.text = "Loading meaning..."
+                    txtExampleSentence.text = "Loading example sentences..."
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                txtKoreanMeaning.text = "한국어 뜻."
+                txtKoreanMeaning.text = "Korean meaning."
                 txtExampleSentence.text = "It is a space for example sentence."
             }
         }
