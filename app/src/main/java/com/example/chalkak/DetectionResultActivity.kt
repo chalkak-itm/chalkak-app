@@ -96,6 +96,16 @@ class DetectionResultActivity : AppCompatActivity() {
             finish()
         }
 
+        // 다시 매직 어드벤처 버튼 설정
+        findViewById<LinearLayout>(R.id.btn_restart_magic_adventure)?.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java).apply {
+                putExtra("fragment_tag", "magic_adventure")
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+            startActivity(intent)
+            finish()
+        }
+
         // Setup bottom navigation
         setupBottomNavigation()
         updateBottomNavigationHighlight(mainNavTag)

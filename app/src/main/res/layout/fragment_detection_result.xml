@@ -143,6 +143,41 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:visibility="gone" />
+
+            <!-- 다시 매직 어드벤처 버튼 -->
+            <LinearLayout
+                android:id="@+id/btn_restart_magic_adventure"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/bg_button_purple_ripple"
+                android:clickable="true"
+                android:focusable="true"
+                android:minHeight="@dimen/button_height_card"
+                android:gravity="center"
+                android:paddingLeft="@dimen/padding_small"
+                android:paddingRight="@dimen/padding_small"
+                android:paddingTop="@dimen/padding_standard"
+                android:paddingBottom="@dimen/padding_standard"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_size_large"
+                    android:layout_height="@dimen/icon_size_large"
+                    android:src="@drawable/camera"
+                    android:scaleType="centerInside"
+                    android:adjustViewBounds="true"
+                    android:contentDescription="Magic Adventure" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/padding_standard"
+                    android:text="다시 매직 어드벤처 실행"
+                    android:textColor="#FFFFFF"
+                    android:textSize="@dimen/text_size_large" />
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 

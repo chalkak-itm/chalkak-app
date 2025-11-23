@@ -183,6 +183,7 @@ class MainActivity : AppCompatActivity() {
             "log" -> LogFragment()
             "quiz" -> QuizFragment()
             "setting" -> SettingFragment()
+            "magic_adventure" -> MagicAdventureFragment()
             else -> HomeFragment()
         }
         navigateToFragment(fragment, tag)

@@ -104,6 +104,14 @@ class DetectionResultFragment : BaseFragment() {
         btnBack.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
+
+        // 다시 매직 어드벤처 버튼 설정
+        view.findViewById<LinearLayout>(R.id.btn_restart_magic_adventure)?.setOnClickListener {
+            (activity as? MainActivity)?.navigateToFragment(
+                MagicAdventureFragment(),
+                "magic_adventure"
+            )
+        }
     }
 
     /**
