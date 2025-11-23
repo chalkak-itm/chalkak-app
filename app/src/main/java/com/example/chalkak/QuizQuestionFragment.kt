@@ -3,6 +3,7 @@ package com.example.chalkak
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -15,15 +16,21 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 data class QuizQuestion(
-    val imageRes: Int,
+    val imagePath: String? = null,
+    val imageRes: Int? = null, // Fallback for when imagePath is null
+    val boundingBox: String? = null, // Bounding box string: "[left, top, right, bottom]"
     val englishWord: String,
     val koreanWord: String,
     val exampleEnglish: String,
     val exampleKorean: String,
-    val correctAnswer: String,
-    val options: List<String>
+    val correctAnswer: String, // English word
+    val options: List<String> // English words
 )
 
 class QuizQuestionFragment : BaseFragment() {
@@ -55,41 +62,18 @@ class QuizQuestionFragment : BaseFragment() {
     private var isAnswered = false
     private var selectedAnswer: String? = null
     private var currentQuestionIndex = 0
+    private var quizQuestions = emptyList<QuizQuestion>()
+    private val roomDb by lazy { AppDatabase.getInstance(requireContext()) }
 
     override fun getCardWordDetailView(): View {
-        return layoutWordInfo
+        // Return a temporary view if layoutWordInfo is not initialized yet
+        return if (::layoutWordInfo.isInitialized) {
+            layoutWordInfo
+        } else {
+            // Return a temporary view to avoid crash
+            View(requireContext())
+        }
     }
-
-    // Placeholder quiz data - replace with actual data from database
-    private val quizQuestions = listOf(
-        QuizQuestion(
-            imageRes = R.drawable.egg,
-            englishWord = "Apple",
-            koreanWord = "사과",
-            exampleEnglish = "I eat an apple every day.",
-            exampleKorean = "나는 매일 사과를 먹어요.",
-            correctAnswer = "사과",
-            options = listOf("사과", "바나나", "오렌지", "포도")
-        ),
-        QuizQuestion(
-            imageRes = R.drawable.egg,
-            englishWord = "Banana",
-            koreanWord = "바나나",
-            exampleEnglish = "I like to eat bananas.",
-            exampleKorean = "나는 바나나를 좋아해요.",
-            correctAnswer = "바나나",
-            options = listOf("사과", "바나나", "오렌지", "포도")
-        ),
-        QuizQuestion(
-            imageRes = R.drawable.egg,
-            englishWord = "Orange",
-            koreanWord = "오렌지",
-            exampleEnglish = "The orange is sweet.",
-            exampleKorean = "오렌지는 달아요.",
-            correctAnswer = "오렌지",
-            options = listOf("사과", "바나나", "오렌지", "포도")
-        )
-    )
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -140,8 +124,162 @@ class QuizQuestionFragment : BaseFragment() {
             loadNextQuestion()
         }
 
-        // Load first question
-        loadQuestion(0)
+        // Load quiz questions from database
+        loadQuizQuestionsFromDatabase()
+    }
+    
+    private fun loadQuizQuestionsFromDatabase() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val questions = withContext(Dispatchers.IO) {
+                    generateQuizQuestions()
+                }
+                quizQuestions = questions
+                
+                if (quizQuestions.isEmpty()) {
+                    // No data available - show message or navigate back
+                    (activity as? MainActivity)?.navigateToFragment(QuizFragment(), "quiz")
+                } else {
+                    // Load first question
+                    loadQuestion(0)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // On error, navigate back to quiz screen
+                (activity as? MainActivity)?.navigateToFragment(QuizFragment(), "quiz")
+            }
+        }
+    }
+    
+    private suspend fun generateQuizQuestions(): List<QuizQuestion> {
+        // Get all photos first
+        val allPhotos = roomDb.photoLogDao().getAllPhotos()
+        val photosMap = allPhotos.associateBy { it.photoId }
+        
+        // Get all detected objects with valid korean meaning AND existing photo
+        val allDetectedObjects = roomDb.detectedObjectDao().getAllDetectedObjects()
+            .filter { 
+                it.koreanMeaning.isNotEmpty() && 
+                it.koreanMeaning != "Searching..." &&
+                photosMap.containsKey(it.parentPhotoId) && // Photo must exist
+                photosMap[it.parentPhotoId]?.localImagePath != null // Image path must exist
+            }
+        
+        if (allDetectedObjects.size < 4) {
+            // Need at least 4 objects with photos to create questions
+            return emptyList()
+        }
+        
+        // Get all unique English words from DB for options
+        val allUniqueWords = allDetectedObjects
+            .map { it.englishWord }
+            .distinct()
+            .filter { it.isNotEmpty() }
+        
+        if (allUniqueWords.size < 4) {
+            // Need at least 4 unique words for options
+            return emptyList()
+        }
+        
+        // Group objects by english word to select one object per word
+        val wordsGrouped = allDetectedObjects.groupBy { it.englishWord.lowercase() }
+        
+        // For each word, select one object (prefer the most recently studied)
+        val selectedObjects = wordsGrouped.values.mapNotNull { objects ->
+            objects.sortedByDescending { it.lastStudied }.firstOrNull()
+        }.shuffled().take(10) // Limit to 10 questions
+        
+        if (selectedObjects.size < 4) {
+            return emptyList()
+        }
+        
+        val questions = mutableListOf<QuizQuestion>()
+        
+        for (wordObj in selectedObjects) {
+            // Get image path from photo - use the EXACT photo for this specific object
+            val photo = photosMap[wordObj.parentPhotoId]
+            val imagePath = photo?.localImagePath
+            
+            // Skip if photo or image path is null (shouldn't happen due to filter, but double check)
+            if (imagePath == null || photo == null) {
+                continue // Skip this question
+            }
+            
+            // Get bounding box for THIS SPECIFIC object - ensure it matches exactly
+            val boundingBox = wordObj.boundingBox
+            
+            // Get example sentence - try to get from any object with the same word
+            val allObjectsWithSameWord = roomDb.detectedObjectDao().getAllObjectsByEnglishWord(wordObj.englishWord)
+            var example: ExampleSentence? = null
+            for (obj in allObjectsWithSameWord) {
+                val examples = roomDb.exampleSentenceDao().getSentencesByWordId(obj.objectId)
+                if (examples.isNotEmpty()) {
+                    example = examples.random()
+                    break
+                }
+            }
+            
+            // Generate wrong options from ALL words in DB (not just selectedObjects)
+            // Exclude the current word and words from the same photo to avoid confusion
+            val objectsInSamePhoto = roomDb.detectedObjectDao().getObjectsByPhotoId(wordObj.parentPhotoId)
+            val wordsInSamePhoto = objectsInSamePhoto.map { it.englishWord.lowercase() }.toSet()
+            
+            val otherWords = allUniqueWords
+                .filter { 
+                    it.lowercase() != wordObj.englishWord.lowercase() && 
+                    !wordsInSamePhoto.contains(it.lowercase())
+                }
+                .shuffled()
+                .take(3)
+            
+            if (otherWords.size < 3) {
+                // If not enough words excluding same photo, use any other words
+                val fallbackWords = allUniqueWords
+                    .filter { it.lowercase() != wordObj.englishWord.lowercase() }
+                    .shuffled()
+                    .take(3)
+                
+                if (fallbackWords.size < 3) {
+                    continue // Skip if still not enough options
+                }
+                
+                // Create options list (correct answer + 3 wrong answers, shuffled) - all English
+                val options = (listOf(wordObj.englishWord) + fallbackWords).shuffled()
+                
+                questions.add(
+                    QuizQuestion(
+                        imagePath = imagePath,
+                        imageRes = null,
+                        boundingBox = boundingBox,
+                        englishWord = wordObj.englishWord,
+                        koreanWord = wordObj.koreanMeaning,
+                        exampleEnglish = example?.sentence ?: "",
+                        exampleKorean = example?.translation ?: "",
+                        correctAnswer = wordObj.englishWord,
+                        options = options
+                    )
+                )
+            } else {
+                // Create options list (correct answer + 3 wrong answers, shuffled) - all English
+                val options = (listOf(wordObj.englishWord) + otherWords).shuffled()
+                
+                questions.add(
+                    QuizQuestion(
+                        imagePath = imagePath,
+                        imageRes = null,
+                        boundingBox = boundingBox,
+                        englishWord = wordObj.englishWord,
+                        koreanWord = wordObj.koreanMeaning,
+                        exampleEnglish = example?.sentence ?: "",
+                        exampleKorean = example?.translation ?: "",
+                        correctAnswer = wordObj.englishWord,
+                        options = options
+                    )
+                )
+            }
+        }
+        
+        return questions
     }
 
     private fun loadQuestion(index: Int) {
@@ -161,11 +299,31 @@ class QuizQuestionFragment : BaseFragment() {
 
         // Load question data
         currentQuestion?.let { question ->
-            imgQuiz.setImageResource(question.imageRes)
-            txtOption1.text = question.options[0]
-            txtOption2.text = question.options[1]
-            txtOption3.text = question.options[2]
-            txtOption4.text = question.options[3]
+            // Load image from path or use resource
+            if (question.imagePath != null) {
+                // Try to crop image using bounding box if available
+                if (question.boundingBox != null) {
+                    loadImageWithBoundingBox(question.imagePath, question.boundingBox)
+                } else {
+                    ImageLoaderHelper.loadImageToView(imgQuiz, question.imagePath)
+                }
+            } else if (question.imageRes != null) {
+                imgQuiz.setImageResource(question.imageRes)
+            }
+            
+            // Ensure we have exactly 4 options
+            if (question.options.size >= 4) {
+                txtOption1.text = question.options[0]
+                txtOption2.text = question.options[1]
+                txtOption3.text = question.options[2]
+                txtOption4.text = question.options[3]
+            } else {
+                // Fallback: fill with available options and empty strings
+                txtOption1.text = question.options.getOrNull(0) ?: ""
+                txtOption2.text = question.options.getOrNull(1) ?: ""
+                txtOption3.text = question.options.getOrNull(2) ?: ""
+                txtOption4.text = question.options.getOrNull(3) ?: ""
+            }
 
             // Hide word info
             layoutWordInfo.visibility = View.GONE
@@ -256,7 +414,15 @@ class QuizQuestionFragment : BaseFragment() {
             currentQuestion?.let { question ->
                 txtSelectedWord.text = question.englishWord
                 txtKoreanMeaning.text = question.koreanWord
-                txtExampleSentence.text = question.exampleEnglish
+                // Show example sentence with translation if available
+                val exampleText = if (question.exampleEnglish.isNotEmpty() && question.exampleKorean.isNotEmpty()) {
+                    "${question.exampleEnglish}\n(${question.exampleKorean})"
+                } else if (question.exampleEnglish.isNotEmpty()) {
+                    question.exampleEnglish
+                } else {
+                    "No example sentence available."
+                }
+                txtExampleSentence.text = exampleText
                 layoutWordInfo.visibility = View.VISIBLE
 
                 // Update speech recognition manager with new word
@@ -465,6 +631,38 @@ class QuizQuestionFragment : BaseFragment() {
 
     private fun loadNextQuestion() {
         loadQuestion(currentQuestionIndex + 1)
+    }
+    
+    private fun loadImageWithBoundingBox(imagePath: String, boundingBoxString: String) {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                // Load original bitmap
+                val originalBitmap = ImageLoaderHelper.loadBitmapFromPath(imagePath)
+                if (originalBitmap != null) {
+                    // Use BoundingBoxHelper to crop
+                    val boundingBox = BoundingBoxHelper.parseBoundingBox(boundingBoxString)
+                    if (boundingBox != null) {
+                        val croppedBitmap = BoundingBoxHelper.cropBitmap(originalBitmap, boundingBox)
+                        if (croppedBitmap != null) {
+                            withContext(Dispatchers.Main) {
+                                imgQuiz.setImageBitmap(croppedBitmap)
+                            }
+                            return@launch
+                        }
+                    }
+                }
+                // Fallback to full image
+                withContext(Dispatchers.Main) {
+                    ImageLoaderHelper.loadImageToView(imgQuiz, imagePath)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // Fallback to full image on error
+                withContext(Dispatchers.Main) {
+                    ImageLoaderHelper.loadImageToView(imgQuiz, imagePath)
+                }
+            }
+        }
     }
 
 }

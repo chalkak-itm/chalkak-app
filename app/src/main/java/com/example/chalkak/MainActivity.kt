@@ -46,31 +46,19 @@ class MainActivity : AppCompatActivity() {
         // Setup bottom navigation
         setupBottomNavigation()
 
-        // Apply WindowInsets to root layout with camera cutout consideration
+        // Apply WindowInsets using helper
         val root = findViewById<android.view.View>(R.id.main_container)
-        ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val displayCutout = insets.getInsets(WindowInsetsCompat.Type.displayCutout())
-            // S23 FE 전면 카메라 영역 고려: systemBars.top과 displayCutout.top 중 큰 값 사용
-            val topPadding = maxOf(systemBars.top, displayCutout.top)
-            val cameraCutoutPadding = resources.getDimensionPixelSize(R.dimen.camera_cutout_padding_top)
-            // 전면 카메라를 충분히 피하기 위해 추가 패딩 적용
-            val totalTopPadding = topPadding + cameraCutoutPadding
-            v.setPadding(systemBars.left, totalTopPadding, systemBars.right, 0)
-            insets
-        }
-
-        // Apply WindowInsets to bottom navigation bar container
         bottomNavContainer = findViewById(R.id.bottom_nav_container)
-        ViewCompat.setOnApplyWindowInsetsListener(bottomNavContainer) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(0, 0, 0, systemBars.bottom)
-            
-            // Apply bottom padding to fragment container based on bottom nav height
-            applyBottomPaddingToFragments()
-            
-            insets
-        }
+        
+        WindowInsetsHelper.applyToActivity(
+            rootView = root,
+            bottomNavContainer = bottomNavContainer,
+            resources = resources,
+            onBottomNavInsetsApplied = {
+                // Apply bottom padding to fragment container based on bottom nav height
+                applyBottomPaddingToFragments()
+            }
+        )
         
         // Initial padding application after layout
         bottomNavContainer?.post {
@@ -366,7 +354,7 @@ class MainActivity : AppCompatActivity() {
 
     // Update: Added imagePath parameter
     // Update: Logic changed to use addNewWordCount & updateReviewTime
-    private fun processDetectedWords(results: List<DetectionResultItem>, imagePath: String) {
+    fun processDetectedWords(results: List<DetectionResultItem>, imagePath: String) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
         lifecycleScope.launch {

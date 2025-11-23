@@ -12,8 +12,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.DialogFragment
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
 
 class LogItemDetailDialogFragment : DialogFragment() {
     
@@ -24,7 +22,7 @@ class LogItemDetailDialogFragment : DialogFragment() {
     
     private var entry: LogEntry? = null
     private var onDialogDismissed: (() -> Unit)? = null
-    private val roomDb by lazy { AppDatabase.getInstance(requireContext()) }
+    private lateinit var wordDataLoader: WordDataLoaderHelper
     
     // TTS and Speech Recognition helpers
     private var ttsHelper: TtsHelper? = null
@@ -87,16 +85,60 @@ class LogItemDetailDialogFragment : DialogFragment() {
     ): View? {
         val view = inflater.inflate(R.layout.dialog_log_item_detail, container, false)
         
-        // 바깥 터치로 닫기 (FrameLayout의 배경 클릭)
-        view.setOnClickListener {
-            dismiss()
+        val scrollView = view.findViewById<android.widget.ScrollView>(R.id.scroll_view)
+        val contentView = view.findViewById<ViewGroup>(R.id.dialog_content)
+        
+        // FrameLayout에 터치 리스너 추가 - 터치 위치가 콘텐츠 영역 밖인지 확인
+        view.setOnTouchListener { v, event ->
+            if (event.action == android.view.MotionEvent.ACTION_DOWN) {
+                val touchX = event.x
+                val touchY = event.y
+                
+                // ScrollView의 위치와 크기 확인
+                scrollView?.let { sv ->
+                    val scrollViewRect = android.graphics.Rect()
+                    sv.getHitRect(scrollViewRect)
+                    
+                    // 터치 위치가 ScrollView 영역 밖인지 확인
+                    if (!scrollViewRect.contains(touchX.toInt(), touchY.toInt())) {
+                        // 콘텐츠 영역 밖을 터치했으므로 팝업 닫기
+                        dismiss()
+                        return@setOnTouchListener true
+                    }
+                }
+            }
+            false
+        }
+        
+        // ScrollView의 빈 공간 터치 감지 - 콘텐츠 영역 밖을 터치하면 닫기
+        scrollView?.setOnTouchListener { sv, event ->
+            if (event.action == android.view.MotionEvent.ACTION_DOWN) {
+                val touchX = event.x
+                val touchY = event.y
+                
+                // 콘텐츠 영역의 위치와 크기 확인 (ScrollView 내부 좌표 기준)
+                contentView?.let { content ->
+                    val contentLeft = content.left.toFloat()
+                    val contentTop = content.top.toFloat()
+                    val contentRight = content.right.toFloat()
+                    val contentBottom = content.bottom.toFloat()
+                    
+                    // 터치 위치가 콘텐츠 영역 밖인지 확인
+                    if (touchX < contentLeft || touchX > contentRight || 
+                        touchY < contentTop || touchY > contentBottom) {
+                        // 콘텐츠 영역 밖을 터치했으므로 팝업 닫기
+                        dismiss()
+                        return@setOnTouchListener true
+                    }
+                }
+            }
+            // 콘텐츠 영역 내부 터치는 ScrollView가 처리 (스크롤 등)
+            false
         }
         
         // 다이얼로그 내용 영역 (터치해도 닫히지 않도록)
-        val contentView = view.findViewById<ViewGroup>(R.id.dialog_content)
         contentView?.setOnClickListener {
             // 내용 영역 클릭은 이벤트 소비하여 부모로 전파되지 않도록 함
-            // (아무 동작도 하지 않지만 이벤트는 소비됨)
         }
         
         return view
@@ -110,6 +152,9 @@ class LogItemDetailDialogFragment : DialogFragment() {
         txtKoreanMeaning = view.findViewById(R.id.txt_korean_meaning)
         txtExampleSentence = view.findViewById(R.id.txt_example_sentence)
         
+        // Initialize WordDataLoaderHelper
+        wordDataLoader = WordDataLoaderHelper(requireContext(), viewLifecycleOwner)
+        
         entry?.let { logEntry ->
             // Load image from path or use resource
             if (logEntry.imagePath != null) {
@@ -120,8 +165,8 @@ class LogItemDetailDialogFragment : DialogFragment() {
             
             txtSelectedWord.text = logEntry.word
             
-            // Load word data from Room database
-            loadWordDataFromLocal(logEntry)
+            // Load word data using helper
+            loadWordData(logEntry)
         }
         
         // Initialize TTS and Speech Recognition
@@ -204,93 +249,31 @@ class LogItemDetailDialogFragment : DialogFragment() {
         speechRecognitionManager = null
     }
 
-    private fun loadWordDataFromLocal(logEntry: LogEntry) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                // objectId가 있으면 우선 사용, 없으면 단어로 검색
-                val detectedObject = if (logEntry.objectId != null) {
-                    roomDb.detectedObjectDao().getObjectById(logEntry.objectId!!)
-                        ?: roomDb.detectedObjectDao().getObjectByEnglishWord(logEntry.word)
-                } else {
-                    roomDb.detectedObjectDao().getObjectByEnglishWord(logEntry.word)
+    private fun loadWordData(logEntry: LogEntry) {
+        wordDataLoader.loadWordData(
+            word = logEntry.word,
+            objectId = logEntry.objectId,
+            callback = object : WordDataLoaderHelper.WordDataCallback {
+                override fun onLoading() {
+                    txtKoreanMeaning.text = logEntry.koreanMeaning ?: "Loading meaning..."
+                    txtExampleSentence.text = "Loading example sentences..."
                 }
 
-                if (detectedObject != null) {
-                    txtKoreanMeaning.text = detectedObject.koreanMeaning.ifEmpty { "의미를 불러오는 중..." }
-                    val examples = roomDb.exampleSentenceDao().getSentencesByWordId(detectedObject.objectId)
-                    if (examples.isNotEmpty()) {
-                        val randomExample = examples.random()
-                        txtExampleSentence.text = "${randomExample.sentence}\n(${randomExample.translation})"
+                override fun onSuccess(data: WordDataLoaderHelper.WordData) {
+                    txtKoreanMeaning.text = data.koreanMeaning
+                    if (data.exampleSentence.isNotEmpty() && data.exampleTranslation.isNotEmpty()) {
+                        txtExampleSentence.text = "${data.exampleSentence}\n(${data.exampleTranslation})"
+                    } else if (data.exampleSentence.isNotEmpty()) {
+                        txtExampleSentence.text = data.exampleSentence
                     } else {
-                        txtExampleSentence.text = "예문이 없습니다."
+                        txtExampleSentence.text = "No example sentences."
                     }
-                } else {
-                    // Firebase에서 가져오기 시도
-                    txtKoreanMeaning.text = logEntry.koreanMeaning ?: "의미를 불러오는 중..."
-                    txtExampleSentence.text = "예문을 불러오는 중..."
-                    
-                    // Firebase에서 단어 정보 가져오기
-                    loadWordDataFromFirebase(logEntry.word)
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                txtKoreanMeaning.text = logEntry.koreanMeaning ?: "의미를 불러오는 중..."
-                txtExampleSentence.text = "예문을 불러오는 중..."
-            }
-        }
-    }
 
-    private fun loadWordDataFromFirebase(word: String) {
-        val firestoreRepo = FirestoreRepository()
-        firestoreRepo.fetchWordFromGPT(
-            word = word,
-            onSuccess = { wordDto ->
-                viewLifecycleOwner.lifecycleScope.launch {
-                    try {
-                        // Firebase에 저장
-                        firestoreRepo.saveWordToFirebase(wordDto)
-                        
-                        // Room DB에 저장
-                        val existingObject = roomDb.detectedObjectDao().getObjectByEnglishWord(word)
-                        if (existingObject != null) {
-                            roomDb.detectedObjectDao().updateMeaning(word, wordDto.meaning)
-                            val existingExamples = roomDb.exampleSentenceDao().getSentencesByWordId(existingObject.objectId)
-                            val existingSentences = existingExamples.map { it.sentence }.toSet()
-                            wordDto.examples.forEach { example ->
-                                if (!existingSentences.contains(example.sentence)) {
-                                    roomDb.exampleSentenceDao().insert(
-                                        ExampleSentence(
-                                            wordId = existingObject.objectId,
-                                            sentence = example.sentence,
-                                            translation = example.translation
-                                        )
-                                    )
-                                }
-                            }
-                            // UI 업데이트
-                            txtKoreanMeaning.text = wordDto.meaning
-                            val allExamples = roomDb.exampleSentenceDao().getSentencesByWordId(existingObject.objectId)
-                            if (allExamples.isNotEmpty()) {
-                                val randomExample = allExamples.random()
-                                txtExampleSentence.text = "${randomExample.sentence}\n(${randomExample.translation})"
-                            }
-                        } else {
-                            // 새 단어인 경우 (일반적으로는 발생하지 않아야 함)
-                            txtKoreanMeaning.text = wordDto.meaning
-                            if (wordDto.examples.isNotEmpty()) {
-                                val randomExample = wordDto.examples.random()
-                                txtExampleSentence.text = "${randomExample.sentence}\n(${randomExample.translation})"
-                            }
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
+                override fun onError(message: String) {
+                    txtKoreanMeaning.text = "Failed to load meaning."
+                    txtExampleSentence.text = message
                 }
-            },
-            onFailure = { e ->
-                // 에러 발생 시 기본 메시지 표시
-                txtKoreanMeaning.text = "의미를 불러올 수 없습니다."
-                txtExampleSentence.text = "예문을 불러올 수 없습니다."
             }
         )
     }

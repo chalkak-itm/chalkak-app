@@ -93,6 +93,10 @@ class LogFragment : BaseFragment() {
                 }
                 recycler.layoutManager = grid
                 recycler.adapter = adapter
+                
+                // 아이템 간격을 일정하게 설정하여 동일한 너비 보장
+                val spacing = resources.getDimensionPixelSize(R.dimen.padding_small)
+                recycler.addItemDecoration(GridSpacingItemDecoration(2, spacing, true))
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -199,6 +203,57 @@ class HeaderViewHolder(itemView: android.view.View) : RecyclerView.ViewHolder(it
     private val sectionDate: android.widget.TextView = itemView.findViewById(R.id.txtSectionDate)
     fun bind(dateIso: String) {
         sectionDate.text = dateIso
+    }
+}
+
+/**
+ * GridLayoutManager용 아이템 간격 설정 클래스
+ * 모든 아이템이 동일한 너비를 가지도록 간격을 일정하게 설정
+ */
+class GridSpacingItemDecoration(
+    private val spanCount: Int,
+    private val spacing: Int,
+    private val includeEdge: Boolean
+) : RecyclerView.ItemDecoration() {
+    
+    override fun getItemOffsets(
+        outRect: android.graphics.Rect,
+        view: android.view.View,
+        parent: RecyclerView,
+        state: RecyclerView.State
+    ) {
+        val position = parent.getChildAdapterPosition(view)
+        val itemViewType = parent.adapter?.getItemViewType(position) ?: -1
+        
+        // Header는 spanCount만큼 차지하므로 전체 너비 사용
+        if (itemViewType == 0) { // TYPE_HEADER
+            if (includeEdge) {
+                outRect.left = spacing
+                outRect.right = spacing
+                outRect.top = if (position < spanCount) spacing else spacing / 2
+                outRect.bottom = spacing
+            } else {
+                outRect.left = 0
+                outRect.right = 0
+                outRect.top = if (position < spanCount) 0 else spacing / 2
+                outRect.bottom = 0
+            }
+        } else {
+            // 일반 아이템 (Entry)
+            val column = position % spanCount
+            
+            if (includeEdge) {
+                outRect.left = spacing - column * spacing / spanCount
+                outRect.right = (column + 1) * spacing / spanCount
+                outRect.top = spacing
+                outRect.bottom = spacing
+            } else {
+                outRect.left = column * spacing / spanCount
+                outRect.right = spacing - (column + 1) * spacing / spanCount
+                outRect.top = spacing
+                outRect.bottom = spacing
+            }
+        }
     }
 }
 

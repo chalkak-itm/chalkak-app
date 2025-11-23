@@ -8,9 +8,7 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 
 class ObjectInputActivity : AppCompatActivity() {
 
@@ -21,6 +19,7 @@ class ObjectInputActivity : AppCompatActivity() {
 
     private var imagePath: String? = null
     private var mainNavTag: String = "home"
+    private lateinit var bottomNavigationHelper: BottomNavigationHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,29 +66,19 @@ class ObjectInputActivity : AppCompatActivity() {
         edtObjectName.requestFocus()
         window.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
 
-        // Setup bottom navigation
-        setupBottomNavigation()
-        updateBottomNavigationHighlight(mainNavTag)
+        // Setup bottom navigation using helper
+        bottomNavigationHelper = BottomNavigationHelper(this, BottomNavigationHelper.createDefaultItems())
+        bottomNavigationHelper.setupBottomNavigation()
+        bottomNavigationHelper.updateNavigationHighlightAlpha(mainNavTag)
 
-        // Apply WindowInsets to root layout with camera cutout consideration
+        // Apply WindowInsets using helper
         val root = findViewById<View>(R.id.input_root)
-        ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val displayCutout = insets.getInsets(WindowInsetsCompat.Type.displayCutout())
-            // S23 FE 전면 카메라 영역 고려: systemBars.top과 displayCutout.top 중 큰 값 사용
-            val topPadding = maxOf(systemBars.top, displayCutout.top)
-            val cameraCutoutPadding = resources.getDimensionPixelSize(R.dimen.camera_cutout_padding_top)
-            v.setPadding(systemBars.left, topPadding + cameraCutoutPadding, systemBars.right, 0)
-            insets
-        }
-
-        // Apply WindowInsets to bottom navigation bar container
         val bottomNavContainer = findViewById<View>(R.id.bottom_nav_container)
-        ViewCompat.setOnApplyWindowInsetsListener(bottomNavContainer) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(0, 0, 0, systemBars.bottom)
-            insets
-        }
+        WindowInsetsHelper.applyToActivity(
+            rootView = root,
+            bottomNavContainer = bottomNavContainer,
+            resources = resources
+        )
     }
 
     private fun handleConfirm() {
@@ -120,47 +109,5 @@ class ObjectInputActivity : AppCompatActivity() {
         finish()
     }
 
-    private fun setupBottomNavigation() {
-        findViewById<View>(R.id.nav_home)?.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java).apply {
-                putExtra("fragment_tag", "home")
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            }
-            startActivity(intent)
-            finish()
-        }
-        findViewById<View>(R.id.nav_log)?.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java).apply {
-                putExtra("fragment_tag", "log")
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            }
-            startActivity(intent)
-            finish()
-        }
-        findViewById<View>(R.id.nav_quiz)?.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java).apply {
-                putExtra("fragment_tag", "quiz")
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            }
-            startActivity(intent)
-            finish()
-        }
-        findViewById<View>(R.id.nav_setting)?.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java).apply {
-                putExtra("fragment_tag", "setting")
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            }
-            startActivity(intent)
-            finish()
-        }
-    }
-    
-    private fun updateBottomNavigationHighlight(tag: String) {
-        // Icons remain in original color, use alpha to show selection state
-        findViewById<ImageView>(R.id.nav_home_icon)?.alpha = if (tag == "home") 1.0f else 0.5f
-        findViewById<ImageView>(R.id.nav_log_icon)?.alpha = if (tag == "log") 1.0f else 0.5f
-        findViewById<ImageView>(R.id.nav_quiz_icon)?.alpha = if (tag == "quiz") 1.0f else 0.5f
-        findViewById<ImageView>(R.id.nav_setting_icon)?.alpha = if (tag == "setting") 1.0f else 0.5f
-    }
 }
 

@@ -11,9 +11,7 @@ import android.view.View
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 import android.widget.FrameLayout.LayoutParams as FLP
 
 class DetectionResultActivity : AppCompatActivity() {
@@ -41,6 +39,7 @@ class DetectionResultActivity : AppCompatActivity() {
     private var mainNavTag: String = "home"
     private val wordButtons = mutableMapOf<String, TextView>() // Map to store buttons by label
     private var selectedButton: TextView? = null // Currently selected button
+    private lateinit var bottomNavigationHelper: BottomNavigationHelper
 
     // Permission launcher
     private val requestPermissionLauncher = registerForActivityResult(
@@ -98,37 +97,22 @@ class DetectionResultActivity : AppCompatActivity() {
 
         // Restart Magic Adventure button setup
         findViewById<LinearLayout>(R.id.btn_restart_magic_adventure)?.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java).apply {
-                putExtra("fragment_tag", "magic_adventure")
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            }
-            startActivity(intent)
-            finish()
+            NavigationHelper.navigateToMainActivity(this, "magic_adventure")
         }
 
-        // Setup bottom navigation
-        setupBottomNavigation()
-        updateBottomNavigationHighlight(mainNavTag)
+        // Setup bottom navigation using helper
+        bottomNavigationHelper = BottomNavigationHelper(this, BottomNavigationHelper.createDefaultItems())
+        bottomNavigationHelper.setupBottomNavigation()
+        bottomNavigationHelper.updateNavigationHighlightAlpha(mainNavTag)
 
-        // Apply WindowInsets to root layout with camera cutout consideration
+        // Apply WindowInsets using helper
         val root = findViewById<View>(R.id.result_root)
-        ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val displayCutout = insets.getInsets(WindowInsetsCompat.Type.displayCutout())
-            // S23 FE 전면 카메라 영역 고려: systemBars.top과 displayCutout.top 중 큰 값 사용
-            val topPadding = maxOf(systemBars.top, displayCutout.top)
-            val cameraCutoutPadding = resources.getDimensionPixelSize(R.dimen.camera_cutout_padding_top)
-            v.setPadding(systemBars.left, topPadding + cameraCutoutPadding, systemBars.right, 0)
-            insets
-        }
-
-        // Apply WindowInsets to bottom navigation bar container
         val bottomNavContainer = findViewById<View>(R.id.bottom_nav_container)
-        ViewCompat.setOnApplyWindowInsetsListener(bottomNavContainer) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(0, 0, 0, systemBars.bottom)
-            insets
-        }
+        WindowInsetsHelper.applyToActivity(
+            rootView = root,
+            bottomNavContainer = bottomNavContainer,
+            resources = resources
+        )
 
 
         // Initialize speech recognition manager
@@ -196,56 +180,18 @@ class DetectionResultActivity : AppCompatActivity() {
                     val touchX = event.x
                     val touchY = event.y
 
-                    // Calculate the actual image display area considering scaleType="fitCenter"
-                    val imageView = imgResult
-                    val drawable = imageView.drawable
-                    
-                    if (drawable != null) {
-                        val imageWidth = drawable.intrinsicWidth.toFloat()
-                        val imageHeight = drawable.intrinsicHeight.toFloat()
-                        
-                        // If intrinsic dimensions are not available, try to get from bitmap
-                        val actualImageWidth = if (imageWidth > 0 && imageHeight > 0) {
-                            imageWidth
-                        } else {
-                            // Fallback: try to get from bitmap if it's a BitmapDrawable
-                            (drawable as? android.graphics.drawable.BitmapDrawable)?.bitmap?.width?.toFloat() ?: return@setOnTouchListener false
-                        }
-                        val actualImageHeight = if (imageWidth > 0 && imageHeight > 0) {
-                            imageHeight
-                        } else {
-                            (drawable as? android.graphics.drawable.BitmapDrawable)?.bitmap?.height?.toFloat() ?: return@setOnTouchListener false
-                        }
-                        
-                        val viewWidth = imageView.width.toFloat()
-                        val viewHeight = imageView.height.toFloat()
-                        
-                        // Calculate scale factor to maintain aspect ratio (fitCenter)
-                        val scale = minOf(viewWidth / actualImageWidth, viewHeight / actualImageHeight)
-                        val scaledImageWidth = actualImageWidth * scale
-                        val scaledImageHeight = actualImageHeight * scale
-                        
-                        // Calculate offset (centered)
-                        val offsetX = (viewWidth - scaledImageWidth) / 2f
-                        val offsetY = (viewHeight - scaledImageHeight) / 2f
-                        
-                        // Convert touch coordinates to image coordinates (0.0-1.0)
-                        // Clamp to valid range [0.0, 1.0]
-                        val imageX = ((touchX - offsetX) / scaledImageWidth).coerceIn(0f, 1f)
-                        val imageY = ((touchY - offsetY) / scaledImageHeight).coerceIn(0f, 1f)
-                        
-                        // Find which box contains the touch point
-                        // Check in reverse order to prioritize boxes added later (usually smaller or more specific)
-                        val clickedItem = detectionResults.reversed().firstOrNull { item ->
-                            // item.left, top, right, bottom are normalized coordinates (0.0-1.0)
-                            imageX >= item.left && imageX <= item.right &&
-                            imageY >= item.top && imageY <= item.bottom
-                        }
+                    // Use BoundingBoxHelper to find clicked item
+                    val clickedItem = BoundingBoxHelper.findItemAtTouch(
+                        touchX = touchX,
+                        touchY = touchY,
+                        imageView = imgResult,
+                        detectionResults = detectionResults,
+                        reverseOrder = true
+                    )
 
-                        clickedItem?.let { item ->
-                            showWordDetail(item)
-                            true
-                        } ?: false
+                    if (clickedItem != null) {
+                        showWordDetail(clickedItem)
+                        true
                     } else {
                         false
                     }
@@ -314,48 +260,6 @@ class DetectionResultActivity : AppCompatActivity() {
     }
 
 
-    private fun setupBottomNavigation() {
-        findViewById<View>(R.id.nav_home)?.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java).apply {
-                putExtra("fragment_tag", "home")
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            }
-            startActivity(intent)
-            finish()
-        }
-        findViewById<View>(R.id.nav_log)?.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java).apply {
-                putExtra("fragment_tag", "log")
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            }
-            startActivity(intent)
-            finish()
-        }
-        findViewById<View>(R.id.nav_quiz)?.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java).apply {
-                putExtra("fragment_tag", "quiz")
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            }
-            startActivity(intent)
-            finish()
-        }
-        findViewById<View>(R.id.nav_setting)?.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java).apply {
-                putExtra("fragment_tag", "setting")
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            }
-            startActivity(intent)
-            finish()
-        }
-    }
-    
-    private fun updateBottomNavigationHighlight(tag: String) {
-        // Icons remain in original color, use alpha to show selection state
-        findViewById<ImageView>(R.id.nav_home_icon)?.alpha = if (tag == "home") 1.0f else 0.5f
-        findViewById<ImageView>(R.id.nav_log_icon)?.alpha = if (tag == "log") 1.0f else 0.5f
-        findViewById<ImageView>(R.id.nav_quiz_icon)?.alpha = if (tag == "quiz") 1.0f else 0.5f
-        findViewById<ImageView>(R.id.nav_setting_icon)?.alpha = if (tag == "setting") 1.0f else 0.5f
-    }
 
     override fun onDestroy() {
         ttsHelper?.cleanup()

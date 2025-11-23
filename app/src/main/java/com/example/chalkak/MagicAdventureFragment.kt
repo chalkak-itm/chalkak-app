@@ -2,14 +2,12 @@ package com.example.chalkak
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 
 class MagicAdventureFragment : Fragment() {
@@ -72,7 +70,7 @@ class MagicAdventureFragment : Fragment() {
 
             // Do camera after loading UI
             view.post {
-                showCenterToast("Launching camera for Magic Adventure...")
+                ToastHelper.showCenterToast(requireContext(), "Launching camera for Magic Adventure...")
                 imagePickerHelper.launchCamera()
             }
         }
@@ -85,19 +83,6 @@ class MagicAdventureFragment : Fragment() {
         }
     }
 
-    private fun showCenterToast(message: String) {
-        val inflater = layoutInflater
-        val toastView = inflater.inflate(R.layout.custom_toast, null)
-
-        val txt = toastView.findViewById<TextView>(R.id.txtToastMessage)
-        txt.text = message
-
-        val toast = Toast(requireContext())
-        toast.duration = Toast.LENGTH_SHORT
-        toast.view = toastView
-        toast.setGravity(Gravity.CENTER, 0, 0)
-        toast.show()
-    }
 
 }
 

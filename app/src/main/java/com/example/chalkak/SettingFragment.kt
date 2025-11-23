@@ -25,6 +25,7 @@ class SettingFragment : Fragment() {
     private lateinit var btnLogout: View
     private lateinit var btnClearCache: View
     private lateinit var txtAppVersion: TextView
+    private lateinit var switchQuickSnap: android.widget.Switch
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -59,9 +60,13 @@ class SettingFragment : Fragment() {
         btnLogout = view.findViewById(R.id.btn_logout)
         btnClearCache = view.findViewById(R.id.btn_clear_cache)
         txtAppVersion = view.findViewById(R.id.txt_app_version)
+        switchQuickSnap = view.findViewById(R.id.switch_quick_snap)
 
         // Load user information
         loadUserInfo()
+        
+        // Load quick snap setting
+        loadQuickSnapSetting()
 
         // Set app version
         try {
@@ -83,6 +88,16 @@ class SettingFragment : Fragment() {
         btnClearCache.setOnClickListener {
             clearCache()
         }
+
+        switchQuickSnap.setOnCheckedChangeListener { _, isChecked ->
+            toggleQuickSnap(isChecked)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Reload quick snap setting when fragment resumes
+        loadQuickSnapSetting()
     }
 
     private fun loadUserInfo() {
@@ -193,5 +208,21 @@ class SettingFragment : Fragment() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+    
+    private fun loadQuickSnapSetting() {
+        val isEnabled = userPreferencesHelper.isQuickSnapEnabled()
+        switchQuickSnap.isChecked = isEnabled
+    }
+    
+    private fun toggleQuickSnap(isEnabled: Boolean) {
+        userPreferencesHelper.setQuickSnapEnabled(isEnabled)
+        
+        val message = if (isEnabled) {
+            "🔥Quick Snap feature is now enabled!"
+        } else {
+            "Quick Snap feature is now disabled."
+        }
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
 }
