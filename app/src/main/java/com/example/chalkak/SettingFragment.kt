@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import java.io.File
 
 class SettingFragment : Fragment() {
     private lateinit var userPreferencesHelper: UserPreferencesHelper
@@ -188,26 +189,89 @@ class SettingFragment : Fragment() {
     private fun clearCache() {
         AlertDialog.Builder(requireContext())
             .setTitle("Clear Cache")
-            .setMessage("This will clear all cached data. Continue?")
+            .setMessage("This will clear all cached data (images, temporary files). Your learning data will be preserved. Continue?")
             .setPositiveButton("Clear") { _, _ ->
-                try {
-                    // Clear image cache
-                    val cacheDir = requireContext().cacheDir
-                    if (cacheDir.exists() && cacheDir.isDirectory) {
-                        cacheDir.listFiles()?.forEach { file ->
-                            if (file.name.startsWith("detection_") || file.name.startsWith("capture_")) {
-                                file.delete()
-                            }
-                        }
-                    }
-
-                    Toast.makeText(requireContext(), "Cache cleared successfully", Toast.LENGTH_SHORT).show()
-                } catch (e: Exception) {
-                    Toast.makeText(requireContext(), "Failed to clear cache", Toast.LENGTH_SHORT).show()
-                }
+                clearCacheFiles()
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+    
+    private fun clearCacheFiles() {
+        try {
+            var deletedCount = 0
+            var totalSize = 0L
+            
+            // Clear internal cache directory
+            val internalCacheDir = requireContext().cacheDir
+            if (internalCacheDir.exists() && internalCacheDir.isDirectory) {
+                internalCacheDir.listFiles()?.forEach { file ->
+                    try {
+                        totalSize += file.length()
+                        if (file.delete()) {
+                            deletedCount++
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+            
+            // Clear external cache directory (if available)
+            val externalCacheDir = requireContext().externalCacheDir
+            if (externalCacheDir != null && externalCacheDir.exists() && externalCacheDir.isDirectory) {
+                externalCacheDir.listFiles()?.forEach { file ->
+                    try {
+                        totalSize += file.length()
+                        if (file.delete()) {
+                            deletedCount++
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+            
+            // Clear code cache (if available)
+            try {
+                val codeCacheDir = requireContext().codeCacheDir
+                if (codeCacheDir.exists() && codeCacheDir.isDirectory) {
+                    codeCacheDir.listFiles()?.forEach { file ->
+                        try {
+                            totalSize += file.length()
+                            if (file.delete()) {
+                                deletedCount++
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // Code cache directory might not be available on all devices
+                e.printStackTrace()
+            }
+            
+            // Format size for display
+            val sizeInMB = totalSize / (1024.0 * 1024.0)
+            val sizeText = if (sizeInMB < 1.0) {
+                String.format("%.2f KB", totalSize / 1024.0)
+            } else {
+                String.format("%.2f MB", sizeInMB)
+            }
+            
+            // Show success message
+            val message = if (deletedCount > 0) {
+                "Cache cleared successfully!\n$deletedCount files ($sizeText) removed"
+            } else {
+                "Cache is already empty"
+            }
+            
+            ToastHelper.showCenterToast(requireContext(), message)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            ToastHelper.showCenterToast(requireContext(), "Failed to clear cache: ${e.message ?: "Unknown error"}")
+        }
     }
     
     private fun loadQuickSnapSetting() {

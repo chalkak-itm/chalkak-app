@@ -445,6 +445,95 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- Learning Calendar Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/padding_standard"
+            android:layout_marginRight="@dimen/padding_standard"
+            android:layout_marginTop="@dimen/padding_standard"
+            android:background="@drawable/bg_card_white"
+            android:orientation="vertical"
+            android:paddingLeft="@dimen/padding_small"
+            android:paddingRight="@dimen/padding_small"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp">
+
+            <!-- Section Header -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Learning Calendar"
+                android:textColor="#8200DB"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <!-- Calendar View -->
+            <com.applandeo.materialcalendarview.CalendarView
+                android:id="@+id/calendar_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:minHeight="300dp"
+                app:headerColor="#8200DB"
+                app:headerLabelColor="#FFFFFF"
+                app:abbreviationsBarColor="#F5F5F5"
+                app:abbreviationsLabelsColor="#8200DB"
+                app:daysLabelsColor="#8200DB"
+                app:selectionColor="#AD46FF"
+                app:todayLabelColor="#8200DB" />
+
+            <!-- Calendar Legend -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="16dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <View
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/bg_circle_green" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Quiz Completed"
+                        android:textColor="#AD46FF"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <View
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/bg_circle_red" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="No Quiz"
+                        android:textColor="#AD46FF"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
         <!-- Spacer for bottom padding -->
         <View
             android:layout_width="match_parent"

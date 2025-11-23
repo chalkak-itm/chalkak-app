@@ -8,12 +8,13 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.applandeo.materialcalendarview.CalendarView
+import com.applandeo.materialcalendarview.EventDay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.Calendar
-import java.util.Locale
 
 class QuizFragment : Fragment() {
     // Main quiz card views
@@ -28,7 +29,13 @@ class QuizFragment : Fragment() {
     private lateinit var txtStreakDays: TextView
     private val activityDots = mutableListOf<View>()
     
+    // Calendar view
+    private lateinit var calendarView: CalendarView
+    
     private val roomDb by lazy { AppDatabase.getInstance(requireContext()) }
+    
+    // Set of dates when quiz was completed (in milliseconds)
+    private val completedDates = mutableSetOf<Long>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -57,6 +64,9 @@ class QuizFragment : Fragment() {
             val dotId = resources.getIdentifier("dot_$i", "id", requireContext().packageName)
             activityDots.add(view.findViewById(dotId))
         }
+        
+        // Initialize calendar view
+        calendarView = view.findViewById(R.id.calendar_view)
 
         // Load quiz data from database
         loadQuizData()
@@ -107,6 +117,9 @@ class QuizFragment : Fragment() {
                 // For now, we'll show a placeholder or calculate based on recent study activity
                 val accuracyRate = calculateAccuracyRate(allDetectedObjects)
                 
+                // 6. Quiz Completion Dates: Get dates when quiz was completed (lastStudied dates)
+                val quizCompletionDates = calculateQuizCompletionDates(allDetectedObjects)
+                
                 // Update UI on Main thread
                 withContext(Dispatchers.Main) {
                     txtWordCount.text = quizAvailableWords.toString()
@@ -118,6 +131,9 @@ class QuizFragment : Fragment() {
                     
                     // Update activity dots
                     updateActivityDots(last7DaysActivity)
+                    
+                    // Update calendar with completion dates
+                    updateCalendar(quizCompletionDates)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -275,5 +291,112 @@ class QuizFragment : Fragment() {
             }
             activityDots[i].background = ContextCompat.getDrawable(requireContext(), drawableRes)
         }
+    }
+    
+    /**
+     * Calculate dates when quiz was completed
+     * Uses lastStudied field from DetectedObject to determine completion dates
+     */
+    private fun calculateQuizCompletionDates(objects: List<DetectedObject>): Set<Long> {
+        val completionDates = mutableSetOf<Long>()
+        
+        // Get unique dates from lastStudied timestamps
+        objects.forEach { obj ->
+            if (obj.lastStudied > 0) {
+                // Convert timestamp to date (midnight)
+                val calendar = Calendar.getInstance().apply {
+                    timeInMillis = obj.lastStudied
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                completionDates.add(calendar.timeInMillis)
+            }
+        }
+        
+        return completionDates
+    }
+    
+    /**
+     * Update calendar view with quiz completion dates
+     * Uses Material CalendarView to highlight dates with quiz completion
+     */
+    private fun updateCalendar(completionDates: Set<Long>) {
+        if (!isAdded || !::calendarView.isInitialized) {
+            return // Fragment not attached or view not initialized
+        }
+        
+        completedDates.clear()
+        completedDates.addAll(completionDates)
+        
+        // Create events for completed dates
+        val events = mutableListOf<EventDay>()
+        val context = requireContext()
+        
+        completionDates.forEach { dateMillis ->
+            val calendar = Calendar.getInstance().apply {
+                timeInMillis = dateMillis
+                // Normalize to midnight for consistent comparison
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+            
+            // Create event with green circle drawable for completed dates
+            val drawable = ContextCompat.getDrawable(context, R.drawable.bg_circle_green)
+            if (drawable != null) {
+                val event = EventDay(calendar, drawable)
+                events.add(event)
+            }
+        }
+        
+        // Set events to calendar view
+        calendarView.setEvents(events)
+        
+        // Set up calendar date click listener
+        calendarView.setOnDayClickListener(object : com.applandeo.materialcalendarview.listeners.OnDayClickListener {
+            override fun onDayClick(eventDay: EventDay) {
+                if (!isAdded) return
+                
+                val selectedDate = eventDay.calendar
+                // Normalize selected date to midnight for comparison
+                selectedDate.set(Calendar.HOUR_OF_DAY, 0)
+                selectedDate.set(Calendar.MINUTE, 0)
+                selectedDate.set(Calendar.SECOND, 0)
+                selectedDate.set(Calendar.MILLISECOND, 0)
+                val selectedDateMillis = selectedDate.timeInMillis
+                
+                val isCompleted = completedDates.contains(selectedDateMillis)
+                
+                // Show toast with completion status using ToastHelper
+                val message = if (isCompleted) {
+                    "Quiz completed on this day! ✨"
+                } else {
+                    "No quiz completed on this day"
+                }
+                
+                ToastHelper.showCenterToast(requireContext(), message)
+            }
+        })
+        
+        // Set minimum date to 1 year ago and maximum to today
+        val today = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val oneYearAgo = Calendar.getInstance().apply {
+            add(Calendar.YEAR, -1)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        
+        calendarView.setMinimumDate(oneYearAgo)
+        calendarView.setMaximumDate(today)
     }
 }
