@@ -38,6 +38,7 @@ class SettingFragment : Fragment() {
     private val notificationPermissionRequestCode = 1001
 
     private val roomDb by lazy { AppDatabase.getInstance(requireContext()) }
+    private val firestoreRepo = FirestoreRepository()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -165,8 +166,16 @@ class SettingFragment : Fragment() {
     }
 
     private fun saveNickname(nickname: String) {
+        // Save to SharedPreferences
         userPreferencesHelper.saveNickname(nickname)
         txtNickname.text = nickname
+        
+        // Save to Firestore if user is logged in
+        val user = userPreferencesHelper.getCurrentUser()
+        if (user != null) {
+            firestoreRepo.updateNickname(user.uid, nickname)
+        }
+        
         Toast.makeText(requireContext(), getString(R.string.nickname_saved), Toast.LENGTH_SHORT).show()
     }
 

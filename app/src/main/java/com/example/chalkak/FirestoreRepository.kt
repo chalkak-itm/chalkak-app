@@ -23,6 +23,18 @@ class FirestoreRepository {
         userRef.set(userData, SetOptions.merge())
     }
 
+    // Update nickname only
+    fun updateNickname(uid: String, nickname: String) {
+        val userRef = db.collection("users").document(uid)
+        userRef.update("nickname", nickname)
+            .addOnSuccessListener {
+                Log.d(TAG, "Nickname updated successfully: $nickname")
+            }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Error updating nickname", e)
+            }
+    }
+
     // [Situation 1] New Word (First Time)
     // Only increment count.
     fun addNewWordCount(uid: String) {
