@@ -171,7 +171,8 @@ object QuizQuestionGenerator {
                 exampleEnglish = example?.sentence ?: "",
                 exampleKorean = example?.translation ?: "",
                 correctAnswer = wordObj.englishWord,
-                options = options
+                options = options,
+                parentPhotoId = wordObj.parentPhotoId
             )
             questions.add(question)
             // Store mapping for updating lastStudied

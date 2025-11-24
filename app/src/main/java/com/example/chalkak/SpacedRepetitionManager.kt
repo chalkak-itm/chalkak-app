@@ -44,19 +44,22 @@ class SpacedRepetitionManager(
     
     /**
      * Handle correct answer
-     * Updates lastStudied date in database (word moves to back of review cycle)
+     * Updates lastStudied date in database with the photo's createdAt (word moves to back of review cycle)
      * 
      * @param word English word that was answered correctly
+     * @param parentPhotoId Photo ID to get createdAt from PhotoLog
      */
-    fun handleCorrectAnswer(word: String) {
-        // Update lastStudied to current time (word moves to back of queue)
+    fun handleCorrectAnswer(word: String, parentPhotoId: Long) {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                // Get all objects with the same word and update their lastStudied
+                // Get the photo's createdAt timestamp
+                val photo = roomDb.photoLogDao().getAllPhotos().find { it.photoId == parentPhotoId }
+                val createdAt = photo?.createdAt ?: System.currentTimeMillis()
+                
+                // Get all objects with the same word and update their lastStudied with the photo's createdAt
                 val allObjectsWithSameWord = roomDb.detectedObjectDao().getAllObjectsByEnglishWord(word)
-                val currentTime = System.currentTimeMillis()
                 allObjectsWithSameWord.forEach { obj ->
-                    roomDb.detectedObjectDao().updateLastStudied(obj.englishWord, currentTime)
+                    roomDb.detectedObjectDao().updateLastStudied(obj.englishWord, createdAt)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

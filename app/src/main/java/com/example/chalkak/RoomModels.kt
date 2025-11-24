@@ -37,7 +37,7 @@ data class DetectedObject(
     @ColumnInfo(name = "korean_meaning") val koreanMeaning: String, // example: "사과"
 
     @ColumnInfo(name = "bounding_box") val boundingBox: String,     // location
-    @ColumnInfo(name = "last_studied") val lastStudied: Long = System.currentTimeMillis() // For synchronization
+    @ColumnInfo(name = "last_studied") val lastStudied: Long = 0 // 0 means not studied yet, updated when quiz is answered correctly
 )
 
 // example table
