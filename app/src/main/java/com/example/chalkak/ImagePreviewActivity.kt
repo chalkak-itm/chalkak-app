@@ -86,8 +86,8 @@ class ImagePreviewActivity : AppCompatActivity() {
 		}
 		
 		// Button text is always "Upload" and "Retake"
-		btnCapture.text = "Upload"
-		btnRetake.text = "Retake"
+		btnCapture.text = getString(R.string.upload)
+		btnRetake.text = getString(R.string.retake)
 
 		findViewById<android.widget.ImageButton>(R.id.btn_back)?.setOnClickListener { finish() }
 

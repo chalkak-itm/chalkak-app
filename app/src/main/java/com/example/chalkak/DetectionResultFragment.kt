@@ -265,8 +265,8 @@ class DetectionResultFragment : BaseFragment() {
             objectId = null,
             callback = object : WordDataLoaderHelper.WordDataCallback {
                 override fun onLoading() {
-                    txtKoreanMeaning.text = "Loading meaning..."
-                    txtExampleSentence.text = "Loading example sentences..."
+                    txtKoreanMeaning.text = getString(R.string.loading_meaning)
+                    txtExampleSentence.text = getString(R.string.loading_example_sentences)
                 }
 
                 override fun onSuccess(data: WordDataLoaderHelper.WordData) {
@@ -276,12 +276,12 @@ class DetectionResultFragment : BaseFragment() {
                     } else if (data.exampleSentence.isNotEmpty()) {
                         txtExampleSentence.text = data.exampleSentence
                     } else {
-                        txtExampleSentence.text = "No example sentences."
+                        txtExampleSentence.text = getString(R.string.no_example_sentences)
                     }
                 }
 
                 override fun onError(message: String) {
-                    txtKoreanMeaning.text = "Failed to load meaning."
+                    txtKoreanMeaning.text = getString(R.string.failed_to_load_meaning)
                     txtExampleSentence.text = message
                 }
             }

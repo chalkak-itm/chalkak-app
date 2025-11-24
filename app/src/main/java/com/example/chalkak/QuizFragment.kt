@@ -299,13 +299,17 @@ class QuizFragment : Fragment() {
     /**
      * Calculate dates when quiz was completed
      * Uses lastStudied field from DetectedObject to determine completion dates
+     * Only includes dates where quiz was actually completed (lastStudied was updated after object creation)
      */
     private fun calculateQuizCompletionDates(objects: List<DetectedObject>): Set<Long> {
         val completionDates = mutableSetOf<Long>()
+        val now = System.currentTimeMillis()
         
         // Get unique dates from lastStudied timestamps
+        // Only include dates where lastStudied was explicitly set (not default value)
+        // We consider a date valid if lastStudied > 0 and it's not in the future
         objects.forEach { obj ->
-            if (obj.lastStudied > 0) {
+            if (obj.lastStudied > 0 && obj.lastStudied <= now) {
                 // Convert timestamp to date (midnight)
                 val calendar = Calendar.getInstance().apply {
                     timeInMillis = obj.lastStudied
@@ -350,28 +354,48 @@ class QuizFragment : Fragment() {
             // Create calendar day with green circle drawable for completed dates
             val drawable = ContextCompat.getDrawable(context, R.drawable.bg_circle_green)
             val calendarDay = if (drawable != null) {
-                // Try to create CalendarDay with drawable using copy or builder pattern
-                // Since CalendarDay constructor only takes Calendar, we'll use reflection as fallback
+                // Material CalendarView 1.9.0 only supports CalendarDay(Calendar) constructor
+                // Use reflection to set drawable property
                 try {
                     val day = CalendarDay(calendar)
-                    // Try to set iconDrawable property
-                    val iconDrawableField = CalendarDay::class.java.getDeclaredField("iconDrawable")
-                    iconDrawableField.isAccessible = true
-                    iconDrawableField.set(day, drawable)
-                    day
-                } catch (e: NoSuchFieldException) {
-                    // If iconDrawable doesn't exist, try drawable
+                    // Try to set iconDrawable property (most common field name)
                     try {
-                        val day = CalendarDay(calendar)
-                        val drawableField = CalendarDay::class.java.getDeclaredField("drawable")
-                        drawableField.isAccessible = true
-                        drawableField.set(day, drawable)
-                        day
+                        val iconDrawableField = CalendarDay::class.java.getDeclaredField("iconDrawable")
+                        iconDrawableField.isAccessible = true
+                        iconDrawableField.set(day, drawable)
+                    } catch (e2: NoSuchFieldException) {
+                        // Try drawable field
+                        try {
+                            val drawableField = CalendarDay::class.java.getDeclaredField("drawable")
+                            drawableField.isAccessible = true
+                            drawableField.set(day, drawable)
+                        } catch (e3: NoSuchFieldException) {
+                            // Try labelDrawable
+                            try {
+                                val labelDrawableField = CalendarDay::class.java.getDeclaredField("labelDrawable")
+                                labelDrawableField.isAccessible = true
+                                labelDrawableField.set(day, drawable)
+                            } catch (e4: NoSuchFieldException) {
+                                // Try imageDrawable
+                                try {
+                                    val imageDrawableField = CalendarDay::class.java.getDeclaredField("imageDrawable")
+                                    imageDrawableField.isAccessible = true
+                                    imageDrawableField.set(day, drawable)
+                                } catch (e5: Exception) {
+                                    // All reflection attempts failed, use day without drawable
+                                }
+                            } catch (e4: Exception) {
+                                // Reflection failed
+                            }
+                        } catch (e3: Exception) {
+                            // Reflection failed
+                        }
                     } catch (e2: Exception) {
-                        // Fallback: create without drawable
-                        CalendarDay(calendar)
+                        // Reflection failed
                     }
+                    day
                 } catch (e: Exception) {
+                    // Fallback: create without drawable
                     CalendarDay(calendar)
                 }
             } else {

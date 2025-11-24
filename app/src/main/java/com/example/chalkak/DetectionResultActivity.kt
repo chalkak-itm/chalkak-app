@@ -220,8 +220,8 @@ class DetectionResultActivity : AppCompatActivity() {
         txtSelectedWord.text = item.label
 
         // bring the example sentence and korean meaning by GPT
-        txtKoreanMeaning.text = "Meaning"
-        txtExampleSentence.text = "It is a space for example sentence."
+        txtKoreanMeaning.text = getString(R.string.meaning)
+        txtExampleSentence.text = getString(R.string.example_sentence_placeholder)
 
         // Update speech recognition manager with new word
         speechRecognitionManager?.updateTargetWord(item.label)

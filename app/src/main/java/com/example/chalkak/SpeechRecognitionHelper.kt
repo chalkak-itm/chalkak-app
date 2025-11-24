@@ -208,18 +208,22 @@ class SpeechRecognitionHelper(
     private fun findBestMatch(matches: java.util.ArrayList<String>?, targetWord: String): String {
         if (matches == null || matches.isEmpty()) return ""
         
+        // Filter out empty strings from matches
+        val validMatches = matches.filter { it.trim().isNotEmpty() }
+        if (validMatches.isEmpty()) return ""
+        
         // Return exact match first if exists
-        matches.forEach { match ->
+        validMatches.forEach { match ->
             if (match.lowercase().trim() == targetWord.lowercase().trim()) {
                 return match
             }
         }
         
         // Find the one with highest similarity
-        var bestMatch = matches.first()
+        var bestMatch = validMatches.first()
         var bestSimilarity = calculateSimilarity(bestMatch.lowercase().trim(), targetWord.lowercase().trim())
         
-        matches.forEach { match ->
+        validMatches.forEach { match ->
             val similarity = calculateSimilarity(match.lowercase().trim(), targetWord.lowercase().trim())
             if (similarity > bestSimilarity) {
                 bestSimilarity = similarity
@@ -234,10 +238,17 @@ class SpeechRecognitionHelper(
      * Determines if two words are similar (returns true if exactly matches or has high similarity).
      */
     private fun isSimilar(text1: String, text2: String): Boolean {
+        // If either string is empty, they cannot be similar (except if both are empty, which is handled below)
+        if (text1.isEmpty() || text2.isEmpty()) {
+            // Only return true if both are empty (exact match case)
+            return text1 == text2
+        }
+        
         // Exact match
         if (text1 == text2) return true
         
         // Check containment relationship (e.g., "apple" and "an apple")
+        // Note: We already checked for empty strings above, so this is safe
         if (text1.contains(text2) || text2.contains(text1)) return true
         
         // Calculate similarity (based on Levenshtein distance)
