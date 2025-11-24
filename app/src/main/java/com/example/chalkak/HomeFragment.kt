@@ -9,6 +9,10 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class HomeFragment : Fragment() {
     private lateinit var userPreferencesHelper: UserPreferencesHelper
@@ -16,6 +20,8 @@ class HomeFragment : Fragment() {
     private lateinit var txtProgressLabel: TextView
     private lateinit var progressWords: ProgressBar
     private var quickSnapSensorHelper: QuickSnapSensorHelper? = null
+    
+    private val roomDb by lazy { AppDatabase.getInstance(requireContext()) }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -50,7 +56,7 @@ class HomeFragment : Fragment() {
         updateWelcomeMessage()
         
         // Update progress bar
-        updateProgressBar()
+        loadReviewRate()
 
         val magicButton: LinearLayout = view.findViewById(R.id.btnMagicAdventure)
         magicButton.setOnClickListener {
@@ -110,15 +116,41 @@ class HomeFragment : Fragment() {
         txtWelcome.text = getString(R.string.welcome_back, nickname)
     }
 
-    private fun updateProgressBar() {
-        // TODO: Replace with actual data from database
-        // For now, using placeholder values
-        val wordsLearned = 8
-        val wordsTotal = 12
-        val progressPercent = (wordsLearned * 100) / wordsTotal
-        
-        txtProgressLabel.text = getString(R.string.words_learned_today, wordsLearned, wordsTotal)
-        progressWords.progress = progressPercent
+    private fun loadReviewRate() {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val allDetectedObjects = roomDb.detectedObjectDao().getAllDetectedObjects()
+                
+                // Calculate Review Rate (same logic as QuizFragment)
+                // Words studied recently (within last 7 days) are considered "active"
+                val now = System.currentTimeMillis()
+                val sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000L)
+                
+                val recentlyStudied = allDetectedObjects.count { it.lastStudied >= sevenDaysAgo }
+                val totalWithMeaning = allDetectedObjects.count { 
+                    it.koreanMeaning.isNotEmpty() && it.koreanMeaning != "Searching..." 
+                }
+                
+                val reviewRate = if (totalWithMeaning > 0) {
+                    (recentlyStudied * 100 / totalWithMeaning).coerceIn(0, 100)
+                } else {
+                    0
+                }
+                
+                withContext(Dispatchers.Main) {
+                    if (!isAdded) return@withContext
+                    txtProgressLabel.text = "Review Rate: $reviewRate%"
+                    progressWords.progress = reviewRate
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    if (!isAdded) return@withContext
+                    txtProgressLabel.text = "Review Rate: 0%"
+                    progressWords.progress = 0
+                }
+            }
+        }
     }
 
     private fun goToCameraDirect() {
