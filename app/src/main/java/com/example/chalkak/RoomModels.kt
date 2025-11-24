@@ -23,6 +23,10 @@ data class PhotoLog(
             childColumns = ["parent_photo_id"],
             onDelete = ForeignKey.CASCADE
         )
+    ],
+    indices = [
+        androidx.room.Index(value = ["parent_photo_id"]),
+        androidx.room.Index(value = ["english_word"])
     ]
 )
 data class DetectedObject(
@@ -46,7 +50,8 @@ data class DetectedObject(
             childColumns = ["word_id"],
             onDelete = ForeignKey.CASCADE
         )
-    ]
+    ],
+    indices = [androidx.room.Index(value = ["word_id"])]
 )
 data class ExampleSentence(
     @PrimaryKey(autoGenerate = true) val sentenceId: Long = 0,

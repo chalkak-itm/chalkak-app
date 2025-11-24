@@ -8,8 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import android.widget.FrameLayout.LayoutParams as FLP
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
 
 class DetectionResultFragment : BaseFragment() {
 
@@ -31,6 +29,7 @@ class DetectionResultFragment : BaseFragment() {
     private val wordButtons = mutableMapOf<String, TextView>() // Map to store buttons by label
     private var selectedButton: TextView? = null // Currently selected button
     private val roomDb by lazy { AppDatabase.getInstance(requireContext()) }
+    private lateinit var wordDataLoader: WordDataLoaderHelper
 
     override fun getCardWordDetailView(): View {
         return cardWordDetail
@@ -80,6 +79,9 @@ class DetectionResultFragment : BaseFragment() {
         txtExampleSentence = view.findViewById(R.id.txt_example_sentence)
         btnBack = view.findViewById(R.id.btn_back)
 
+        // Initialize WordDataLoaderHelper
+        wordDataLoader = WordDataLoaderHelper(requireContext(), viewLifecycleOwner)
+
         // Get arguments
         arguments?.let {
             val imagePath = it.getString(ARG_IMAGE_PATH)
@@ -103,6 +105,14 @@ class DetectionResultFragment : BaseFragment() {
 
         btnBack.setOnClickListener {
             parentFragmentManager.popBackStack()
+        }
+
+        // Restart Magic Adventure button setup
+        view.findViewById<LinearLayout>(R.id.btn_restart_magic_adventure)?.setOnClickListener {
+            (activity as? MainActivity)?.navigateToFragment(
+                MagicAdventureFragment(),
+                "magic_adventure"
+            )
         }
     }
 
@@ -250,28 +260,32 @@ class DetectionResultFragment : BaseFragment() {
      * Load word data (meaning and example) from local Room database
      */
     private fun loadWordDataFromLocal(word: String) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val detectedObject = roomDb.detectedObjectDao().getObjectByEnglishWord(word)
-                if (detectedObject != null) {
-                    txtKoreanMeaning.text = detectedObject.koreanMeaning.ifEmpty { "의미를 불러오는 중..." }
-                    val examples = roomDb.exampleSentenceDao().getSentencesByWordId(detectedObject.objectId)
-                    if (examples.isNotEmpty()) {
-                        val randomExample = examples.random()
-                        txtExampleSentence.text = "${randomExample.sentence}\n(${randomExample.translation})"
-                    } else {
-                        txtExampleSentence.text = "예문이 없습니다."
-                    }
-                } else {
-                    txtKoreanMeaning.text = "의미를 불러오는 중..."
-                    txtExampleSentence.text = "예문을 불러오는 중..."
+        wordDataLoader.loadWordData(
+            word = word,
+            objectId = null,
+            callback = object : WordDataLoaderHelper.WordDataCallback {
+                override fun onLoading() {
+                    txtKoreanMeaning.text = "Loading meaning..."
+                    txtExampleSentence.text = "Loading example sentences..."
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                txtKoreanMeaning.text = "한국어 뜻."
-                txtExampleSentence.text = "It is a space for example sentence."
+
+                override fun onSuccess(data: WordDataLoaderHelper.WordData) {
+                    txtKoreanMeaning.text = data.koreanMeaning
+                    if (data.exampleSentence.isNotEmpty() && data.exampleTranslation.isNotEmpty()) {
+                        txtExampleSentence.text = "${data.exampleSentence}\n(${data.exampleTranslation})"
+                    } else if (data.exampleSentence.isNotEmpty()) {
+                        txtExampleSentence.text = data.exampleSentence
+                    } else {
+                        txtExampleSentence.text = "No example sentences."
+                    }
+                }
+
+                override fun onError(message: String) {
+                    txtKoreanMeaning.text = "Failed to load meaning."
+                    txtExampleSentence.text = message
+                }
             }
-        }
+        )
     }
     
     /**

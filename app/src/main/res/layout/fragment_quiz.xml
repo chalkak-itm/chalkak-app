@@ -98,7 +98,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="오늘의 마법 퀴즈"
+                        android:text="Today's Magic Quiz"
                         android:textColor="#8200DB"
                         android:textSize="20sp"
                         android:textStyle="bold" />
@@ -107,7 +107,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="마법 모자가 준비했어요!"
+                        android:text="The magic hat has prepared it!"
                         android:textColor="#AD46FF"
                         android:textSize="14sp" />
                 </LinearLayout>
@@ -139,7 +139,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
-                        android:text="개의 단어"
+                        android:text="words"
                         android:textColor="#8200DB"
                         android:textSize="20sp" />
                 </LinearLayout>
@@ -148,7 +148,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="복습이 필요한 마법 주문들"
+                    android:text="Magic spells that need review"
                     android:textColor="#AD46FF"
                     android:textSize="14sp" />
             </LinearLayout>
@@ -182,7 +182,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="정답률"
+                        android:text="Accuracy"
                         android:textColor="#AD46FF"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -208,7 +208,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="총 학습"
+                        android:text="Total Learning"
                         android:textColor="#AD46FF"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -234,7 +234,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="연속 학습"
+                        android:text="Consecutive Days"
                         android:textColor="#AD46FF"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -272,7 +272,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="마법 퀴즈 시작하기"
+                        android:text="Start Magic Quiz"
                         android:textColor="#FFFFFF"
                         android:textSize="18sp"
                         android:textStyle="bold" />
@@ -282,7 +282,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="12개의 마법 주문을 복습해요"
+                        android:text="Review 12 magic spells"
                         android:textColor="#FFFFFF"
                         android:textSize="12sp"
                         android:alpha="0.9" />
@@ -315,7 +315,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="학습 활동"
+                    android:text="Learning Activity"
                     android:textColor="#8200DB"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -330,7 +330,7 @@
                     android:id="@+id/txt_streak_days"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="12일 연속"
+                    android:text="12 days streak"
                     android:textColor="#8200DB"
                     android:textSize="14sp" />
             </LinearLayout>
@@ -418,7 +418,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="학습함"
+                        android:text="Learned"
                         android:textColor="#AD46FF"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -438,7 +438,96 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="학습 안함"
+                        android:text="Not Learned"
+                        android:textColor="#AD46FF"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Learning Calendar Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/padding_standard"
+            android:layout_marginRight="@dimen/padding_standard"
+            android:layout_marginTop="@dimen/padding_standard"
+            android:background="@drawable/bg_card_white"
+            android:orientation="vertical"
+            android:paddingLeft="@dimen/padding_small"
+            android:paddingRight="@dimen/padding_small"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp">
+
+            <!-- Section Header -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Learning Calendar"
+                android:textColor="#8200DB"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <!-- Calendar View -->
+            <com.applandeo.materialcalendarview.CalendarView
+                android:id="@+id/calendar_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:minHeight="300dp"
+                app:headerColor="#8200DB"
+                app:headerLabelColor="#FFFFFF"
+                app:abbreviationsBarColor="#F5F5F5"
+                app:abbreviationsLabelsColor="#8200DB"
+                app:daysLabelsColor="#8200DB"
+                app:selectionColor="#AD46FF"
+                app:todayLabelColor="#8200DB" />
+
+            <!-- Calendar Legend -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="16dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <View
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/bg_circle_green" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Quiz Completed"
+                        android:textColor="#AD46FF"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <View
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/bg_circle_red" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="No Quiz"
                         android:textColor="#AD46FF"
                         android:textSize="12sp" />
                 </LinearLayout>

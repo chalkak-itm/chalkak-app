@@ -121,9 +121,18 @@ class ObjectInputFragment : Fragment() {
             bottom = 1.0f
         )
 
+        // Process detected words to save to DB and fetch from Firebase
+        val currentImagePath = imagePath
+        if (currentImagePath != null) {
+            (activity as? MainActivity)?.processDetectedWords(
+                listOf(userInputItem),
+                currentImagePath
+            )
+        }
+
         // Navigate to DetectionResultFragment
         val fragment = DetectionResultFragment.newInstance(
-            imagePath = imagePath,
+            imagePath = currentImagePath,
             detectionResults = listOf(userInputItem),
             mainNavTag = mainNavTag
         )

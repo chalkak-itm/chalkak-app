@@ -8,9 +8,7 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -77,16 +75,12 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
-        // Apply WindowInsets with camera cutout consideration
-        ViewCompat.setOnApplyWindowInsetsListener(binding.loginRoot) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val displayCutout = insets.getInsets(WindowInsetsCompat.Type.displayCutout())
-            // S23 FE 전면 카메라 영역 고려: systemBars.top과 displayCutout.top 중 큰 값 사용
-            val topPadding = maxOf(systemBars.top, displayCutout.top)
-            val cameraCutoutPadding = resources.getDimensionPixelSize(R.dimen.camera_cutout_padding_top)
-            v.setPadding(systemBars.left, topPadding + cameraCutoutPadding, systemBars.right, systemBars.bottom)
-            insets
-        }
+        // Apply WindowInsets using helper (LoginActivity includes bottom padding)
+        WindowInsetsHelper.applyToRootLayout(
+            rootView = binding.loginRoot,
+            resources = resources,
+            includeBottomPadding = true
+        )
 
         binding.btnSignIn?.setOnClickListener {
             Log.d(TAG, "Launching Google Sign In Intent...")

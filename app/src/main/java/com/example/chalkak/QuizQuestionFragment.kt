@@ -3,6 +3,7 @@ package com.example.chalkak
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -15,18 +16,30 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
 
 data class QuizQuestion(
-    val imageRes: Int,
+    val imagePath: String? = null,
+    val imageRes: Int? = null, // Fallback for when imagePath is null
+    val boundingBox: String? = null, // Bounding box string: "[left, top, right, bottom]"
     val englishWord: String,
     val koreanWord: String,
     val exampleEnglish: String,
     val exampleKorean: String,
-    val correctAnswer: String,
-    val options: List<String>
+    val correctAnswer: String, // English word
+    val options: List<String> // English words
 )
 
 class QuizQuestionFragment : BaseFragment() {
+    companion object {
+        // Constants for quiz configuration
+        private const val NUM_OPTIONS = 4
+    }
+    
     private lateinit var txtProgress: TextView
     private lateinit var txtProgressPercent: TextView
     private lateinit var progressBar: android.widget.ProgressBar
@@ -55,41 +68,20 @@ class QuizQuestionFragment : BaseFragment() {
     private var isAnswered = false
     private var selectedAnswer: String? = null
     private var currentQuestionIndex = 0
+    private var quizQuestions = emptyList<QuizQuestion>()
+    private val roomDb by lazy { AppDatabase.getInstance(requireContext()) }
+    // Spaced repetition manager for learning algorithm
+    private lateinit var spacedRepetitionManager: SpacedRepetitionManager
 
     override fun getCardWordDetailView(): View {
-        return layoutWordInfo
+        // Return a temporary view if layoutWordInfo is not initialized yet
+        return if (::layoutWordInfo.isInitialized) {
+            layoutWordInfo
+        } else {
+            // Return a temporary view to avoid crash
+            View(requireContext())
+        }
     }
-
-    // Placeholder quiz data - replace with actual data from database
-    private val quizQuestions = listOf(
-        QuizQuestion(
-            imageRes = R.drawable.egg,
-            englishWord = "Apple",
-            koreanWord = "사과",
-            exampleEnglish = "I eat an apple every day.",
-            exampleKorean = "나는 매일 사과를 먹어요.",
-            correctAnswer = "사과",
-            options = listOf("사과", "바나나", "오렌지", "포도")
-        ),
-        QuizQuestion(
-            imageRes = R.drawable.egg,
-            englishWord = "Banana",
-            koreanWord = "바나나",
-            exampleEnglish = "I like to eat bananas.",
-            exampleKorean = "나는 바나나를 좋아해요.",
-            correctAnswer = "바나나",
-            options = listOf("사과", "바나나", "오렌지", "포도")
-        ),
-        QuizQuestion(
-            imageRes = R.drawable.egg,
-            englishWord = "Orange",
-            koreanWord = "오렌지",
-            exampleEnglish = "The orange is sweet.",
-            exampleKorean = "오렌지는 달아요.",
-            correctAnswer = "오렌지",
-            options = listOf("사과", "바나나", "오렌지", "포도")
-        )
-    )
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -140,51 +132,135 @@ class QuizQuestionFragment : BaseFragment() {
             loadNextQuestion()
         }
 
-        // Load first question
-        loadQuestion(0)
-    }
+        // Initialize spaced repetition manager
+        spacedRepetitionManager = SpacedRepetitionManager(roomDb, viewLifecycleOwner.lifecycleScope)
 
-    private fun loadQuestion(index: Int) {
-        if (index >= quizQuestions.size) {
+        // Load quiz questions from database
+        loadQuizQuestionsFromDatabase()
+    }
+    
+    private fun loadQuizQuestionsFromDatabase() {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                // Use QuizQuestionGenerator to generate questions
+                val wordToObjectIdMap = mutableMapOf<String, Long>()
+                val questions = QuizQuestionGenerator.generateQuizQuestions(roomDb, wordToObjectIdMap)
+                quizQuestions = questions
+                
+                // Initialize spaced repetition manager with questions
+                spacedRepetitionManager.initializeQuestions(questions, wordToObjectIdMap)
+                spacedRepetitionManager.setTotalCount(questions.size)
+                
+                // Switch to Main dispatcher for UI operations
+                withContext(Dispatchers.Main) {
+                    if (spacedRepetitionManager.isEmpty()) {
+                        // No data available - show message and navigate back
+                        ToastHelper.showCenterToast(
+                            requireContext(),
+                            "No quiz questions available. Please take photos first."
+                        )
+                        (activity as? MainActivity)?.navigateToFragment(QuizFragment(), "quiz")
+                    } else {
+                        // Load first question from queue
+                        loadNextQuestionFromQueue()
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // On error, navigate back to quiz screen (on Main thread)
+                withContext(Dispatchers.Main) {
+                    ToastHelper.showCenterToast(
+                        requireContext(),
+                        "Failed to load quiz questions. Please try again."
+                    )
+                    (activity as? MainActivity)?.navigateToFragment(QuizFragment(), "quiz")
+                }
+            }
+        }
+    }
+    
+
+    private fun loadNextQuestionFromQueue() {
+        // Get next question from spaced repetition manager
+        val question = spacedRepetitionManager.getNextQuestion()
+        
+        if (question == null) {
             // Quiz completed - navigate back or show completion screen
+            ToastHelper.showCenterToast(
+                requireContext(),
+                "Great job! You've completed all questions! 🎉"
+            )
             (activity as? MainActivity)?.navigateToFragment(QuizFragment(), "quiz")
             return
         }
 
-        currentQuestionIndex = index
-        currentQuestion = quizQuestions[index]
+        currentQuestion = question
+        val remaining = spacedRepetitionManager.getRemainingCount()
+        currentQuestionIndex = quizQuestions.size - remaining - 1 // Track progress
         isAnswered = false
         selectedAnswer = null
 
         // Reset UI
         resetUI()
 
-        // Load question data
-        currentQuestion?.let { question ->
+        // Verify file exists before loading image
+        if (question.imagePath != null) {
+            val imageFile = java.io.File(question.imagePath)
+            if (!imageFile.exists()) {
+                // File doesn't exist, skip to next question
+                loadNextQuestionFromQueue()
+                return
+            }
+            
+            // Try to crop image using bounding box if available
+            if (question.boundingBox != null) {
+                loadImageWithBoundingBox(question.imagePath, question.boundingBox)
+            } else {
+                ImageLoaderHelper.loadImageToView(imgQuiz, question.imagePath)
+            }
+        } else if (question.imageRes != null) {
             imgQuiz.setImageResource(question.imageRes)
+        }
+        
+        // Ensure we have exactly NUM_OPTIONS options
+        if (question.options.size >= NUM_OPTIONS) {
             txtOption1.text = question.options[0]
             txtOption2.text = question.options[1]
             txtOption3.text = question.options[2]
             txtOption4.text = question.options[3]
-
-            // Hide word info
-            layoutWordInfo.visibility = View.GONE
-            btnNextQuestion.visibility = View.GONE
-
-            // Enable all option buttons
-            enableAllOptions()
+        } else {
+            // Fallback: fill with available options and empty strings
+            txtOption1.text = question.options.getOrNull(0) ?: ""
+            txtOption2.text = question.options.getOrNull(1) ?: ""
+            txtOption3.text = question.options.getOrNull(2) ?: ""
+            txtOption4.text = question.options.getOrNull(3) ?: ""
         }
+
+        // Hide word info
+        layoutWordInfo.visibility = View.GONE
+        btnNextQuestion.visibility = View.GONE
+
+        // Enable all option buttons
+        enableAllOptions()
 
         // Update progress
         updateProgress()
     }
 
     private fun updateProgress() {
-        val current = currentQuestionIndex + 1
         val total = quizQuestions.size
-        val percent = (current * 100) / total
+        if (total == 0) {
+            txtProgress.text = "0 / 0"
+            txtProgressPercent.text = "0%"
+            progressBar.progress = 0
+            return
+        }
+        
+        val remaining = spacedRepetitionManager.getRemainingCount()
+        val completed = total - remaining
+        val percent = if (total > 0) (completed * 100 / total) else 0
 
-        txtProgress.text = "$current / $total"
+        txtProgress.text = "$completed / $total"
         txtProgressPercent.text = "$percent%"
         progressBar.progress = percent
     }
@@ -251,12 +327,25 @@ class QuizQuestionFragment : BaseFragment() {
         // Update selected button to correct state
         updateOptionButton(optionIndex, true)
 
+        // Spaced Repetition Algorithm: Update lastStudied date in DB
+        currentQuestion?.let { question ->
+            spacedRepetitionManager.handleCorrectAnswer(question.englishWord)
+        }
+
         // Show word info in the same card after a short delay
         Handler(Looper.getMainLooper()).postDelayed({
             currentQuestion?.let { question ->
                 txtSelectedWord.text = question.englishWord
                 txtKoreanMeaning.text = question.koreanWord
-                txtExampleSentence.text = question.exampleEnglish
+                // Show example sentence with translation if available
+                val exampleText = if (question.exampleEnglish.isNotEmpty() && question.exampleKorean.isNotEmpty()) {
+                    "${question.exampleEnglish}\n(${question.exampleKorean})"
+                } else if (question.exampleEnglish.isNotEmpty()) {
+                    question.exampleEnglish
+                } else {
+                    "No example sentence available."
+                }
+                txtExampleSentence.text = exampleText
                 layoutWordInfo.visibility = View.VISIBLE
 
                 // Update speech recognition manager with new word
@@ -276,6 +365,12 @@ class QuizQuestionFragment : BaseFragment() {
 
         // Update selected button to incorrect state
         updateOptionButton(optionIndex, false)
+
+        // Spaced Repetition Algorithm: Add question back to end of queue
+        // (Don't update lastStudied - word will appear again soon)
+        currentQuestion?.let { question ->
+            spacedRepetitionManager.handleWrongAnswer(question)
+        }
 
         // Don't show correct answer - let user try again
         // Re-enable all options for retry
@@ -464,7 +559,58 @@ class QuizQuestionFragment : BaseFragment() {
     }
 
     private fun loadNextQuestion() {
-        loadQuestion(currentQuestionIndex + 1)
+        // Load next question from queue (spaced repetition algorithm)
+        loadNextQuestionFromQueue()
+    }
+    
+    private fun loadImageWithBoundingBox(imagePath: String, boundingBoxString: String) {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                // Verify file exists before attempting to load
+                val imageFile = java.io.File(imagePath)
+                if (!imageFile.exists()) {
+                    // File doesn't exist, skip to next question
+                    withContext(Dispatchers.Main) {
+                        loadNextQuestion()
+                    }
+                    return@launch
+                }
+                
+                // Load original bitmap
+                val originalBitmap = ImageLoaderHelper.loadBitmapFromPath(imagePath)
+                if (originalBitmap != null) {
+                    // Use BoundingBoxHelper to crop
+                    val boundingBox = BoundingBoxHelper.parseBoundingBox(boundingBoxString)
+                    if (boundingBox != null) {
+                        val croppedBitmap = BoundingBoxHelper.cropBitmap(originalBitmap, boundingBox)
+                        if (croppedBitmap != null) {
+                            withContext(Dispatchers.Main) {
+                                imgQuiz.setImageBitmap(croppedBitmap)
+                            }
+                            return@launch
+                        }
+                    }
+                }
+                // Fallback to full image (file exists but loading failed)
+                withContext(Dispatchers.Main) {
+                    ImageLoaderHelper.loadImageToView(imgQuiz, imagePath)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // On error, try to load full image if file exists
+                val imageFile = java.io.File(imagePath)
+                if (imageFile.exists()) {
+                    withContext(Dispatchers.Main) {
+                        ImageLoaderHelper.loadImageToView(imgQuiz, imagePath)
+                    }
+                } else {
+                    // File doesn't exist, skip to next question
+                    withContext(Dispatchers.Main) {
+                        loadNextQuestion()
+                    }
+                }
+            }
+        }
     }
 
 }

@@ -10,9 +10,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 import com.example.chalkak.ml.ObjectDetectionHelper
 
 class ImagePreviewActivity : AppCompatActivity() {
@@ -115,25 +113,14 @@ class ImagePreviewActivity : AppCompatActivity() {
 		bottomNavigationHelper.setupBottomNavigation()
 		bottomNavigationHelper.updateNavigationHighlightAlpha(mainNavTag)
 
-		// Apply WindowInsets to root layout with camera cutout consideration
+		// Apply WindowInsets using helper
 		val root = findViewById<android.view.View>(R.id.camera_root)
-		ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
-			val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-			val displayCutout = insets.getInsets(WindowInsetsCompat.Type.displayCutout())
-			// S23 FE 전면 카메라 영역 고려: systemBars.top과 displayCutout.top 중 큰 값 사용
-			val topPadding = maxOf(systemBars.top, displayCutout.top)
-			val cameraCutoutPadding = resources.getDimensionPixelSize(R.dimen.camera_cutout_padding_top)
-			v.setPadding(systemBars.left, topPadding + cameraCutoutPadding, systemBars.right, 0)
-			insets
-		}
-
-		// Apply WindowInsets to bottom navigation bar container
 		val bottomNavContainer = findViewById<android.view.View>(R.id.bottom_nav_container)
-		ViewCompat.setOnApplyWindowInsetsListener(bottomNavContainer) { v, insets ->
-			val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-			v.setPadding(0, 0, 0, systemBars.bottom)
-			insets
-		}
+		WindowInsetsHelper.applyToActivity(
+			rootView = root,
+			bottomNavContainer = bottomNavContainer,
+			resources = resources
+		)
 
 		findViewById<android.widget.TextView>(R.id.btn_capture)?.setOnClickListener {
 			// Upload button: select photo from gallery
@@ -173,24 +160,10 @@ class ImagePreviewActivity : AppCompatActivity() {
 						outputBitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
 					}
 
-					// 3. DetectionResult -> DetectionResultItem
-					val uiResults = ArrayList<DetectionResultItem>()
+					// 3. DetectionResult -> DetectionResultItem using converter
 					val w = outputBitmap.width.toFloat()
 					val h = outputBitmap.height.toFloat()
-
-					for (r in results) {
-						val box = r.boundingBox   // RectF
-						uiResults.add(
-							DetectionResultItem(
-								label = r.name,
-								score = r.score,
-								left = box.left / w,
-								top = box.top / h,
-								right = box.right / w,
-								bottom = box.bottom / h
-							)
-						)
-					}
+					val uiResults = DetectionResultConverter.convertToDetectionResultItems(results, w, h)
 
 					// 4. UI Thread --> MainActivity with Fragment
 					runOnUiThread {
@@ -204,14 +177,12 @@ class ImagePreviewActivity : AppCompatActivity() {
 								Toast.LENGTH_SHORT
 							).show()
 
-							val intent = Intent(this@ImagePreviewActivity, MainActivity::class.java).apply {
-								putExtra("fragment_type", "object_input")
-								putExtra("image_path", imageFile.absolutePath)
-								putExtra("main_nav_tag", mainNavTag)
-								flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-							}
-							startActivity(intent)
-							finish()
+							NavigationHelper.navigateToMainActivityWithFragmentType(
+								context = this@ImagePreviewActivity,
+								fragmentType = "object_input",
+								imagePath = imageFile.absolutePath,
+								mainNavTag = mainNavTag
+							)
 						} else {
 							// Has detection results - go to result Fragment
 							Toast.makeText(
@@ -220,15 +191,13 @@ class ImagePreviewActivity : AppCompatActivity() {
 								Toast.LENGTH_SHORT
 							).show()
 
-							val intent = Intent(this@ImagePreviewActivity, MainActivity::class.java).apply {
-								putExtra("fragment_type", "detection_result")
-								putExtra("image_path", imageFile.absolutePath)
-								putParcelableArrayListExtra("detection_results", uiResults)
-								putExtra("main_nav_tag", mainNavTag)
-								flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-							}
-							startActivity(intent)
-							finish()
+							NavigationHelper.navigateToMainActivityWithFragmentType(
+								context = this@ImagePreviewActivity,
+								fragmentType = "detection_result",
+								imagePath = imageFile.absolutePath,
+								mainNavTag = mainNavTag,
+								detectionResults = uiResults
+							)
 						}
 					}
 				} catch (e: Exception) {

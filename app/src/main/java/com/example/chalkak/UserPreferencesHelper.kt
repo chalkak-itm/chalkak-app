@@ -100,5 +100,21 @@ class UserPreferencesHelper(private val context: Context) {
             .build()
         return GoogleSignIn.getClient(context, gso)
     }
+    
+    /**
+     * Get quick snap enabled state (default: false)
+     */
+    fun isQuickSnapEnabled(): Boolean {
+        return sharedPreferences.getBoolean("quick_snap_enabled", false)
+    }
+    
+    /**
+     * Save quick snap enabled state
+     */
+    fun setQuickSnapEnabled(enabled: Boolean) {
+        sharedPreferences.edit()
+            .putBoolean("quick_snap_enabled", enabled)
+            .apply()
+    }
 }
 

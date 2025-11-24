@@ -45,6 +45,14 @@ interface DetectedObjectDao {
     // get object by objectId
     @Query("SELECT * FROM detected_objects WHERE objectId = :objectId LIMIT 1")
     suspend fun getObjectById(objectId: Long): DetectedObject?
+    
+    // get all objects by english word
+    @Query("SELECT * FROM detected_objects WHERE english_word = :word")
+    suspend fun getAllObjectsByEnglishWord(word: String): List<DetectedObject>
+    
+    // get all detected objects
+    @Query("SELECT * FROM detected_objects")
+    suspend fun getAllDetectedObjects(): List<DetectedObject>
 }
 
 // For examples
@@ -55,4 +63,8 @@ interface ExampleSentenceDao {
 
     @Query("SELECT * FROM example_sentences WHERE word_id = :wordId")
     suspend fun getSentencesByWordId(wordId: Long): List<ExampleSentence>
+    
+    // Get all example sentences for batch loading
+    @Query("SELECT * FROM example_sentences")
+    suspend fun getAllExampleSentences(): List<ExampleSentence>
 }
