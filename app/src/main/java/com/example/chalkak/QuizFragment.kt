@@ -123,9 +123,8 @@ class QuizFragment : Fragment() {
                 // 4. Activity Dots: Last 7 days learning activity
                 val last7DaysActivity = calculateLast7DaysActivity(allPhotos)
                 
-                // 5. Accuracy Rate: Currently not tracked, show placeholder or calculate from lastStudied
-                // For now, we'll show a placeholder or calculate based on recent study activity
-                val accuracyRate = calculateAccuracyRate(allDetectedObjects)
+                // 5. Review Rate: Calculate based on photos studied vs total photos in last 7 days
+                val accuracyRate = calculateAccuracyRate(allPhotos, allDetectedObjects)
                 
                 // 6. Quiz Completion Dates: Get dates when quiz was completed (lastStudied dates)
                 val quizCompletionDates = calculateQuizCompletionDates(allDetectedObjects)
@@ -270,24 +269,44 @@ class QuizFragment : Fragment() {
         return activity
     }
     
-    private fun calculateAccuracyRate(objects: List<DetectedObject>): Int {
-        // Since we don't track quiz accuracy, we'll calculate based on recent study activity
-        // Words studied recently (within last 7 days) are considered "active"
+    /**
+     * Calculate Review Rate
+     * Denominator: Number of photos taken in the last 7 days (from 7 days ago to now)
+     * Numerator: Number of photos that have been studied (lastStudied >= sevenDaysAgo)
+     * 
+     * When quiz is answered correctly, the photo's createdAt is saved to lastStudied
+     * So a photo is considered "studied" if at least one DetectedObject has lastStudied >= sevenDaysAgo
+     */
+    private fun calculateAccuracyRate(photos: List<PhotoLog>, objects: List<DetectedObject>): Int {
         val now = System.currentTimeMillis()
         val sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000L)
         
-        val recentlyStudied = objects.count { it.lastStudied >= sevenDaysAgo }
-        val totalWithMeaning = objects.count { 
-            it.koreanMeaning.isNotEmpty() && it.koreanMeaning != "Searching..." 
+        // Denominator: Photos taken in the last 7 days (from 7 days ago to now)
+        val recentPhotos = photos.filter { it.createdAt >= sevenDaysAgo }
+        val totalRecentPhotos = recentPhotos.size
+        
+        if (totalRecentPhotos == 0) {
+            return 0 // Avoid division by zero
         }
         
-        return if (totalWithMeaning > 0) {
-            // Calculate percentage of words studied recently
-            // This gives an indication of learning activity
-            (recentlyStudied * 100 / totalWithMeaning).coerceIn(0, 100)
-        } else {
-            0
+        // Group objects by photoId for efficient lookup
+        val objectsByPhotoId = objects.groupBy { it.parentPhotoId }
+        
+        // Numerator: Photos that have been studied (lastStudied >= sevenDaysAgo)
+        // A photo is studied if at least one DetectedObject has lastStudied >= sevenDaysAgo
+        // (lastStudied = 0 means not studied yet, so we check lastStudied > 0)
+        val studiedPhotos = recentPhotos.count { photo ->
+            val objectsInPhoto = objectsByPhotoId[photo.photoId] ?: emptyList()
+            // Check if at least one object in this photo has been studied via quiz
+            // lastStudied > 0 means it was updated (quiz was answered correctly)
+            // lastStudied >= sevenDaysAgo means it was studied within the last 7 days
+            objectsInPhoto.any { obj ->
+                obj.lastStudied > 0 && obj.lastStudied >= sevenDaysAgo
+            }
         }
+        
+        // Calculate percentage
+        return ((studiedPhotos * 100) / totalRecentPhotos).coerceIn(0, 100)
     }
     
     private fun updateActivityDots(last7DaysActivity: List<Boolean>) {

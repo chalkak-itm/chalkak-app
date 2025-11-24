@@ -31,7 +31,8 @@ data class QuizQuestion(
     val exampleEnglish: String,
     val exampleKorean: String,
     val correctAnswer: String, // English word
-    val options: List<String> // English words
+    val options: List<String>, // English words
+    val parentPhotoId: Long // Photo ID for getting createdAt
 )
 
 class QuizQuestionFragment : BaseFragment() {
@@ -327,9 +328,9 @@ class QuizQuestionFragment : BaseFragment() {
         // Update selected button to correct state
         updateOptionButton(optionIndex, true)
 
-        // Spaced Repetition Algorithm: Update lastStudied date in DB
+        // Spaced Repetition Algorithm: Update lastStudied date in DB with photo's createdAt
         currentQuestion?.let { question ->
-            spacedRepetitionManager.handleCorrectAnswer(question.englishWord)
+            spacedRepetitionManager.handleCorrectAnswer(question.englishWord, question.parentPhotoId)
         }
 
         // Show word info in the same card after a short delay

@@ -427,8 +427,6 @@ class MainActivity : AppCompatActivity() {
                             )
                         )
                     }
-                    firestoreRepo.updateReviewTime(uid, detectedWord)
-                    roomDb.detectedObjectDao().updateLastStudied(detectedWord, System.currentTimeMillis())
                     val exampleCount = if (existingObject != null) {
                         examplesByWordId[existingObject.objectId]?.size ?: 0
                     } else {
