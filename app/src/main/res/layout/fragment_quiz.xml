@@ -118,7 +118,22 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:orientation="vertical">
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_star_purple"
+                    android:contentDescription="Star Icon"
+                    android:visibility="invisible" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp"
+                    android:orientation="vertical">
 
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -130,7 +145,7 @@
                         android:id="@+id/txt_word_count"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="12"
+                        android:text="0"
                         android:textColor="#8200DB"
                         android:textSize="48sp"
                         android:textStyle="bold" />
@@ -151,6 +166,7 @@
                     android:text="Magic spells that need review"
                     android:textColor="#AD46FF"
                     android:textSize="14sp" />
+                </LinearLayout>
             </LinearLayout>
 
             <!-- Statistics Section -->
@@ -173,7 +189,7 @@
                         android:id="@+id/txt_accuracy_rate"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="85%"
+                        android:text="0%"
                         android:textColor="#8200DB"
                         android:textSize="24sp"
                         android:textStyle="bold" />
@@ -199,7 +215,7 @@
                         android:id="@+id/txt_total_learning"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="156"
+                        android:text="0"
                         android:textColor="#8200DB"
                         android:textSize="24sp"
                         android:textStyle="bold" />
@@ -225,7 +241,7 @@
                         android:id="@+id/txt_consecutive_days"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="12일"
+                        android:text="0 days"
                         android:textColor="#8200DB"
                         android:textSize="24sp"
                         android:textStyle="bold" />
@@ -282,7 +298,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="Review 12 magic spells"
+                        android:text="Review 0 magic spells"
                         android:textColor="#FFFFFF"
                         android:textSize="12sp"
                         android:alpha="0.9" />
@@ -330,7 +346,7 @@
                     android:id="@+id/txt_streak_days"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="12 days streak"
+                    android:text="Loading"
                     android:textColor="#8200DB"
                     android:textSize="14sp" />
             </LinearLayout>
@@ -507,7 +523,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Quiz Completed"
+                        android:text="Learned"
                         android:textColor="#AD46FF"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -527,7 +543,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="No Quiz"
+                        android:text="Not Learned"
                         android:textColor="#AD46FF"
                         android:textSize="12sp" />
                 </LinearLayout>
