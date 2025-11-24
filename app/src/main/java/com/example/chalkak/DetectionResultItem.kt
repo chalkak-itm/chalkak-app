@@ -1,3 +1,5 @@
+package com.example.chalkak
+
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 

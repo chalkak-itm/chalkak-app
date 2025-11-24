@@ -1,6 +1,5 @@
 package com.example.chalkak
 
-import DetectionResultItem
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler

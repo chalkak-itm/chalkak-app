@@ -1,6 +1,5 @@
 package com.example.chalkak
 
-import DetectionResultItem
 import com.example.chalkak.ml.DetectionResult
 
 /**

@@ -1,6 +1,5 @@
 package com.example.chalkak
 
-import DetectionResultItem
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri

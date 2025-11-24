@@ -1,6 +1,5 @@
 package com.example.chalkak
 
-import DetectionResultItem
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View

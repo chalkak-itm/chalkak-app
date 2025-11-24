@@ -20,7 +20,7 @@ import java.util.Calendar
 class QuizFragment : Fragment() {
     // Main quiz card views
     private lateinit var txtWordCount: TextView
-    private lateinit var txtReviewRate: TextView
+    private lateinit var txtAccuracyRate: TextView
     private lateinit var txtTotalLearning: TextView
     private lateinit var txtConsecutiveDays: TextView
     private lateinit var txtQuizSubtitle: TextView
@@ -51,7 +51,7 @@ class QuizFragment : Fragment() {
 
         // Initialize main quiz card views
         txtWordCount = view.findViewById(R.id.txt_word_count)
-        txtReviewRate = view.findViewById(R.id.txt_accuracy_rate)
+        txtAccuracyRate = view.findViewById(R.id.txt_accuracy_rate)
         txtTotalLearning = view.findViewById(R.id.txt_total_learning)
         txtConsecutiveDays = view.findViewById(R.id.txt_consecutive_days)
         txtQuizSubtitle = view.findViewById(R.id.txt_quiz_subtitle)
@@ -119,7 +119,7 @@ class QuizFragment : Fragment() {
                 
                 // 5. Accuracy Rate: Currently not tracked, show placeholder or calculate from lastStudied
                 // For now, we'll show a placeholder or calculate based on recent study activity
-                val reviewRate = calculateAccuracyRate(allDetectedObjects)
+                val accuracyRate = calculateAccuracyRate(allDetectedObjects)
                 
                 // 6. Quiz Completion Dates: Get dates when quiz was completed (lastStudied dates)
                 val quizCompletionDates = calculateQuizCompletionDates(allDetectedObjects)
@@ -360,15 +360,15 @@ class QuizFragment : Fragment() {
                     val day = CalendarDay(calendar)
                     // Try to set iconDrawable property (most common field name)
                     try {
-                        val iconDrawableField = CalendarDay::class.java.getDeclaredField("iconDrawable")
-                        iconDrawableField.isAccessible = true
-                        iconDrawableField.set(day, drawable)
+                    val iconDrawableField = CalendarDay::class.java.getDeclaredField("iconDrawable")
+                    iconDrawableField.isAccessible = true
+                    iconDrawableField.set(day, drawable)
                     } catch (e2: NoSuchFieldException) {
                         // Try drawable field
-                        try {
-                            val drawableField = CalendarDay::class.java.getDeclaredField("drawable")
-                            drawableField.isAccessible = true
-                            drawableField.set(day, drawable)
+                    try {
+                        val drawableField = CalendarDay::class.java.getDeclaredField("drawable")
+                        drawableField.isAccessible = true
+                        drawableField.set(day, drawable)
                         } catch (e3: NoSuchFieldException) {
                             // Try labelDrawable
                             try {

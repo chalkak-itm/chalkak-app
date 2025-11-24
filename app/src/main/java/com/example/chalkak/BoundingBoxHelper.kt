@@ -1,6 +1,5 @@
 package com.example.chalkak
 
-import DetectionResultItem
 import android.graphics.Bitmap
 import android.graphics.RectF
 import android.widget.ImageView
