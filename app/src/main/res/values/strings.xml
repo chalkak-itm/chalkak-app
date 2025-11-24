@@ -20,7 +20,8 @@
     <string name="nickname_saved">Nickname saved</string>
     <string name="logout">Logout</string>
     <string name="logout_confirmation">Are you sure you want to logout?</string>
-    <string name="reset">Reset</string>
+    <string name="reset_section_title">Reset</string>
+    <string name="clear_all_data">Clear All Data</string>
     <string name="reset_confirmation">This will delete ALL your learning data including photos, words, and examples. This action cannot be undone. Continue?</string>
     <string name="all_data_cleared_successfully">All data cleared successfully!</string>
     <string name="failed_to_clear_data">Failed to clear data: %1$s</string>
