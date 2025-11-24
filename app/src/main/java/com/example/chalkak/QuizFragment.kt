@@ -19,7 +19,7 @@ import java.util.Calendar
 class QuizFragment : Fragment() {
     // Main quiz card views
     private lateinit var txtWordCount: TextView
-    private lateinit var txtAccuracyRate: TextView
+    private lateinit var txtReviewRate: TextView
     private lateinit var txtTotalLearning: TextView
     private lateinit var txtConsecutiveDays: TextView
     private lateinit var txtQuizSubtitle: TextView
@@ -50,7 +50,7 @@ class QuizFragment : Fragment() {
 
         // Initialize main quiz card views
         txtWordCount = view.findViewById(R.id.txt_word_count)
-        txtAccuracyRate = view.findViewById(R.id.txt_accuracy_rate)
+        txtReviewRate = view.findViewById(R.id.txt_accuracy_rate)
         txtTotalLearning = view.findViewById(R.id.txt_total_learning)
         txtConsecutiveDays = view.findViewById(R.id.txt_consecutive_days)
         txtQuizSubtitle = view.findViewById(R.id.txt_quiz_subtitle)
@@ -115,7 +115,7 @@ class QuizFragment : Fragment() {
                 
                 // 5. Accuracy Rate: Currently not tracked, show placeholder or calculate from lastStudied
                 // For now, we'll show a placeholder or calculate based on recent study activity
-                val accuracyRate = calculateAccuracyRate(allDetectedObjects)
+                val reviewRate = calculateAccuracyRate(allDetectedObjects)
                 
                 // 6. Quiz Completion Dates: Get dates when quiz was completed (lastStudied dates)
                 val quizCompletionDates = calculateQuizCompletionDates(allDetectedObjects)
@@ -123,7 +123,7 @@ class QuizFragment : Fragment() {
                 // Update UI on Main thread
                 withContext(Dispatchers.Main) {
                     txtWordCount.text = quizAvailableWords.toString()
-                    txtAccuracyRate.text = "$accuracyRate%"
+                    txtReviewRate.text = "$reviewRate%"
                     txtTotalLearning.text = totalUniqueWords.toString()
                     txtConsecutiveDays.text = "$consecutiveDays days"
                     txtQuizSubtitle.text = "Review $quizAvailableWords magic spells"
@@ -140,7 +140,7 @@ class QuizFragment : Fragment() {
                 // On error, show default values
                 withContext(Dispatchers.Main) {
                     txtWordCount.text = "0"
-                    txtAccuracyRate.text = "0%"
+                    txtReviewRate.text = "0%"
                     txtTotalLearning.text = "0"
                     txtConsecutiveDays.text = "0 days"
                     txtQuizSubtitle.text = "Review 0 magic spells"
