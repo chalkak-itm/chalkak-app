@@ -1,107 +1,316 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/home_root"
+    android:id="@+id/scroll_home"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@drawable/bg_magic_gradient">
+    android:background="@drawable/bg_magic_gradient"
+    android:fillViewport="true">
 
-    <!-- 상단 환영 섹션 -->
-    <include
-        android:id="@+id/header_common"
-        layout="@layout/header_common" />
-
-    <!-- Magic Adventure 버튼 카드 -->
     <LinearLayout
-        android:id="@+id/btnMagicAdventure"
+        android:id="@+id/home_root"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="@dimen/padding_standard"
-        android:layout_marginRight="@dimen/padding_standard"
-        android:layout_marginTop="@dimen/padding_standard"
-        android:background="@drawable/bg_button_purple_ripple"
-        android:clickable="true"
-        android:focusable="true"
-        android:minHeight="@dimen/button_height_card"
-        android:gravity="center"
-        android:paddingLeft="@dimen/padding_small"
-        android:paddingRight="@dimen/padding_small"
-        android:paddingTop="@dimen/padding_standard"
-        android:paddingBottom="@dimen/padding_standard">
+        android:orientation="vertical">
 
+        <!-- 상단 환영 섹션 -->
+        <include
+            android:id="@+id/header_common"
+            layout="@layout/header_common" />
+
+        <!-- Magic Adventure 버튼 카드 -->
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:id="@+id/btnMagicAdventure"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/padding_standard"
+            android:layout_marginRight="@dimen/padding_standard"
+            android:layout_marginTop="@dimen/padding_standard"
+            android:background="@drawable/bg_button_purple_ripple"
+            android:clickable="true"
+            android:focusable="true"
+            android:minHeight="@dimen/button_height_card"
+            android:gravity="center"
+            android:paddingLeft="@dimen/padding_small"
+            android:paddingRight="@dimen/padding_small"
+            android:paddingTop="@dimen/padding_standard"
+            android:paddingBottom="@dimen/padding_standard">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <ImageView
+                    android:layout_width="@dimen/icon_size_large"
+                    android:layout_height="@dimen/icon_size_large"
+                    android:src="@drawable/camera"
+                    android:scaleType="centerInside"
+                    android:adjustViewBounds="true"
+                    android:contentDescription="Magic Camera" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Magic Adventure"
+                    android:textColor="#FFFFFF"
+                    android:textSize="@dimen/text_size_large"
+                    android:layout_marginTop="@dimen/padding_small" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Learning Activity Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/padding_standard"
+            android:layout_marginRight="@dimen/padding_standard"
+            android:layout_marginTop="@dimen/padding_standard"
+            android:background="@drawable/bg_card_white"
             android:orientation="vertical"
-            android:gravity="center">
+            android:paddingLeft="@dimen/padding_small"
+            android:paddingRight="@dimen/padding_small"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp">
 
-            <ImageView
-                android:layout_width="@dimen/icon_size_large"
-                android:layout_height="@dimen/icon_size_large"
-                android:src="@drawable/camera"
-                android:scaleType="centerInside"
-                android:adjustViewBounds="true"
-                android:contentDescription="Magic Camera" />
+            <!-- Section Header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Learning Activity"
+                    android:textColor="#8200DB"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <View
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_circle_green" />
+
+                <TextView
+                    android:id="@+id/txt_streak_days"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Loading"
+                    android:textColor="#8200DB"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <!-- Activity Dots (Last 7 Days) -->
+            <LinearLayout
+                android:id="@+id/activity_dots_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <!-- Day Dots (7 days) -->
+                <View
+                    android:id="@+id/dot_0"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_circle_green" />
+
+                <View
+                    android:id="@+id/dot_1"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_circle_red" />
+
+                <View
+                    android:id="@+id/dot_2"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_circle_green" />
+
+                <View
+                    android:id="@+id/dot_3"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_circle_green" />
+
+                <View
+                    android:id="@+id/dot_4"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_circle_red" />
+
+                <View
+                    android:id="@+id/dot_5"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_circle_green" />
+
+                <View
+                    android:id="@+id/dot_6"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="@drawable/bg_circle_green" />
+            </LinearLayout>
+
+            <!-- Legend -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="16dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <View
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/bg_circle_green" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Learned"
+                        android:textColor="#AD46FF"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <View
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/bg_circle_red" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Not Learned"
+                        android:textColor="#AD46FF"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Learning Calendar Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/padding_standard"
+            android:layout_marginRight="@dimen/padding_standard"
+            android:layout_marginTop="@dimen/padding_standard"
+            android:background="@drawable/bg_card_white"
+            android:orientation="vertical"
+            android:paddingLeft="@dimen/padding_small"
+            android:paddingRight="@dimen/padding_small"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp">
+
+            <!-- Section Header -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Magic Adventure"
-                android:textColor="#FFFFFF"
-                android:textSize="@dimen/text_size_large"
-                android:layout_marginTop="@dimen/padding_small" />
+                android:text="Learning Calendar"
+                android:textColor="#8200DB"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <!-- Calendar View -->
+            <com.applandeo.materialcalendarview.CalendarView
+                android:id="@+id/calendar_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:minHeight="300dp"
+                app:headerColor="#8200DB"
+                app:headerLabelColor="#FFFFFF"
+                app:abbreviationsBarColor="#F5F5F5"
+                app:abbreviationsLabelsColor="#8200DB"
+                app:daysLabelsColor="#8200DB"
+                app:selectionColor="#AD46FF"
+                app:todayLabelColor="#8200DB" />
+
+            <!-- Calendar Legend -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="16dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <View
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/bg_circle_green" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Learned"
+                        android:textColor="#AD46FF"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <View
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/bg_circle_red" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Not Learned"
+                        android:textColor="#AD46FF"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
 
-    <!-- Review Progress 카드 -->
-    <LinearLayout
-        android:id="@+id/btnReviewProgress"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="@dimen/padding_standard"
-        android:layout_marginRight="@dimen/padding_standard"
-        android:layout_marginTop="@dimen/padding_standard"
-        android:background="@drawable/bg_card_white_ripple"
-        android:orientation="vertical"
-        android:paddingLeft="@dimen/padding_small"
-        android:paddingRight="@dimen/padding_small"
-        android:paddingTop="@dimen/padding_standard"
-        android:paddingBottom="@dimen/padding_standard"
-        android:clickable="true"
-        android:focusable="true">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Review Progress Rate"
-            android:textColor="#8200DB"
-            android:textSize="@dimen/text_size_large" />
-
-        <TextView
-            android:id="@+id/txtProgressLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Review Rate: 0%"
-            android:textColor="#AD46FF"
-            android:textSize="@dimen/text_size_small"
-            android:layout_marginTop="@dimen/padding_small" />
-
-        <ProgressBar
-            android:id="@+id/progressWords"
-            style="@android:style/Widget.ProgressBar.Horizontal"
+        <!-- Spacer for bottom padding -->
+        <View
             android:layout_width="match_parent"
-            android:layout_height="@dimen/progress_bar_height"
-            android:layout_marginTop="@dimen/padding_small"
-            android:max="100"
-            android:progress="67"
-            android:progressDrawable="@drawable/progress_review" />
+            android:layout_height="24dp" />
+
     </LinearLayout>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="0dp" />
-
-</LinearLayout>
+</ScrollView>
 

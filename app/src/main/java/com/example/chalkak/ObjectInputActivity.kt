@@ -87,10 +87,19 @@ class ObjectInputActivity : AppCompatActivity() {
             return
         }
 
+        // Validate: only English letters and spaces allowed
+        if (!objectName.matches(Regex("^[a-zA-Z\\s]+$"))) {
+            Toast.makeText(this, "Please enter only English letters and spaces.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Convert to lowercase
+        val normalizedObjectName = objectName.lowercase()
+
         // Create a DetectionResultItem with the user input
         // Since there's no bounding box, we'll use default values (full image)
         val userInputItem = DetectionResultItem(
-            label = objectName,
+            label = normalizedObjectName,
             score = 1.0f, // User input is considered 100% confident
             left = 0.0f,
             top = 0.0f,

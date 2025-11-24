@@ -5,12 +5,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.applandeo.materialcalendarview.CalendarView
-import com.applandeo.materialcalendarview.CalendarDay
-import com.applandeo.materialcalendarview.listeners.OnCalendarDayClickListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -26,18 +22,8 @@ class QuizFragment : Fragment() {
     private lateinit var txtQuizSubtitle: TextView
     private lateinit var btnStartQuiz: View
     
-    // Learning activity views
-    private lateinit var txtStreakDays: TextView
-    private val activityDots = mutableListOf<View>()
-    
-    // Calendar view
-    private lateinit var calendarView: CalendarView
-    
     private val roomDb by lazy { AppDatabase.getInstance(requireContext()) }
     
-    // Set of dates when quiz was completed (in milliseconds)
-    private val completedDates = mutableSetOf<Long>()
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -57,21 +43,6 @@ class QuizFragment : Fragment() {
         txtQuizSubtitle = view.findViewById(R.id.txt_quiz_subtitle)
         btnStartQuiz = view.findViewById(R.id.btn_start_quiz)
         
-        // Initialize learning activity views
-        txtStreakDays = view.findViewById(R.id.txt_streak_days)
-        
-        // Initialize activity dots (7 days) - use direct resource IDs instead of reflection
-        val dotIds = arrayOf(
-            R.id.dot_0, R.id.dot_1, R.id.dot_2, R.id.dot_3,
-            R.id.dot_4, R.id.dot_5, R.id.dot_6
-        )
-        dotIds.forEach { dotId ->
-            activityDots.add(view.findViewById(dotId))
-        }
-        
-        // Initialize calendar view
-        calendarView = view.findViewById(R.id.calendar_view)
-
         // Load quiz data from database
         loadQuizData()
 
@@ -126,9 +97,6 @@ class QuizFragment : Fragment() {
                 // 5. Review Rate: Calculate based on photos studied vs total photos in last 7 days
                 val accuracyRate = calculateAccuracyRate(allPhotos, allDetectedObjects)
                 
-                // 6. Quiz Completion Dates: Get dates when quiz was completed (lastStudied dates)
-                val quizCompletionDates = calculateQuizCompletionDates(allDetectedObjects)
-                
                 // Update UI on Main thread
                 withContext(Dispatchers.Main) {
                     txtWordCount.text = quizAvailableWords.toString()
@@ -136,13 +104,6 @@ class QuizFragment : Fragment() {
                     txtTotalLearning.text = recentlyStudiedCount.toString()
                     txtConsecutiveDays.text = getString(R.string.consecutive_days_format, consecutiveDays)
                     txtQuizSubtitle.text = getString(R.string.quiz_subtitle_format, quizAvailableWords)
-                    txtStreakDays.text = getString(R.string.streak_days_format, consecutiveDays)
-                    
-                    // Update activity dots
-                    updateActivityDots(last7DaysActivity)
-                    
-                    // Update calendar with completion dates
-                    updateCalendar(quizCompletionDates)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -153,8 +114,6 @@ class QuizFragment : Fragment() {
                     txtTotalLearning.text = "0"
                     txtConsecutiveDays.text = getString(R.string.consecutive_days_format, 0)
                     txtQuizSubtitle.text = getString(R.string.quiz_subtitle_format, 0)
-                    txtStreakDays.text = getString(R.string.streak_days_format, 0)
-                    updateActivityDots(List(7) { false })
                 }
             }
         }
@@ -307,173 +266,5 @@ class QuizFragment : Fragment() {
         
         // Calculate percentage
         return ((studiedPhotos * 100) / totalRecentPhotos).coerceIn(0, 100)
-    }
-    
-    private fun updateActivityDots(last7DaysActivity: List<Boolean>) {
-        for (i in 0 until minOf(7, activityDots.size)) {
-            val hasLearned = if (i < last7DaysActivity.size) last7DaysActivity[i] else false
-            val drawableRes = if (hasLearned) {
-                R.drawable.bg_circle_green
-            } else {
-                R.drawable.bg_circle_red
-            }
-            activityDots[i].background = ContextCompat.getDrawable(requireContext(), drawableRes)
-        }
-    }
-    
-    /**
-     * Calculate dates when quiz was completed
-     * Uses lastStudied field from DetectedObject to determine completion dates
-     * Only includes dates where quiz was actually completed (lastStudied was updated after object creation)
-     */
-    private fun calculateQuizCompletionDates(objects: List<DetectedObject>): Set<Long> {
-        val completionDates = mutableSetOf<Long>()
-        val now = System.currentTimeMillis()
-        
-        // Get unique dates from lastStudied timestamps
-        // Only include dates where lastStudied was explicitly set (not default value)
-        // We consider a date valid if lastStudied > 0 and it's not in the future
-        objects.forEach { obj ->
-            if (obj.lastStudied > 0 && obj.lastStudied <= now) {
-                // Convert timestamp to date (midnight)
-                val calendar = Calendar.getInstance().apply {
-                    timeInMillis = obj.lastStudied
-                    set(Calendar.HOUR_OF_DAY, 0)
-                    set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
-                }
-                completionDates.add(calendar.timeInMillis)
-            }
-        }
-        
-        return completionDates
-    }
-    
-    /**
-     * Update calendar view with quiz completion dates
-     * Uses Material CalendarView to highlight dates with quiz completion
-     */
-    private fun updateCalendar(completionDates: Set<Long>) {
-        if (!isAdded || !::calendarView.isInitialized) {
-            return // Fragment not attached or view not initialized
-        }
-        
-        completedDates.clear()
-        completedDates.addAll(completionDates)
-        
-        // Create calendar days for completed dates
-        val calendarDays = mutableListOf<CalendarDay>()
-        val context = requireContext()
-        
-        completionDates.forEach { dateMillis ->
-            val calendar = Calendar.getInstance().apply {
-                timeInMillis = dateMillis
-                // Normalize to midnight for consistent comparison
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }
-            
-            // Create calendar day with green circle drawable for completed dates
-            val drawable = ContextCompat.getDrawable(context, R.drawable.bg_circle_green)
-            val calendarDay = if (drawable != null) {
-                // Material CalendarView 1.9.0 only supports CalendarDay(Calendar) constructor
-                // Use reflection to set drawable property
-                try {
-                    val day = CalendarDay(calendar)
-                    // Try to set iconDrawable property (most common field name)
-                    try {
-                    val iconDrawableField = CalendarDay::class.java.getDeclaredField("iconDrawable")
-                    iconDrawableField.isAccessible = true
-                    iconDrawableField.set(day, drawable)
-                    } catch (e2: NoSuchFieldException) {
-                        // Try drawable field
-                    try {
-                        val drawableField = CalendarDay::class.java.getDeclaredField("drawable")
-                        drawableField.isAccessible = true
-                        drawableField.set(day, drawable)
-                        } catch (e3: NoSuchFieldException) {
-                            // Try labelDrawable
-                            try {
-                                val labelDrawableField = CalendarDay::class.java.getDeclaredField("labelDrawable")
-                                labelDrawableField.isAccessible = true
-                                labelDrawableField.set(day, drawable)
-                            } catch (e4: NoSuchFieldException) {
-                                // Try imageDrawable
-                                try {
-                                    val imageDrawableField = CalendarDay::class.java.getDeclaredField("imageDrawable")
-                                    imageDrawableField.isAccessible = true
-                                    imageDrawableField.set(day, drawable)
-                                } catch (e5: Exception) {
-                                    // All reflection attempts failed, use day without drawable
-                                }
-                            } catch (e4: Exception) {
-                                // Reflection failed
-                            }
-                        } catch (e3: Exception) {
-                            // Reflection failed
-                        }
-                    } catch (e2: Exception) {
-                        // Reflection failed
-                    }
-                    day
-                } catch (e: Exception) {
-                    // Fallback: create without drawable
-                    CalendarDay(calendar)
-                }
-            } else {
-                CalendarDay(calendar)
-            }
-            calendarDays.add(calendarDay)
-        }
-        
-        // Set calendar days to calendar view
-        calendarView.setCalendarDays(calendarDays)
-        
-        // Set up calendar date click listener
-        calendarView.setOnCalendarDayClickListener(object : OnCalendarDayClickListener {
-            override fun onClick(calendarDay: CalendarDay) {
-                if (!isAdded) return
-                
-                val selectedDate = calendarDay.calendar
-                // Normalize selected date to midnight for comparison
-                selectedDate.set(Calendar.HOUR_OF_DAY, 0)
-                selectedDate.set(Calendar.MINUTE, 0)
-                selectedDate.set(Calendar.SECOND, 0)
-                selectedDate.set(Calendar.MILLISECOND, 0)
-                val selectedDateMillis = selectedDate.timeInMillis
-                
-                val isCompleted = completedDates.contains(selectedDateMillis)
-                
-                // Show toast with completion status using ToastHelper
-                val message = if (isCompleted) {
-                    "Quiz completed on this day! ✨"
-                } else {
-                    "No quiz completed on this day"
-                }
-                
-                ToastHelper.showCenterToast(requireContext(), message)
-            }
-        })
-        
-        // Set minimum date to 1 year ago and maximum to today
-        val today = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-        val oneYearAgo = Calendar.getInstance().apply {
-            add(Calendar.YEAR, -1)
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-        
-        calendarView.setMinimumDate(oneYearAgo)
-        calendarView.setMaximumDate(today)
     }
 }
