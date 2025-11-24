@@ -75,7 +75,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Review Rate"
+            android:text="Review Progress Rate"
             android:textColor="#8200DB"
             android:textSize="@dimen/text_size_large" />
 
