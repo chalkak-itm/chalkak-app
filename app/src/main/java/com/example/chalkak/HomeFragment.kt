@@ -367,9 +367,9 @@ class HomeFragment : Fragment() {
                 val isCompleted = completedDates.contains(selectedDateMillis)
                 
                 val message = if (isCompleted) {
-                    "Quiz completed on this day! ✨"
+                    "Learning completed on this day! ✨"
                 } else {
-                    "No quiz completed on this day"
+                    "No learning completed on this day"
                 }
                 
                 ToastHelper.showCenterToast(requireContext(), message)
