@@ -179,9 +179,9 @@ class SettingFragment : Fragment() {
     
     private fun resetAllData() {
         AlertDialog.Builder(requireContext())
-            .setTitle(getString(R.string.reset))
+            .setTitle(getString(R.string.reset_section_title))
             .setMessage(getString(R.string.reset_confirmation))
-            .setPositiveButton(getString(R.string.reset)) { _, _ ->
+            .setPositiveButton(getString(R.string.clear_all_data)) { _, _ ->
                 clearDatabaseData()
             }
             .setNegativeButton(getString(R.string.cancel), null)
