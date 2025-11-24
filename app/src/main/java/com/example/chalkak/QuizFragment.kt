@@ -104,9 +104,15 @@ class QuizFragment : Fragment() {
                     .distinct()
                     .count()
                 
-                // 2. Total Learning: Total unique words learned
-                val totalUniqueWords = allDetectedObjects
-                    .filter { it.koreanMeaning.isNotEmpty() && it.koreanMeaning != "Searching..." }
+                // 2. Total Learning: Recently studied words (within last 7 days)
+                val now = System.currentTimeMillis()
+                val sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000L)
+                val recentlyStudiedCount = allDetectedObjects
+                    .filter { 
+                        it.koreanMeaning.isNotEmpty() && 
+                        it.koreanMeaning != "Searching..." &&
+                        it.lastStudied >= sevenDaysAgo
+                    }
                     .map { it.englishWord.lowercase() }
                     .distinct()
                     .count()
@@ -128,7 +134,7 @@ class QuizFragment : Fragment() {
                 withContext(Dispatchers.Main) {
                     txtWordCount.text = quizAvailableWords.toString()
                     txtAccuracyRate.text = getString(R.string.accuracy_rate_format, accuracyRate)
-                    txtTotalLearning.text = totalUniqueWords.toString()
+                    txtTotalLearning.text = recentlyStudiedCount.toString()
                     txtConsecutiveDays.text = getString(R.string.consecutive_days_format, consecutiveDays)
                     txtQuizSubtitle.text = getString(R.string.quiz_subtitle_format, quizAvailableWords)
                     txtStreakDays.text = getString(R.string.streak_days_format, consecutiveDays)
