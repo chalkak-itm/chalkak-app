@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">Chalkak</string>
     <string name="default_web_client_id" translatable="false">176917824873-ipc46dhtgiacnep2ejaf598l468k5ral.apps.googleusercontent.com</string>
+    
+    <!-- Quiz Fragment strings -->
+    <string name="accuracy_rate_format">%1$d%%</string>
+    <string name="consecutive_days_format">%1$d days</string>
+    <string name="quiz_subtitle_format">Review %1$d magic spells</string>
+    <string name="streak_days_format">%1$d days streak</string>
 </resources>

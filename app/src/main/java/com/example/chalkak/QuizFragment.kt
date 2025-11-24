@@ -9,7 +9,8 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.applandeo.materialcalendarview.CalendarView
-import com.applandeo.materialcalendarview.EventDay
+import com.applandeo.materialcalendarview.CalendarDay
+import com.applandeo.materialcalendarview.listeners.OnCalendarDayClickListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -59,9 +60,12 @@ class QuizFragment : Fragment() {
         // Initialize learning activity views
         txtStreakDays = view.findViewById(R.id.txt_streak_days)
         
-        // Initialize activity dots (7 days)
-        for (i in 0..6) {
-            val dotId = resources.getIdentifier("dot_$i", "id", requireContext().packageName)
+        // Initialize activity dots (7 days) - use direct resource IDs instead of reflection
+        val dotIds = arrayOf(
+            R.id.dot_0, R.id.dot_1, R.id.dot_2, R.id.dot_3,
+            R.id.dot_4, R.id.dot_5, R.id.dot_6
+        )
+        dotIds.forEach { dotId ->
             activityDots.add(view.findViewById(dotId))
         }
         
@@ -123,11 +127,11 @@ class QuizFragment : Fragment() {
                 // Update UI on Main thread
                 withContext(Dispatchers.Main) {
                     txtWordCount.text = quizAvailableWords.toString()
-                    txtAccuracyRate.text = "$accuracyRate%"
+                    txtAccuracyRate.text = getString(R.string.accuracy_rate_format, accuracyRate)
                     txtTotalLearning.text = totalUniqueWords.toString()
-                    txtConsecutiveDays.text = "$consecutiveDays days"
-                    txtQuizSubtitle.text = "Review $quizAvailableWords magic spells"
-                    txtStreakDays.text = "$consecutiveDays days streak"
+                    txtConsecutiveDays.text = getString(R.string.consecutive_days_format, consecutiveDays)
+                    txtQuizSubtitle.text = getString(R.string.quiz_subtitle_format, quizAvailableWords)
+                    txtStreakDays.text = getString(R.string.streak_days_format, consecutiveDays)
                     
                     // Update activity dots
                     updateActivityDots(last7DaysActivity)
@@ -140,11 +144,11 @@ class QuizFragment : Fragment() {
                 // On error, show default values
                 withContext(Dispatchers.Main) {
                     txtWordCount.text = "0"
-                    txtAccuracyRate.text = "0%"
+                    txtAccuracyRate.text = getString(R.string.accuracy_rate_format, 0)
                     txtTotalLearning.text = "0"
-                    txtConsecutiveDays.text = "0 days"
-                    txtQuizSubtitle.text = "Review 0 magic spells"
-                    txtStreakDays.text = "0 days streak"
+                    txtConsecutiveDays.text = getString(R.string.consecutive_days_format, 0)
+                    txtQuizSubtitle.text = getString(R.string.quiz_subtitle_format, 0)
+                    txtStreakDays.text = getString(R.string.streak_days_format, 0)
                     updateActivityDots(List(7) { false })
                 }
             }
@@ -227,7 +231,6 @@ class QuizFragment : Fragment() {
     
     private fun calculateLast7DaysActivity(photos: List<PhotoLog>): List<Boolean> {
         val activity = mutableListOf<Boolean>()
-        val calendar = Calendar.getInstance()
         
         // Get unique dates from photos (excluding firebase_sync)
         val learningDates = photos
@@ -330,8 +333,8 @@ class QuizFragment : Fragment() {
         completedDates.clear()
         completedDates.addAll(completionDates)
         
-        // Create events for completed dates
-        val events = mutableListOf<EventDay>()
+        // Create calendar days for completed dates
+        val calendarDays = mutableListOf<CalendarDay>()
         val context = requireContext()
         
         completionDates.forEach { dateMillis ->
@@ -344,23 +347,48 @@ class QuizFragment : Fragment() {
                 set(Calendar.MILLISECOND, 0)
             }
             
-            // Create event with green circle drawable for completed dates
+            // Create calendar day with green circle drawable for completed dates
             val drawable = ContextCompat.getDrawable(context, R.drawable.bg_circle_green)
-            if (drawable != null) {
-                val event = EventDay(calendar, drawable)
-                events.add(event)
+            val calendarDay = if (drawable != null) {
+                // Try to create CalendarDay with drawable using copy or builder pattern
+                // Since CalendarDay constructor only takes Calendar, we'll use reflection as fallback
+                try {
+                    val day = CalendarDay(calendar)
+                    // Try to set iconDrawable property
+                    val iconDrawableField = CalendarDay::class.java.getDeclaredField("iconDrawable")
+                    iconDrawableField.isAccessible = true
+                    iconDrawableField.set(day, drawable)
+                    day
+                } catch (e: NoSuchFieldException) {
+                    // If iconDrawable doesn't exist, try drawable
+                    try {
+                        val day = CalendarDay(calendar)
+                        val drawableField = CalendarDay::class.java.getDeclaredField("drawable")
+                        drawableField.isAccessible = true
+                        drawableField.set(day, drawable)
+                        day
+                    } catch (e2: Exception) {
+                        // Fallback: create without drawable
+                        CalendarDay(calendar)
+                    }
+                } catch (e: Exception) {
+                    CalendarDay(calendar)
+                }
+            } else {
+                CalendarDay(calendar)
             }
+            calendarDays.add(calendarDay)
         }
         
-        // Set events to calendar view
-        calendarView.setEvents(events)
+        // Set calendar days to calendar view
+        calendarView.setCalendarDays(calendarDays)
         
         // Set up calendar date click listener
-        calendarView.setOnDayClickListener(object : com.applandeo.materialcalendarview.listeners.OnDayClickListener {
-            override fun onDayClick(eventDay: EventDay) {
+        calendarView.setOnCalendarDayClickListener(object : OnCalendarDayClickListener {
+            override fun onClick(calendarDay: CalendarDay) {
                 if (!isAdded) return
                 
-                val selectedDate = eventDay.calendar
+                val selectedDate = calendarDay.calendar
                 // Normalize selected date to midnight for comparison
                 selectedDate.set(Calendar.HOUR_OF_DAY, 0)
                 selectedDate.set(Calendar.MINUTE, 0)

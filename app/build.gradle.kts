@@ -89,5 +89,5 @@ dependencies {
     kapt("androidx.room:room-compiler:$roomVersion")
     
     // Material CalendarView for date highlighting
-    implementation("com.applandeo:material-calendar-view:1.9.0-rc03")
+    implementation("com.applandeo:material-calendar-view:1.9.0")
 }
