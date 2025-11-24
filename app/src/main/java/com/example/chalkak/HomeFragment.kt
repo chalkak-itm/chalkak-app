@@ -107,7 +107,7 @@ class HomeFragment : Fragment() {
 
     private fun updateWelcomeMessage() {
         val nickname = userPreferencesHelper.getNickname()
-        txtWelcome.text = "Welcome back,\n$nickname"
+        txtWelcome.text = getString(R.string.welcome_back, nickname)
     }
 
     private fun updateProgressBar() {
@@ -117,7 +117,7 @@ class HomeFragment : Fragment() {
         val wordsTotal = 12
         val progressPercent = (wordsLearned * 100) / wordsTotal
         
-        txtProgressLabel.text = "$wordsLearned / $wordsTotal words learned today!"
+        txtProgressLabel.text = getString(R.string.words_learned_today, wordsLearned, wordsTotal)
         progressWords.progress = progressPercent
     }
 

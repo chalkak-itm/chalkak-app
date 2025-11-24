@@ -208,7 +208,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Data Management Section -->
+        <!-- Reset Section (Data Management에서 변경) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -225,13 +225,15 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Data Management"
+                android:text="@string/reset_section_title"
                 android:textColor="#8200DB"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
+            <!-- btn_clear_cache LinearLayout 전체 제거 -->
+
             <LinearLayout
-                android:id="@+id/btn_clear_cache"
+                android:id="@+id/btn_reset"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -246,14 +248,14 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Clear Cache"
-                    android:textColor="#333333"
+                    android:text="@string/clear_all_data"
+                    android:textColor="#F44336"
                     android:textSize="16sp" />
 
                 <ImageView
                     android:layout_width="24dp"
                     android:layout_height="24dp"
-                    app:tint="#999999"
+                    app:tint="#F44336"
                     app:srcCompat="@android:drawable/ic_menu_delete" />
             </LinearLayout>
         </LinearLayout>

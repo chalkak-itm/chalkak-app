@@ -49,6 +49,12 @@ object QuizQuestionGenerator {
         // Group examples by wordId for efficient lookup
         val examplesByWordId = allExampleSentences.groupBy { it.wordId }
         
+        // Load ALL detected objects (not filtered) for example sentence lookup
+        // This ensures we can find examples even if the current object doesn't have one
+        val allDetectedObjectsUnfiltered = roomDb.detectedObjectDao().getAllDetectedObjects()
+        // Group all objects by english word (lowercase) for example lookup
+        val allObjectsByWord = allDetectedObjectsUnfiltered.groupBy { it.englishWord.lowercase() }
+        
         // Group objects by photoId for efficient lookup
         val objectsByPhotoId = allDetectedObjects.groupBy { it.parentPhotoId }
         
@@ -104,8 +110,10 @@ object QuizQuestionGenerator {
             // Get bounding box for THIS SPECIFIC object - ensure it matches exactly
             val boundingBox = wordObj.boundingBox
             
-            // Get example sentence from memory cache instead of querying database
-            val allObjectsWithSameWord = objectsByWord[wordObj.englishWord.lowercase()] ?: emptyList()
+            // Get example sentence from memory cache
+            // Search in ALL objects with the same word (not just filtered ones)
+            // This ensures we find examples even if the current object doesn't have one
+            val allObjectsWithSameWord = allObjectsByWord[wordObj.englishWord.lowercase()] ?: emptyList()
             var example: ExampleSentence? = null
             for (obj in allObjectsWithSameWord) {
                 val examples = examplesByWordId[obj.objectId] ?: emptyList()

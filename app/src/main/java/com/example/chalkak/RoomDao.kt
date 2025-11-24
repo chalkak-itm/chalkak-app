@@ -14,6 +14,10 @@ interface PhotoLogDao {
 
     @Query("SELECT * FROM photo_logs ORDER BY created_at DESC")
     suspend fun getAllPhotos(): List<PhotoLog>
+    
+    // Delete all photos
+    @Query("DELETE FROM photo_logs")
+    suspend fun deleteAllPhotos()
 }
 
 // For Word object
@@ -53,6 +57,10 @@ interface DetectedObjectDao {
     // get all detected objects
     @Query("SELECT * FROM detected_objects")
     suspend fun getAllDetectedObjects(): List<DetectedObject>
+    
+    // Delete all detected objects
+    @Query("DELETE FROM detected_objects")
+    suspend fun deleteAllDetectedObjects()
 }
 
 // For examples
@@ -67,4 +75,8 @@ interface ExampleSentenceDao {
     // Get all example sentences for batch loading
     @Query("SELECT * FROM example_sentences")
     suspend fun getAllExampleSentences(): List<ExampleSentence>
+    
+    // Delete all example sentences
+    @Query("DELETE FROM example_sentences")
+    suspend fun deleteAllExampleSentences()
 }
