@@ -1,23 +1,26 @@
 package com.example.chalkak
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.example.chalkak.databinding.ActivityLoginBinding
 import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
 
@@ -27,8 +30,8 @@ class LoginActivity : AppCompatActivity() {
 
     private val firestoreRepo = FirestoreRepository()
 
-    private lateinit var googleSignInClient: GoogleSignInClient
-    private lateinit var googleSignInLauncher: ActivityResultLauncher<Intent>
+    private lateinit var credentialManager: CredentialManager
+    private val coroutineScope = CoroutineScope(Dispatchers.Main)
 
     private val webClientId by lazy { getString(R.string.default_web_client_id) }
 
@@ -40,39 +43,13 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         auth = FirebaseAuth.getInstance()
+        credentialManager = CredentialManager.create(this)
 
         // Check if user is already signed in
         if (auth.currentUser != null) {
             Log.d(TAG, "Already Login: ${auth.currentUser?.displayName}")
             navigateToMain()
             return
-        }
-
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(webClientId)
-            .requestEmail()
-            .build()
-
-        googleSignInClient = GoogleSignIn.getClient(this, gso)
-
-        googleSignInLauncher = registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-                try {
-                    val account = task.getResult(ApiException::class.java)!!
-                    Log.d(TAG, "Google Sign In Succeeded, getting token...")
-                    firebaseAuthWithGoogle(account.idToken!!)
-                } catch (e: ApiException) {
-                    val statusCode = e.statusCode
-                    Log.e(TAG, "Google sign in failed: ApiException (statusCode: $statusCode)", e)
-                    updateUI(null)
-                }
-            } else {
-                Log.w(TAG, "Google sign in flow cancelled by user (resultCode: ${result.resultCode})")
-                updateUI(null)
-            }
         }
 
         // Apply WindowInsets using helper (LoginActivity includes bottom padding)
@@ -83,9 +60,58 @@ class LoginActivity : AppCompatActivity() {
         )
 
         binding.btnSignIn?.setOnClickListener {
-            Log.d(TAG, "Launching Google Sign In Intent...")
-            val signInIntent = googleSignInClient.signInIntent
-            googleSignInLauncher.launch(signInIntent)
+            Log.d(TAG, "Launching Google Sign In with Credential Manager...")
+            signInWithGoogle()
+        }
+    }
+
+    private fun signInWithGoogle() {
+        coroutineScope.launch {
+            try {
+                val googleIdOption = GetGoogleIdOption.Builder()
+                    .setFilterByAuthorizedAccounts(false)
+                    .setServerClientId(webClientId)
+                    .build()
+
+                val request = GetCredentialRequest.Builder()
+                    .addCredentialOption(googleIdOption)
+                    .build()
+
+                val result = credentialManager.getCredential(
+                    request = request,
+                    context = this@LoginActivity
+                )
+
+                when (val credential = result.credential) {
+                    is CustomCredential -> {
+                        if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                            try {
+                                val googleIdTokenCredential = GoogleIdTokenCredential
+                                    .createFrom(credential.data)
+                                val idToken = googleIdTokenCredential.idToken
+                                Log.d(TAG, "Google Sign In Succeeded, getting token...")
+                                firebaseAuthWithGoogle(idToken)
+                            } catch (e: GoogleIdTokenParsingException) {
+                                Log.e(TAG, "Failed to parse Google ID token", e)
+                                updateUI(null)
+                            }
+                        } else {
+                            Log.e(TAG, "Unexpected credential type: ${credential.type}")
+                            updateUI(null)
+                        }
+                    }
+                    else -> {
+                        Log.e(TAG, "Unexpected credential type")
+                        updateUI(null)
+                    }
+                }
+            } catch (e: GetCredentialException) {
+                Log.e(TAG, "Google sign in failed: ${e.message}", e)
+                updateUI(null)
+            } catch (e: Exception) {
+                Log.e(TAG, "Unexpected error during sign in", e)
+                updateUI(null)
+            }
         }
     }
 

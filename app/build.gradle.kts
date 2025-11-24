@@ -63,12 +63,13 @@ dependencies {
     // Add the dependency for the Firebase Authentication library
     implementation("com.google.firebase:firebase-auth")
 
-    // Also add the dependencies for the Credential Manager libraries and specify their versions
-//    implementation("androidx.credentials:credentials:1.3.0")
-//    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
-//    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    // Credential Manager libraries for Google Sign-In (replaces deprecated GoogleSignInClient)
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
-    implementation("com.google.android.gms:play-services-auth:21.2.0")
+    // Keep play-services-auth for backward compatibility (can be removed later)
+    // implementation("com.google.android.gms:play-services-auth:21.2.0")
 
     //Add the dependency for the TensorFlow lite Model
     implementation("org.tensorflow:tensorflow-lite-task-vision:0.4.2")
@@ -89,5 +90,5 @@ dependencies {
     kapt("androidx.room:room-compiler:$roomVersion")
     
     // Material CalendarView for date highlighting
-    implementation("com.applandeo:material-calendar-view:1.9.0-rc03")
+    implementation("com.applandeo:material-calendar-view:1.9.0")
 }

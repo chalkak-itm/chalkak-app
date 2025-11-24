@@ -71,7 +71,13 @@ class SpeechRecognitionManager(
             onSttResult = { recognizedText, isCorrect ->
                 // Basic example sentence comparison logic
                 val exampleText = txtExampleSentence.text.toString().lowercase().trim()
-                val isExampleCorrect = recognizedText.contains(exampleText) || exampleText.contains(recognizedText)
+                
+                // If recognized text is empty, it cannot be correct
+                val isExampleCorrect = if (recognizedText.isEmpty() || exampleText.isEmpty()) {
+                    false
+                } else {
+                    recognizedText.contains(exampleText) || exampleText.contains(recognizedText)
+                }
                 
                 // Use custom handler if available, otherwise show dialog
                 if (onExampleSttResult != null) {
@@ -175,11 +181,11 @@ class SpeechRecognitionManager(
         val btnClose = dialogView.findViewById<Button>(R.id.btn_close)
         
         // Display recognized text
-        txtRecognized.text = if (recognizedText.isNotEmpty()) recognizedText else "No recognized text"
+        txtRecognized.text = if (recognizedText.isNotEmpty()) recognizedText else context.getString(R.string.no_recognized_text)
         
         // Display result status
         if (isCorrect) {
-            txtResultStatus.text = "Correct! ✓"
+            txtResultStatus.text = context.getString(R.string.correct)
             txtResultStatus.setTextColor(0xFF4CAF50.toInt()) // Green
             try {
                 iconResult.setImageResource(R.drawable.ic_checkmark_green)
@@ -189,7 +195,7 @@ class SpeechRecognitionManager(
             txtTargetWordLabel.visibility = View.GONE
             txtTargetWord.visibility = View.GONE
         } else {
-            txtResultStatus.text = "Incorrect"
+            txtResultStatus.text = context.getString(R.string.incorrect)
             txtResultStatus.setTextColor(0xFFFF6B6B.toInt()) // Red
             iconResult.setImageResource(android.R.drawable.ic_delete)
             txtTargetWordLabel.visibility = View.VISIBLE

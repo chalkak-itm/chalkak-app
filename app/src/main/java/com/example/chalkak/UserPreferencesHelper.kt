@@ -2,9 +2,6 @@ package com.example.chalkak
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 
@@ -91,17 +88,6 @@ class UserPreferencesHelper(private val context: Context) {
     }
     
     /**
-     * Create and return Google Sign-In Client
-     */
-    fun createGoogleSignInClient(webClientId: String): GoogleSignInClient {
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(webClientId)
-            .requestEmail()
-            .build()
-        return GoogleSignIn.getClient(context, gso)
-    }
-    
-    /**
      * Get quick snap enabled state (default: false)
      */
     fun isQuickSnapEnabled(): Boolean {
@@ -114,6 +100,22 @@ class UserPreferencesHelper(private val context: Context) {
     fun setQuickSnapEnabled(enabled: Boolean) {
         sharedPreferences.edit()
             .putBoolean("quick_snap_enabled", enabled)
+            .apply()
+    }
+    
+    /**
+     * Get notification enabled state (default: false)
+     */
+    fun isNotificationEnabled(): Boolean {
+        return sharedPreferences.getBoolean("notification_enabled", false)
+    }
+    
+    /**
+     * Save notification enabled state
+     */
+    fun setNotificationEnabled(enabled: Boolean) {
+        sharedPreferences.edit()
+            .putBoolean("notification_enabled", enabled)
             .apply()
     }
 }

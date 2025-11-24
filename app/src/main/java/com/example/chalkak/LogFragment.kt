@@ -59,7 +59,7 @@ class LogFragment : BaseFragment() {
         val imgMascot = headerView.findViewById<ImageView>(R.id.img_header_mascot)
         val txtTitle = headerView.findViewById<TextView>(R.id.txt_header_title)
         imgMascot.setImageResource(R.drawable.egg)
-        txtTitle.text = "Log"
+        txtTitle.text = getString(R.string.log)
 
         recycler = view.findViewById(R.id.recyclerLog)
 

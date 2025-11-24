@@ -113,7 +113,7 @@ class HomeFragment : Fragment() {
 
     private fun updateWelcomeMessage() {
         val nickname = userPreferencesHelper.getNickname()
-        txtWelcome.text = "Welcome back,\n$nickname"
+        txtWelcome.text = getString(R.string.welcome_back, nickname)
     }
 
     private fun loadReviewRate() {
