@@ -1,6 +1,9 @@
 package com.example.chalkak
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.text.InputType
 import android.view.LayoutInflater
@@ -11,6 +14,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import java.io.File
@@ -27,6 +32,9 @@ class SettingFragment : Fragment() {
     private lateinit var btnClearCache: View
     private lateinit var txtAppVersion: TextView
     private lateinit var switchQuickSnap: android.widget.Switch
+    private lateinit var switchNotifications: android.widget.Switch
+    
+    private val notificationPermissionRequestCode = 1001
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -62,12 +70,16 @@ class SettingFragment : Fragment() {
         btnClearCache = view.findViewById(R.id.btn_clear_cache)
         txtAppVersion = view.findViewById(R.id.txt_app_version)
         switchQuickSnap = view.findViewById(R.id.switch_quick_snap)
+        switchNotifications = view.findViewById(R.id.switch_notifications)
 
         // Load user information
         loadUserInfo()
         
         // Load quick snap setting
         loadQuickSnapSetting()
+        
+        // Load notification setting
+        loadNotificationSetting()
 
         // Set app version
         try {
@@ -93,12 +105,18 @@ class SettingFragment : Fragment() {
         switchQuickSnap.setOnCheckedChangeListener { _, isChecked ->
             toggleQuickSnap(isChecked)
         }
+        
+        switchNotifications.setOnCheckedChangeListener { _, isChecked ->
+            toggleNotifications(isChecked)
+        }
     }
 
     override fun onResume() {
         super.onResume()
         // Reload quick snap setting when fragment resumes
         loadQuickSnapSetting()
+        // Reload notification setting when fragment resumes
+        loadNotificationSetting()
     }
 
     private fun loadUserInfo() {
@@ -288,5 +306,93 @@ class SettingFragment : Fragment() {
             "Quick Snap feature is now disabled."
         }
         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+    }
+    
+    private fun loadNotificationSetting() {
+        val isEnabled = userPreferencesHelper.isNotificationEnabled()
+        switchNotifications.isChecked = isEnabled
+    }
+    
+    private fun toggleNotifications(isEnabled: Boolean) {
+        if (isEnabled) {
+            // Permission is required to enable notifications
+            if (checkNotificationPermission()) {
+                enableNotifications()
+            } else {
+                // Turn off switch again if permission is not available
+                switchNotifications.isChecked = false
+                requestNotificationPermission()
+            }
+        } else {
+            disableNotifications()
+        }
+    }
+    
+    private fun checkNotificationPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true // Permission is not required for Android versions below 13
+        }
+    }
+    
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(
+                requireActivity(),
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                notificationPermissionRequestCode
+            )
+        }
+    }
+    
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == notificationPermissionRequestCode) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Enable notifications if permission is granted
+                switchNotifications.isChecked = true
+                enableNotifications()
+            } else {
+                // Turn off switch if permission is denied
+                switchNotifications.isChecked = false
+                Toast.makeText(
+                    requireContext(),
+                    "Notification permission is required. Please allow permission in settings.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+    
+    private fun enableNotifications() {
+        userPreferencesHelper.setNotificationEnabled(true)
+        val scheduler = NotificationScheduler(requireContext())
+        scheduler.scheduleRepeatingNotification()
+        
+        Toast.makeText(
+            requireContext(),
+            "🔔 Notifications enabled. You will receive notifications every 1 minute.",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+    
+    private fun disableNotifications() {
+        userPreferencesHelper.setNotificationEnabled(false)
+        val scheduler = NotificationScheduler(requireContext())
+        scheduler.cancelRepeatingNotification()
+        
+        Toast.makeText(
+            requireContext(),
+            "Notifications disabled.",
+            Toast.LENGTH_SHORT
+        ).show()
     }
 }
