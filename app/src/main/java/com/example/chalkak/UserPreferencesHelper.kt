@@ -116,5 +116,21 @@ class UserPreferencesHelper(private val context: Context) {
             .putBoolean("quick_snap_enabled", enabled)
             .apply()
     }
+    
+    /**
+     * Get notification enabled state (default: false)
+     */
+    fun isNotificationEnabled(): Boolean {
+        return sharedPreferences.getBoolean("notification_enabled", false)
+    }
+    
+    /**
+     * Save notification enabled state
+     */
+    fun setNotificationEnabled(enabled: Boolean) {
+        sharedPreferences.edit()
+            .putBoolean("notification_enabled", enabled)
+            .apply()
+    }
 }
 

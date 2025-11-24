@@ -99,6 +99,17 @@ class MainActivity : AppCompatActivity() {
 
         // Sync words from Firebase on app start
         syncWordsFromFirebase()
+        
+        // Restore notification schedule if enabled
+        restoreNotificationSchedule()
+    }
+    
+    private fun restoreNotificationSchedule() {
+        val userPreferencesHelper = UserPreferencesHelper(this)
+        if (userPreferencesHelper.isNotificationEnabled()) {
+            val scheduler = NotificationScheduler(this)
+            scheduler.scheduleRepeatingNotification()
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
