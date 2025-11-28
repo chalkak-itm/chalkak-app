@@ -10,7 +10,8 @@ import android.widget.TextView
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
 import java.io.Serializable
 import java.text.SimpleDateFormat
 import java.util.*
@@ -114,6 +115,15 @@ class LogFragment : BaseFragment() {
                 recycler.layoutManager = grid
                 recycler.adapter = adapter
                 
+                // RecyclerView 최적화 설정
+                recycler.setHasFixedSize(true) // 아이템 크기가 고정되어 있으므로 true
+                recycler.setItemViewCacheSize(20) // 캐시 크기 증가 (기본값: 2)
+                recycler.setRecycledViewPool(RecyclerView.RecycledViewPool().apply {
+                    // 여러 ViewHolder 타입을 위한 풀 크기 설정
+                    setMaxRecycledViews(SectionedLogAdapter.TYPE_HEADER, 5)
+                    setMaxRecycledViews(SectionedLogAdapter.TYPE_ENTRY, 20)
+                })
+                
                 // 아이템 간격을 일정하게 설정하여 동일한 너비 보장
                 val spacing = resources.getDimensionPixelSize(R.dimen.padding_small)
                 recycler.addItemDecoration(GridSpacingItemDecoration(2, spacing, true))
@@ -167,8 +177,8 @@ class SectionedLogAdapter(
     private val onItemClick: (LogEntry) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     companion object {
-        private const val TYPE_HEADER = 0
-        private const val TYPE_ENTRY = 1
+        const val TYPE_HEADER = 0
+        const val TYPE_ENTRY = 1
     }
 
     override fun getItemViewType(position: Int): Int = when (items[position]) {
@@ -194,30 +204,53 @@ class SectionedLogAdapter(
         }
     }
 
+    override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
+        super.onViewRecycled(holder)
+        if (holder is LogEntryViewHolder) {
+            holder.onRecycled()
+        }
+    }
+
     override fun getItemCount(): Int = items.size
 }
 
 class LogEntryViewHolder(itemView: android.view.View) : RecyclerView.ViewHolder(itemView) {
     private val wordView: android.widget.TextView = itemView.findViewById(R.id.txtWord)
     private val imageView: android.widget.ImageView = itemView.findViewById(R.id.imgPhoto)
+    
+    // Job for canceling image loading when ViewHolder is reused
+    private var imageLoadJob: Job? = null
+    
+    // CoroutineScope for image loading
+    private val viewHolderScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    
+    companion object {
+        // Cache for optimal image size calculation
+        private var cachedOptimalSize: Pair<Int, Int>? = null
+        private var cachedScreenWidth: Int = 0
+    }
 
     /**
      * Calculate optimal image size for GridLayout item
      * Considers 2-column grid layout, padding, spacing, and image card dimensions
+     * Results are cached to avoid recalculation
      */
     private fun calculateOptimalImageSize(): Pair<Int, Int> {
         val context = itemView.context
         val resources = context.resources
         val displayMetrics = resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+        
+        // Return cached value if screen width hasn't changed
+        if (cachedOptimalSize != null && cachedScreenWidth == screenWidth) {
+            return cachedOptimalSize!!
+        }
         
         // Get RecyclerView padding (padding_standard = 16dp on each side)
         val recyclerPadding = resources.getDimensionPixelSize(R.dimen.padding_standard) * 2
         
         // Get spacing between items (padding_small = 8dp)
         val itemSpacing = resources.getDimensionPixelSize(R.dimen.padding_small)
-        
-        // Calculate available width for items
-        val screenWidth = displayMetrics.widthPixels
         val availableWidth = screenWidth - recyclerPadding - itemSpacing
         
         // 2-column grid: each item gets half of available width
@@ -231,25 +264,73 @@ class LogEntryViewHolder(itemView: android.view.View) : RecyclerView.ViewHolder(
         val optimalWidth = (itemWidth * 1.5f).toInt()
         val optimalHeight = (imageCardHeightPx * 1.5f).toInt()
         
-        return Pair(optimalWidth, optimalHeight)
+        val result = Pair(optimalWidth, optimalHeight)
+        
+        // Cache the result
+        cachedOptimalSize = result
+        cachedScreenWidth = screenWidth
+        
+        return result
     }
 
     fun bind(entry: LogEntry, onItemClick: (LogEntry) -> Unit) {
+        // Cancel previous image loading job if exists
+        imageLoadJob?.cancel()
+        imageLoadJob = null
+        
+        // Clear previous image to avoid flickering when ViewHolder is reused
+        imageView.setImageBitmap(null)
+        
         wordView.text = entry.word
         wordView.visibility = View.VISIBLE
         
         // 실제 이미지 경로가 있으면 사용, 없으면 더미 이미지
         if (entry.imagePath != null) {
             val (maxWidth, maxHeight) = calculateOptimalImageSize()
-            ImageLoaderHelper.loadImageToView(imageView, entry.imagePath, maxWidth, maxHeight)
+            val imagePath = entry.imagePath
+            
+            // Set tag first to identify which image this ViewHolder is loading
+            imageView.tag = imagePath
+            
+            // Load image in background thread
+            imageLoadJob = viewHolderScope.launch {
+                try {
+                    // Load bitmap on IO dispatcher
+                    val bitmap = withContext(Dispatchers.IO) {
+                        ImageLoaderHelper.loadBitmapFromPath(imagePath, maxWidth, maxHeight)
+                    }
+                    
+                    // Set bitmap on main thread only if job is still active and tag matches
+                    if (isActive && imageView.tag == imagePath) {
+                        imageView.setImageBitmap(bitmap)
+                    }
+                } catch (e: CancellationException) {
+                    // Job was cancelled, ignore
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
         } else if (entry.imageRes != null) {
             imageView.setImageResource(entry.imageRes)
+            imageView.tag = null
+        } else {
+            imageView.tag = null
         }
 
         // Set click listener on the card
         itemView.setOnClickListener {
             onItemClick(entry)
         }
+    }
+    
+    /**
+     * Clean up resources when ViewHolder is recycled
+     */
+    fun onRecycled() {
+        imageLoadJob?.cancel()
+        imageLoadJob = null
+        imageView.setImageBitmap(null)
+        imageView.tag = null
     }
 }
 
