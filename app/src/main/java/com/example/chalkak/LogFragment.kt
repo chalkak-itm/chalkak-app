@@ -201,13 +201,47 @@ class LogEntryViewHolder(itemView: android.view.View) : RecyclerView.ViewHolder(
     private val wordView: android.widget.TextView = itemView.findViewById(R.id.txtWord)
     private val imageView: android.widget.ImageView = itemView.findViewById(R.id.imgPhoto)
 
+    /**
+     * Calculate optimal image size for GridLayout item
+     * Considers 2-column grid layout, padding, spacing, and image card dimensions
+     */
+    private fun calculateOptimalImageSize(): Pair<Int, Int> {
+        val context = itemView.context
+        val resources = context.resources
+        val displayMetrics = resources.displayMetrics
+        
+        // Get RecyclerView padding (padding_standard = 16dp on each side)
+        val recyclerPadding = resources.getDimensionPixelSize(R.dimen.padding_standard) * 2
+        
+        // Get spacing between items (padding_small = 8dp)
+        val itemSpacing = resources.getDimensionPixelSize(R.dimen.padding_small)
+        
+        // Calculate available width for items
+        val screenWidth = displayMetrics.widthPixels
+        val availableWidth = screenWidth - recyclerPadding - itemSpacing
+        
+        // 2-column grid: each item gets half of available width
+        val itemWidth = availableWidth / 2
+        
+        // Image card height from dimens (120dp)
+        val imageCardHeightDp = 120
+        val imageCardHeightPx = (imageCardHeightDp * displayMetrics.density).toInt()
+        
+        // Load at 1.5x size for high-density displays and smooth scaling
+        val optimalWidth = (itemWidth * 1.5f).toInt()
+        val optimalHeight = (imageCardHeightPx * 1.5f).toInt()
+        
+        return Pair(optimalWidth, optimalHeight)
+    }
+
     fun bind(entry: LogEntry, onItemClick: (LogEntry) -> Unit) {
         wordView.text = entry.word
         wordView.visibility = View.VISIBLE
         
         // 실제 이미지 경로가 있으면 사용, 없으면 더미 이미지
         if (entry.imagePath != null) {
-            ImageLoaderHelper.loadImageToView(imageView, entry.imagePath)
+            val (maxWidth, maxHeight) = calculateOptimalImageSize()
+            ImageLoaderHelper.loadImageToView(imageView, entry.imagePath, maxWidth, maxHeight)
         } else if (entry.imageRes != null) {
             imageView.setImageResource(entry.imageRes)
         }
