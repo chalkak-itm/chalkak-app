@@ -34,6 +34,8 @@ class HomeFragment : Fragment() {
     
     // Set of dates when quiz was completed (in milliseconds)
     private val completedDates = mutableSetOf<Long>()
+    // Set of dates when no learning occurred (in milliseconds)
+    private val notLearnedDates = mutableSetOf<Long>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -134,7 +136,6 @@ class HomeFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val allPhotos = roomDb.photoLogDao().getAllPhotos()
-                val allDetectedObjects = roomDb.detectedObjectDao().getAllDetectedObjects()
                 
                 // Calculate consecutive days
                 val consecutiveDays = calculateConsecutiveDays(allPhotos)
@@ -142,8 +143,8 @@ class HomeFragment : Fragment() {
                 // Calculate last 7 days activity
                 val last7DaysActivity = calculateLast7DaysActivity(allPhotos)
                 
-                // Calculate quiz completion dates
-                val quizCompletionDates = calculateQuizCompletionDates(allDetectedObjects)
+                // Calculate quiz completion dates (based on photo creation dates)
+                val quizCompletionDates = calculateQuizCompletionDates(allPhotos)
                 
                 withContext(Dispatchers.Main) {
                     if (!isAdded) return@withContext
@@ -274,14 +275,14 @@ class HomeFragment : Fragment() {
         }
     }
     
-    private fun calculateQuizCompletionDates(objects: List<DetectedObject>): Set<Long> {
+    private fun calculateQuizCompletionDates(photos: List<PhotoLog>): Set<Long> {
         val completionDates = mutableSetOf<Long>()
-        val now = System.currentTimeMillis()
         
-        objects.forEach { obj ->
-            if (obj.lastStudied > 0 && obj.lastStudied <= now) {
+        photos
+            .filter { it.localImagePath != "firebase_sync" }
+            .forEach { photo ->
                 val calendar = Calendar.getInstance().apply {
-                    timeInMillis = obj.lastStudied
+                    timeInMillis = photo.createdAt
                     set(Calendar.HOUR_OF_DAY, 0)
                     set(Calendar.MINUTE, 0)
                     set(Calendar.SECOND, 0)
@@ -289,9 +290,48 @@ class HomeFragment : Fragment() {
                 }
                 completionDates.add(calendar.timeInMillis)
             }
-        }
         
         return completionDates
+    }
+    
+    /**
+     * Calculate dates when no learning occurred (no photos taken)
+     * Only includes dates from the first photo date to today
+     */
+    private fun calculateNotLearnedDates(completionDates: Set<Long>): Set<Long> {
+        if (completionDates.isEmpty()) return emptySet()
+        
+        val notLearnedDates = mutableSetOf<Long>()
+        val today = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        
+        // Find the earliest learning date
+        val firstLearningDate = Calendar.getInstance().apply {
+            timeInMillis = completionDates.minOrNull() ?: return emptySet()
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        
+        // Iterate from first learning date to today
+        val currentDate = Calendar.getInstance().apply {
+            timeInMillis = firstLearningDate.timeInMillis
+        }
+        
+        while (currentDate.timeInMillis <= today.timeInMillis) {
+            val dateMillis = currentDate.timeInMillis
+            if (!completionDates.contains(dateMillis)) {
+                notLearnedDates.add(dateMillis)
+            }
+            currentDate.add(Calendar.DAY_OF_YEAR, 1)
+        }
+        
+        return notLearnedDates
     }
     
     private fun updateCalendar(completionDates: Set<Long>) {
@@ -302,9 +342,15 @@ class HomeFragment : Fragment() {
         completedDates.clear()
         completedDates.addAll(completionDates)
         
+        // Calculate not learned dates (from first learning date to today)
+        val calculatedNotLearnedDates = calculateNotLearnedDates(completionDates)
+        notLearnedDates.clear()
+        notLearnedDates.addAll(calculatedNotLearnedDates)
+        
         val calendarDays = mutableListOf<CalendarDay>()
         val context = requireContext()
         
+        // Add learned dates with green icon
         completionDates.forEach { dateMillis ->
             val calendar = Calendar.getInstance().apply {
                 timeInMillis = dateMillis
@@ -315,39 +361,22 @@ class HomeFragment : Fragment() {
             }
             
             val drawable = ContextCompat.getDrawable(context, R.drawable.bg_circle_green)
-            val calendarDay = if (drawable != null) {
-                try {
-                    val day = CalendarDay(calendar)
-                    try {
-                    val iconDrawableField = CalendarDay::class.java.getDeclaredField("iconDrawable")
-                    iconDrawableField.isAccessible = true
-                    iconDrawableField.set(day, drawable)
-                    } catch (e2: NoSuchFieldException) {
-                    try {
-                        val drawableField = CalendarDay::class.java.getDeclaredField("drawable")
-                        drawableField.isAccessible = true
-                        drawableField.set(day, drawable)
-                        } catch (e3: NoSuchFieldException) {
-                            try {
-                                val labelDrawableField = CalendarDay::class.java.getDeclaredField("labelDrawable")
-                                labelDrawableField.isAccessible = true
-                                labelDrawableField.set(day, drawable)
-                            } catch (e4: NoSuchFieldException) {
-                                try {
-                                    val imageDrawableField = CalendarDay::class.java.getDeclaredField("imageDrawable")
-                                    imageDrawableField.isAccessible = true
-                                    imageDrawableField.set(day, drawable)
-                                } catch (e5: Exception) {}
-                            } catch (e4: Exception) {}
-                        } catch (e3: Exception) {}
-                    } catch (e2: Exception) {}
-                    day
-                } catch (e: Exception) {
-                    CalendarDay(calendar)
-                }
-            } else {
-                CalendarDay(calendar)
+            val calendarDay = createCalendarDayWithDrawable(calendar, drawable)
+            calendarDays.add(calendarDay)
+        }
+        
+        // Add not learned dates with red icon
+        calculatedNotLearnedDates.forEach { dateMillis ->
+            val calendar = Calendar.getInstance().apply {
+                timeInMillis = dateMillis
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
             }
+            
+            val drawable = ContextCompat.getDrawable(context, R.drawable.bg_circle_red)
+            val calendarDay = createCalendarDayWithDrawable(calendar, drawable)
             calendarDays.add(calendarDay)
         }
         
@@ -365,11 +394,12 @@ class HomeFragment : Fragment() {
                 val selectedDateMillis = selectedDate.timeInMillis
                 
                 val isCompleted = completedDates.contains(selectedDateMillis)
+                val isNotLearned = notLearnedDates.contains(selectedDateMillis)
                 
-                val message = if (isCompleted) {
-                    "Learning completed on this day! ✨"
-                } else {
-                    "No learning completed on this day"
+                val message = when {
+                    isCompleted -> "Learning completed on this day! ✨"
+                    isNotLearned -> "No learning completed on this day"
+                    else -> "No learning activity on this day"
                 }
                 
                 ToastHelper.showCenterToast(requireContext(), message)
@@ -392,6 +422,45 @@ class HomeFragment : Fragment() {
         
         calendarView.setMinimumDate(oneYearAgo)
         calendarView.setMaximumDate(today)
+    }
+    
+    /**
+     * Helper method to create CalendarDay with drawable icon
+     */
+    private fun createCalendarDayWithDrawable(calendar: Calendar, drawable: android.graphics.drawable.Drawable?): CalendarDay {
+        if (drawable == null) {
+            return CalendarDay(calendar)
+        }
+        
+        return try {
+            val day = CalendarDay(calendar)
+            try {
+                val iconDrawableField = CalendarDay::class.java.getDeclaredField("iconDrawable")
+                iconDrawableField.isAccessible = true
+                iconDrawableField.set(day, drawable)
+            } catch (e2: NoSuchFieldException) {
+                try {
+                    val drawableField = CalendarDay::class.java.getDeclaredField("drawable")
+                    drawableField.isAccessible = true
+                    drawableField.set(day, drawable)
+                } catch (e3: NoSuchFieldException) {
+                    try {
+                        val labelDrawableField = CalendarDay::class.java.getDeclaredField("labelDrawable")
+                        labelDrawableField.isAccessible = true
+                        labelDrawableField.set(day, drawable)
+                    } catch (e4: NoSuchFieldException) {
+                        try {
+                            val imageDrawableField = CalendarDay::class.java.getDeclaredField("imageDrawable")
+                            imageDrawableField.isAccessible = true
+                            imageDrawableField.set(day, drawable)
+                        } catch (e5: Exception) {}
+                    } catch (e4: Exception) {}
+                } catch (e3: Exception) {}
+            } catch (e2: Exception) {}
+            day
+        } catch (e: Exception) {
+            CalendarDay(calendar)
+        }
     }
 
     private fun goToCameraDirect() {

@@ -8,10 +8,9 @@ import java.io.File
  */
 object QuizQuestionGenerator {
     // Constants for quiz configuration
-    private const val MIN_OBJECTS_FOR_QUIZ = 4
-    private const val MIN_UNIQUE_WORDS_FOR_OPTIONS = 4
+    private const val MIN_OBJECTS_FOR_QUIZ = 1 // Minimum 1 object needed to create quiz
     private const val MAX_QUIZ_QUESTIONS = 20 // Spaced repetition: take top 20 words
-    private const val NUM_WRONG_OPTIONS = 3
+    private const val MIN_OPTIONS_REQUIRED = 2 // Minimum 2 options needed (1 correct + 1 wrong)
     
     /**
      * Generate quiz questions using spaced repetition algorithm
@@ -39,8 +38,8 @@ object QuizQuestionGenerator {
                 File(photosMap[it.parentPhotoId]!!.localImagePath).exists() // File must actually exist
             }
         
-        if (allDetectedObjects.size < MIN_OBJECTS_FOR_QUIZ) {
-            // Need at least MIN_OBJECTS_FOR_QUIZ objects with photos to create questions
+        if (allDetectedObjects.isEmpty()) {
+            // Need at least 1 object with photos to create questions
             return emptyList()
         }
         
@@ -71,11 +70,6 @@ object QuizQuestionGenerator {
             }
         }
         
-        if (allUniqueWords.size < MIN_UNIQUE_WORDS_FOR_OPTIONS) {
-            // Need at least MIN_UNIQUE_WORDS_FOR_OPTIONS unique words for options
-            return emptyList()
-        }
-        
         // Spaced Repetition Algorithm: Select words that haven't been studied for the longest time
         // Sort by lastStudied ASCENDING (oldest first) to prioritize words that need review
         val selectedObjects = objectsByWord.values.mapNotNull { objects ->
@@ -85,7 +79,7 @@ object QuizQuestionGenerator {
             .sortedBy { it.lastStudied } // Sort by lastStudied ascending (oldest first)
             .take(MAX_QUIZ_QUESTIONS) // Take top MAX_QUIZ_QUESTIONS words that need review most
         
-        if (selectedObjects.size < MIN_OBJECTS_FOR_QUIZ) {
+        if (selectedObjects.isEmpty()) {
             return emptyList()
         }
         
@@ -131,6 +125,7 @@ object QuizQuestionGenerator {
             
             val wordObjLowercase = wordObj.englishWord.lowercase()
             // Filter and shuffle in a single pass
+            // First try to get words excluding same photo
             val otherWords = allUniqueWords
                 .asSequence()
                 .filter { 
@@ -139,28 +134,28 @@ object QuizQuestionGenerator {
                     !wordsInSamePhoto.contains(wordLower)
                 }
                 .shuffled()
-                .take(NUM_WRONG_OPTIONS)
                 .toList()
             
-            val options = if (otherWords.size < NUM_WRONG_OPTIONS) {
-                // If not enough words excluding same photo, use any other words
-                val fallbackWords = allUniqueWords
+            // If not enough words excluding same photo, use any other words (excluding current word)
+            val availableWords = if (otherWords.size < MIN_OPTIONS_REQUIRED - 1) {
+                allUniqueWords
                     .asSequence()
                     .filter { it.lowercase() != wordObjLowercase }
                     .shuffled()
-                    .take(NUM_WRONG_OPTIONS)
                     .toList()
-                
-                if (fallbackWords.size < NUM_WRONG_OPTIONS) {
-                    continue // Skip if still not enough options
-                }
-                
-                // Create options list (correct answer + NUM_WRONG_OPTIONS wrong answers, shuffled) - all English
-                (listOf(wordObj.englishWord) + fallbackWords).shuffled()
             } else {
-                // Create options list (correct answer + NUM_WRONG_OPTIONS wrong answers, shuffled) - all English
-                (listOf(wordObj.englishWord) + otherWords).shuffled()
+                otherWords
             }
+            
+            // Skip if we don't have at least 1 wrong option (minimum 2 total options needed)
+            if (availableWords.isEmpty()) {
+                continue // Skip this question if no other words available
+            }
+            
+            // Create options list with available words (correct answer + available wrong answers, shuffled)
+            // Use up to 3 wrong options if available, but accept any number >= 1
+            val wrongOptions = availableWords.take(3) // Take up to 3 wrong options
+            val options = (listOf(wordObj.englishWord) + wrongOptions).shuffled()
             
             val question = QuizQuestion(
                 imagePath = imagePath,
