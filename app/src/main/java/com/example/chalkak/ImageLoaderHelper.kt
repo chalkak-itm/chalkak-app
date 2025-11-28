@@ -148,9 +148,18 @@ object ImageLoaderHelper {
     
     /**
      * Load bitmap from file path and set to ImageView
+     * @param imageView ImageView to set the bitmap to
+     * @param imagePath Path to the image file
+     * @param maxWidth Maximum width for the loaded bitmap (default: MAX_IMAGE_WIDTH)
+     * @param maxHeight Maximum height for the loaded bitmap (default: MAX_IMAGE_HEIGHT)
      */
-    fun loadImageToView(imageView: ImageView, imagePath: String?) {
-        val bitmap = loadBitmapFromPath(imagePath)
+    fun loadImageToView(
+        imageView: ImageView, 
+        imagePath: String?,
+        maxWidth: Int = MAX_IMAGE_WIDTH,
+        maxHeight: Int = MAX_IMAGE_HEIGHT
+    ) {
+        val bitmap = loadBitmapFromPath(imagePath, maxWidth, maxHeight)
         if (bitmap != null) {
             imageView.setImageBitmap(bitmap)
         }
