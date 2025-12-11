@@ -64,8 +64,8 @@ class ObjectDetectionHelper(context: Context) {
         // box-paint setting
         val boxPaint = Paint().apply {
             style = Paint.Style.STROKE
-            strokeWidth = 6f
-            color = Color.RED
+            strokeWidth = 20f
+            color = Color.GREEN
         }
 
         val detectionResults = mutableListOf<DetectionResult>()
