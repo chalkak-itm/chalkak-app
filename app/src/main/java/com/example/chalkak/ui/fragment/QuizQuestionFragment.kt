@@ -325,7 +325,7 @@ class QuizQuestionFragment : BaseFragment() {
         // Update selected button to correct state
         updateOptionButton(optionIndex, true)
 
-        // Spaced Repetition Algorithm: Update lastStudied date in DB with photo's createdAt
+        // Spaced Repetition Algorithm: Update lastStudied date in DB with current quiz time
         currentQuestion?.let { question ->
             spacedRepetitionManager.handleCorrectAnswer(question.englishWord, question.parentPhotoId)
         }

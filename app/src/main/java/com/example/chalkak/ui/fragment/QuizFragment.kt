@@ -238,7 +238,7 @@ class QuizFragment : Fragment() {
      * Denominator: Number of photos taken in the last 7 days (from 7 days ago to now)
      * Numerator: Number of photos that have been studied (lastStudied >= sevenDaysAgo)
      * 
-     * When quiz is answered correctly, the photo's createdAt is saved to lastStudied
+     * When quiz is answered correctly, the current quiz time is saved to lastStudied
      * So a photo is considered "studied" if at least one DetectedObject has lastStudied >= sevenDaysAgo
      */
     private fun calculateAccuracyRate(photos: List<PhotoLog>, objects: List<DetectedObject>): Int {
