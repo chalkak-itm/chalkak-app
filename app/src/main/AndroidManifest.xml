@@ -21,7 +21,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Chalkak">
         <activity
-            android:name=".LoginActivity"
+            android:name=".ui.activity.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -30,16 +30,16 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.activity.MainActivity"
             android:exported="false" />
         <activity
-            android:name=".DetectionResultActivity"
+            android:name=".ui.activity.DetectionResultActivity"
             android:exported="false" />
         <activity
-            android:name=".ImagePreviewActivity"
+            android:name=".ui.activity.ImagePreviewActivity"
             android:exported="false" />
         <activity
-            android:name=".ObjectInputActivity"
+            android:name=".ui.activity.ObjectInputActivity"
             android:exported="false" />
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -52,7 +52,7 @@
         </provider>
         
         <receiver
-            android:name=".NotificationReceiver"
+            android:name=".domain.notification.NotificationReceiver"
             android:exported="false"
             android:enabled="true" />
     </application>

@@ -21,6 +21,7 @@ import com.example.chalkak.R
 import com.example.chalkak.base.BaseFragment
 import com.example.chalkak.data.local.AppDatabase
 import com.example.chalkak.domain.detection.BoundingBoxHelper
+import com.example.chalkak.domain.quiz.QuizQuestion
 import com.example.chalkak.domain.quiz.QuizQuestionGenerator
 import com.example.chalkak.domain.quiz.SpacedRepetitionManager
 import com.example.chalkak.ui.activity.MainActivity
@@ -30,19 +31,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
-
-data class QuizQuestion(
-    val imagePath: String? = null,
-    val imageRes: Int? = null, // Fallback for when imagePath is null
-    val boundingBox: String? = null, // Bounding box string: "[left, top, right, bottom]"
-    val englishWord: String,
-    val koreanWord: String,
-    val exampleEnglish: String,
-    val exampleKorean: String,
-    val correctAnswer: String, // English word
-    val options: List<String>, // English words
-    val parentPhotoId: Long // Photo ID for getting createdAt
-)
 
 class QuizQuestionFragment : BaseFragment() {
     companion object {

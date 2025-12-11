@@ -4,6 +4,7 @@ import com.example.chalkak.data.local.AppDatabase
 import com.example.chalkak.data.local.DetectedObject
 import com.example.chalkak.data.local.ExampleSentence
 import com.example.chalkak.data.local.PhotoLog
+import com.example.chalkak.domain.quiz.QuizQuestion
 import java.io.File
 
 /**

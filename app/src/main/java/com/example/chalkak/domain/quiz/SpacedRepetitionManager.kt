@@ -1,8 +1,8 @@
 package com.example.chalkak.domain.quiz
 
-import com.example.chalkak.data.local.AppDatabase
-import com.example.chalkak.ui.fragment.QuizQuestion
 import androidx.lifecycle.LifecycleCoroutineScope
+import com.example.chalkak.data.local.AppDatabase
+import com.example.chalkak.domain.quiz.QuizQuestion
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.ArrayDeque
