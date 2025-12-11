@@ -33,8 +33,11 @@ class ImagePreviewActivity : AppCompatActivity() {
 	private lateinit var bottomNavigationHelper: BottomNavigationHelper
 
 	private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-		if (success && photoUri != null) {
-			updateImageDisplay(photoUri!!)
+		// Pull the latest URI from ImagePickerHelper because it creates the temp file internally
+		val latestUri = imagePickerHelper.getCurrentPhotoUri()
+		if (success && latestUri != null) {
+			photoUri = latestUri
+			updateImageDisplay(latestUri)
 		}
 	}
 

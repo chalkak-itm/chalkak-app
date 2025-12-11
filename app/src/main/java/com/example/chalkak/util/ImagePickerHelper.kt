@@ -90,6 +90,11 @@ class ImagePickerHelper(
             takePictureLauncher?.launch(uri)
         }
     }
+
+    /**
+     * Expose the latest camera uri so callers can read it in onActivityResult callbacks.
+     */
+    fun getCurrentPhotoUri(): Uri? = photoUri
     
     /**
      * Launch gallery to pick an image
