@@ -208,7 +208,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Reset Section (Data Management에서 변경) -->
+        <!-- Reset Section (moved from Data Management) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -230,7 +230,7 @@
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
-            <!-- btn_clear_cache LinearLayout 전체 제거 -->
+            <!-- Removed btn_clear_cache LinearLayout entirely -->
 
             <LinearLayout
                 android:id="@+id/btn_reset"

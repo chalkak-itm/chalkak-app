@@ -1,31 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- S23 FE 최적화: 1080x2340, 480dpi, 19.5:9 비율 -->
+    <!-- Optimized for S23 FE: 1080x2340, 480dpi, 19.5:9 aspect ratio -->
     
-    <!-- 전면 카메라 영역 고려한 상단 패딩 -->
+    <!-- Top padding accounting for the front camera area -->
     <dimen name="status_bar_padding_top">0dp</dimen>
     <dimen name="camera_cutout_padding_top">0dp</dimen>
     <dimen name="screen_top_padding">32dp</dimen>
     
-    <!-- 아이콘 크기 -->
+    <!-- Icon sizes -->
     <dimen name="icon_size_small">24dp</dimen>
     <dimen name="icon_size_medium">40dp</dimen>
     <dimen name="icon_size_large">64dp</dimen>
     <dimen name="icon_size_xlarge">96dp</dimen>
     
-    <!-- 마스코트 이미지 크기 -->
+    <!-- Mascot image sizes -->
     <dimen name="mascot_size_small">100dp</dimen>
     <dimen name="mascot_size_medium">200dp</dimen>
     <dimen name="mascot_size_large">240dp</dimen>
     
-    <!-- 버튼 크기 -->
+    <!-- Button sizes -->
     <dimen name="button_height_standard">56dp</dimen>
     <dimen name="button_height_large">72dp</dimen>
     <dimen name="button_height_xlarge">80dp</dimen>
     <dimen name="button_height_card">120dp</dimen>
     <dimen name="button_min_height">48dp</dimen>
     
-    <!-- 텍스트 크기 -->
+    <!-- Text sizes -->
     <dimen name="text_size_small">14sp</dimen>
     <dimen name="text_size_medium">16sp</dimen>
     <dimen name="text_size_body">18sp</dimen>
@@ -36,7 +36,7 @@
     <dimen name="text_size_heading">28sp</dimen>
     <dimen name="text_size_display">52sp</dimen>
     
-    <!-- 패딩 -->
+    <!-- Padding -->
     <dimen name="padding_tiny">4dp</dimen>
     <dimen name="padding_small">8dp</dimen>
     <dimen name="padding_medium">12dp</dimen>
@@ -44,7 +44,7 @@
     <dimen name="padding_large">32dp</dimen>
     <dimen name="padding_xlarge">32dp</dimen>
     
-    <!-- 마진 -->
+    <!-- Margins -->
     <dimen name="margin_tiny">4dp</dimen>
     <dimen name="margin_small">8dp</dimen>
     <dimen name="margin_medium">12dp</dimen>
@@ -52,12 +52,12 @@
     <dimen name="margin_large">24dp</dimen>
     <dimen name="margin_xlarge">32dp</dimen>
     
-    <!-- 레이아웃 크기 -->
+    <!-- Bottom navigation sizing -->
     <dimen name="bottom_nav_height">56dp</dimen>
     <dimen name="bottom_nav_padding_horizontal">24dp</dimen>
     <dimen name="bottom_nav_item_padding">4dp</dimen>
     
-    <!-- 이미지 프레임 크기 -->
+    <!-- Image frame sizes -->
     <dimen name="image_frame_height_standard">200dp</dimen>
     <dimen name="image_frame_height_large">200dp</dimen>
     <dimen name="image_card_height">120dp</dimen>
@@ -67,10 +67,10 @@
     <dimen name="image_preview_height_large">300dp</dimen>
     <dimen name="image_preview_width_large">300dp</dimen>
     
-    <!-- 콘텐츠 좌우 마진 (하단 네비게이션 바 가림 방지) -->
+    <!-- Content side margins (avoid being hidden by bottom navigation bar) -->
     <dimen name="content_horizontal_margin">32dp</dimen>
     
-    <!-- 카드 패딩 -->
+    <!-- Card padding -->
     <dimen name="card_padding_small">10dp</dimen>
     <dimen name="card_padding_standard">12dp</dimen>
     <dimen name="card_padding_large">16dp</dimen>
@@ -78,7 +78,7 @@
     <!-- Progress Bar -->
     <dimen name="progress_bar_height">20dp</dimen>
     
-    <!-- 기타 -->
+    <!-- Misc spacing -->
     <dimen name="spacing_tiny">6dp</dimen>
     <dimen name="spacing_small">8dp</dimen>
     <dimen name="spacing_medium">12dp</dimen>
@@ -86,16 +86,15 @@
     <dimen name="spacing_large">20dp</dimen>
     <dimen name="spacing_xlarge">24dp</dimen>
     
-    <!-- 19.5:9 긴 화면 비율 최적화를 위한 여백 -->
+    <!-- Spacing tuned for tall 19.5:9 screens -->
     <dimen name="screen_vertical_spacing">32dp</dimen>
     <dimen name="content_top_margin">48dp</dimen>
     
-    <!-- 다이얼로그 상단 마진 -->
+    <!-- Dialog top spacing -->
     <dimen name="dialog_top_margin">120dp</dimen>
     <dimen name="dialog_image_padding_top">24dp</dimen>
     
-    <!-- 다이얼로그 좌우 패딩 (화면에 꽉 차도록 작게 설정) -->
+    <!-- Dialog horizontal padding (kept small to fill the screen) -->
     <dimen name="dialog_horizontal_margin">8dp</dimen>
     <dimen name="dialog_horizontal_padding">8dp</dimen>
 </resources>
-

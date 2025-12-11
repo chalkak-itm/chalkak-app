@@ -14,12 +14,12 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- 상단 환영 섹션 -->
+        <!-- Top welcome section -->
         <include
             android:id="@+id/header_common"
             layout="@layout/header_common" />
 
-        <!-- Magic Adventure 버튼 카드 -->
+        <!-- Magic Adventure button card -->
         <LinearLayout
             android:id="@+id/btnMagicAdventure"
             android:layout_width="match_parent"
@@ -313,4 +313,3 @@
     </LinearLayout>
 
 </ScrollView>
-
