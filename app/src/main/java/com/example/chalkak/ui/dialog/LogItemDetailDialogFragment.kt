@@ -60,14 +60,14 @@ class LogItemDetailDialogFragment : DialogFragment() {
         arguments?.let {
             entry = it.getSerializable(ARG_ENTRY) as? LogEntry
         }
-        // 팝업 스타일 설정
+        // Set popup style
         setStyle(STYLE_NORMAL, android.R.style.Theme_Translucent_NoTitleBar)
     }
     
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState)
         dialog.window?.let { window ->
-            // 전체 화면을 덮도록 설정
+            // Cover the full screen
             window.setFlags(
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
@@ -76,10 +76,10 @@ class LogItemDetailDialogFragment : DialogFragment() {
                 WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
                 WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
             )
-            // 배경을 반투명하게 설정
+            // Make background translucent
             window.setBackgroundDrawableResource(android.R.color.transparent)
         }
-        // 다이얼로그 취소 가능하도록 설정 (뒤로가기 버튼으로도 닫을 수 있음)
+        // Allow dialog cancellation (also via back button)
         dialog.setCanceledOnTouchOutside(true)
         return dialog
     }
@@ -94,20 +94,20 @@ class LogItemDetailDialogFragment : DialogFragment() {
         val scrollView = view.findViewById<android.widget.ScrollView>(R.id.scroll_view)
         val contentView = view.findViewById<ViewGroup>(R.id.dialog_content)
         
-        // FrameLayout에 터치 리스너 추가 - 터치 위치가 콘텐츠 영역 밖인지 확인
+        // Add touch listener to close if touch is outside the content area
         view.setOnTouchListener { v, event ->
             if (event.action == android.view.MotionEvent.ACTION_DOWN) {
                 val touchX = event.x
                 val touchY = event.y
                 
-                // ScrollView의 위치와 크기 확인
+                // Check ScrollView bounds
                 scrollView?.let { sv ->
                     val scrollViewRect = android.graphics.Rect()
                     sv.getHitRect(scrollViewRect)
                     
-                    // 터치 위치가 ScrollView 영역 밖인지 확인
+                    // Close if touch is outside ScrollView
                     if (!scrollViewRect.contains(touchX.toInt(), touchY.toInt())) {
-                        // 콘텐츠 영역 밖을 터치했으므로 팝업 닫기
+                        // Touch is outside content area, close popup
                         dismiss()
                         return@setOnTouchListener true
                     }
@@ -116,35 +116,35 @@ class LogItemDetailDialogFragment : DialogFragment() {
             false
         }
         
-        // ScrollView의 빈 공간 터치 감지 - 콘텐츠 영역 밖을 터치하면 닫기
+        // Detect touches on empty space in ScrollView; close when outside content area
         scrollView?.setOnTouchListener { sv, event ->
             if (event.action == android.view.MotionEvent.ACTION_DOWN) {
                 val touchX = event.x
                 val touchY = event.y
                 
-                // 콘텐츠 영역의 위치와 크기 확인 (ScrollView 내부 좌표 기준)
+                // Check content bounds (ScrollView coordinates)
                 contentView?.let { content ->
                     val contentLeft = content.left.toFloat()
                     val contentTop = content.top.toFloat()
                     val contentRight = content.right.toFloat()
                     val contentBottom = content.bottom.toFloat()
                     
-                    // 터치 위치가 콘텐츠 영역 밖인지 확인
+                    // Close if touch is outside content area
                     if (touchX < contentLeft || touchX > contentRight || 
                         touchY < contentTop || touchY > contentBottom) {
-                        // 콘텐츠 영역 밖을 터치했으므로 팝업 닫기
+                        // Touch is outside content, close popup
                         dismiss()
                         return@setOnTouchListener true
                     }
                 }
             }
-            // 콘텐츠 영역 내부 터치는 ScrollView가 처리 (스크롤 등)
+            // Let ScrollView handle touches inside content (scrolling, etc.)
             false
         }
         
-        // 다이얼로그 내용 영역 (터치해도 닫히지 않도록)
+        // Content area should not close the dialog on touch
         contentView?.setOnClickListener {
-            // 내용 영역 클릭은 이벤트 소비하여 부모로 전파되지 않도록 함
+            // Consume clicks to prevent propagation
         }
         
         return view
@@ -200,16 +200,16 @@ class LogItemDetailDialogFragment : DialogFragment() {
     override fun onStart() {
         super.onStart()
         dialog?.window?.let { window ->
-            // 전체 화면을 덮도록 설정 (딤 영역 포함)
+            // Cover the entire screen (including dim area)
             window.setLayout(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            // 배경을 반투명하게 설정
+            // Make background translucent
             window.setBackgroundDrawableResource(android.R.color.transparent)
         }
         
-        // ScrollView의 최대 높이를 화면 높이의 90%로 제한하여 중앙 정렬 보장
+        // Limit ScrollView height to 90% of screen to keep it centered
         view?.let { rootView ->
             val scrollView = rootView.findViewById<android.widget.ScrollView>(R.id.scroll_view)
             scrollView?.let { sv ->
@@ -217,15 +217,14 @@ class LogItemDetailDialogFragment : DialogFragment() {
                 val screenHeight = displayMetrics.heightPixels
                 val maxHeight = (screenHeight * 0.9).toInt()
                 
-                // ScrollView의 LayoutParams를 가져와서 높이 제한 설정
+                // Get LayoutParams and apply height cap
                 val layoutParams = sv.layoutParams as? android.widget.FrameLayout.LayoutParams
                     ?: android.widget.FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.WRAP_CONTENT
                     )
                 
-                // ScrollView가 화면 높이를 초과하지 않도록 최대 높이 설정
-                // wrap_content이지만 최대 높이를 초과하지 않도록 post로 설정
+                // Enforce max height after measurement even though it uses wrap_content
                 sv.post {
                     val measuredHeight = sv.measuredHeight
                     if (measuredHeight > maxHeight) {

@@ -34,7 +34,7 @@ data class DetectedObject(
     @ColumnInfo(name = "parent_photo_id") val parentPhotoId: Long,
 
     @ColumnInfo(name = "english_word") val englishWord: String,     // example: "Apple"
-    @ColumnInfo(name = "korean_meaning") val koreanMeaning: String, // example: "사과"
+    @ColumnInfo(name = "korean_meaning") val koreanMeaning: String, // example: "apple" (Korean meaning)
 
     @ColumnInfo(name = "bounding_box") val boundingBox: String,     // location
     @ColumnInfo(name = "last_studied") val lastStudied: Long = 0 // 0 means not studied yet, updated when quiz is answered correctly

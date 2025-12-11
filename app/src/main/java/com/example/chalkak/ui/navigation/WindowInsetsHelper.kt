@@ -27,7 +27,7 @@ object WindowInsetsHelper {
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             val displayCutout = insets.getInsets(WindowInsetsCompat.Type.displayCutout())
             
-            // S23 FE 전면 카메라 영역 고려: systemBars.top과 displayCutout.top 중 큰 값 사용
+            // Account for S23 FE front camera area: use the larger of systemBars.top and displayCutout.top
             val topPadding = maxOf(systemBars.top, displayCutout.top)
             val cameraCutoutPadding = resources.getDimensionPixelSize(R.dimen.camera_cutout_padding_top)
             val totalTopPadding = topPadding + cameraCutoutPadding

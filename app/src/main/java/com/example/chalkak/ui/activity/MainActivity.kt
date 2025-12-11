@@ -432,7 +432,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 if (isKnown && hasEnoughExamples) {
-                    // 단어가 이미 있고 예문이 3개 이상이면 GPT 호출 스킵
+                    // Skip GPT call if word exists and already has at least 3 example sentences
                     existingObject?.let { obj ->
                         val boxString = "[${item.left}, ${item.top}, ${item.right}, ${item.bottom}]"
                         roomDb.detectedObjectDao().insert(
@@ -451,7 +451,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     Log.d("WordCheck", "$detectedWord: Already exists with $exampleCount examples, skipping GPT")
                 } else {
-                    // 새 단어이거나 예문이 3개 미만이면 GPT 호출
+                    // Call GPT for new words or when there are fewer than 3 example sentences
                     if (!isKnown) {
                         firestoreRepo.addNewWordCount(uid)
                     }

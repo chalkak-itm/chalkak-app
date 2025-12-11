@@ -151,7 +151,7 @@ class SpeechRecognitionManager(
     }
 
     /**
-     * 단어가 변경될 때 호출하여 타겟 단어를 업데이트하고 상태를 리셋합니다.
+     * Called when the target word changes to update the target and reset state.
      */
     fun updateTargetWord(word: String) {
         speechHelperMeaning?.reset()
@@ -161,7 +161,7 @@ class SpeechRecognitionManager(
     }
 
     /**
-     * 리소스를 정리합니다.
+     * Release resources.
      */
     fun cleanup() {
         speechHelperMeaning?.cleanup()
@@ -169,7 +169,7 @@ class SpeechRecognitionManager(
     }
 
     /**
-     * STT 결과를 다이얼로그로 표시합니다.
+     * Show the STT result in a dialog.
      */
     private fun showSttResultDialog(recognizedText: String, isCorrect: Boolean, targetText: String) {
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_stt_result, null)

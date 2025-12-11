@@ -4,7 +4,7 @@ import android.util.Log
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
-import com.google.firebase.functions.FirebaseFunctions // 필수 Import
+import com.google.firebase.functions.FirebaseFunctions // Required import
 import kotlinx.coroutines.tasks.await
 
 class FirestoreRepository {

@@ -4,19 +4,19 @@ import { OpenAI } from 'openai';
 import * as logger from 'firebase-functions/logger';
 
 /**
- * 단어의 한국어 의미와 예문을 GPT로부터 가져오는 Cloud Function
+ * Cloud Function that fetches Korean meanings and example sentences for a word from GPT
  * 
- * @param {Object} data - 요청 데이터
- * @param {string} data.word - 조회할 영어 단어
- * @returns {Object} - originalWord, meaning, examples를 포함한 객체
+ * @param {Object} data - Request payload
+ * @param {string} data.word - English word to look up
+ * @returns {Object} - Object containing originalWord, meaning, and examples
  */
 export const getWordData = onCall(
   {
     region: 'asia-northeast3',
   },
   async (request) => {
-    // OpenAI 클라이언트 초기화 (환경 변수에서 API 키 가져오기)
-    // 환경 변수는 Firebase Console > Functions > Configuration에서 설정
+    // Initialize OpenAI client (read API key from environment variables)
+    // Environment variables are configured in Firebase Console > Functions > Configuration
     const apiKey = process.env.OPENAI_API_KEY;
     
     if (!apiKey) {
@@ -44,7 +44,7 @@ export const getWordData = onCall(
 
       logger.info('Fetching word data for:', word);
 
-      // GPT API 호출 - 3개 예문 생성
+      // Call GPT API - generate 3 example sentences
       const completion = await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [
@@ -65,15 +65,15 @@ export const getWordData = onCall(
       const responseText = completion.choices[0]?.message?.content || '';
       logger.info('GPT Response:', responseText);
 
-      // JSON 파싱 시도
+      // Try to parse JSON
       let parsedResponse;
       try {
-        // JSON 코드 블록이 있는 경우 제거
+        // Remove JSON code block if present
         const cleanedText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
         parsedResponse = JSON.parse(cleanedText);
       } catch (parseError) {
         logger.error('Failed to parse GPT response:', parseError);
-        // 파싱 실패 시 기본 응답 (1개 예문)
+        // Fallback response when parsing fails (single example)
         parsedResponse = {
           meaning: `${word}의 의미를 찾을 수 없습니다.`,
           examples: [
@@ -86,10 +86,10 @@ export const getWordData = onCall(
       }
 
       const meaning = parsedResponse.meaning || `${word}의 의미`;
-      // examples 배열이 있는지 확인, 없으면 기본값
+      // Ensure examples array exists, otherwise use defaults
       let examples = parsedResponse.examples || [];
       
-      // examples가 배열이 아니거나 비어있으면 기본 예문 생성
+      // If examples is not an array or empty, generate default example
       if (!Array.isArray(examples) || examples.length === 0) {
         examples = [
           {
@@ -99,7 +99,7 @@ export const getWordData = onCall(
         ];
       }
 
-      // 최대 3개로 제한
+      // Limit to maximum of 3
       if (examples.length > 3) {
         examples = examples.slice(0, 3);
       }

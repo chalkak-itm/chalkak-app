@@ -40,9 +40,9 @@ class LogFragment : BaseFragment() {
     }
 
     override fun getCardWordDetailView(): View {
-        // DialogFragment를 사용하므로 더 이상 필요 없음
-        // 하지만 BaseFragment의 initializeTtsAndSpeechRecognition이 호출되므로
-        // 임시 뷰를 반환하거나 null 처리가 필요할 수 있음
+        // Not used anymore because DialogFragment is in place
+        // initializeTtsAndSpeechRecognition in BaseFragment still runs,
+        // so return a temporary view or handle null if needed
         return view ?: View(requireContext())
     }
 
@@ -120,16 +120,16 @@ class LogFragment : BaseFragment() {
                 recycler.layoutManager = grid
                 recycler.adapter = adapter
                 
-                // RecyclerView 최적화 설정
-                recycler.setHasFixedSize(true) // 아이템 크기가 고정되어 있으므로 true
-                recycler.setItemViewCacheSize(20) // 캐시 크기 증가 (기본값: 2)
+                // RecyclerView optimizations
+                recycler.setHasFixedSize(true) // Item sizes are fixed, so keep as true
+                recycler.setItemViewCacheSize(20) // Increase cache size (default is 2)
                 recycler.setRecycledViewPool(RecyclerView.RecycledViewPool().apply {
-                    // 여러 ViewHolder 타입을 위한 풀 크기 설정
+                    // Pool sizes for multiple ViewHolder types
                     setMaxRecycledViews(SectionedLogAdapter.TYPE_HEADER, 5)
                     setMaxRecycledViews(SectionedLogAdapter.TYPE_ENTRY, 20)
                 })
                 
-                // 아이템 간격을 일정하게 설정하여 동일한 너비 보장
+                // Keep item spacing consistent to ensure equal widths
                 val spacing = resources.getDimensionPixelSize(R.dimen.padding_small)
                 recycler.addItemDecoration(GridSpacingItemDecoration(2, spacing, true))
             } catch (e: Exception) {
@@ -139,10 +139,10 @@ class LogFragment : BaseFragment() {
     }
 
     private fun showItemDetail(entry: LogEntry) {
-        // 기존 다이얼로그가 열려있으면 닫기
+        // Close any existing dialog if open
         dialogFragment?.dismiss()
         
-        // 새 다이얼로그 생성 및 표시
+        // Create and show a new dialog
         dialogFragment = LogItemDetailDialogFragment.newInstance(entry)
         dialogFragment?.setOnDialogDismissedListener {
             dialogFragment = null
@@ -154,10 +154,10 @@ class LogFragment : BaseFragment() {
 data class LogEntry(
     val dateIso: String, // e.g., 2025-11-06; replace with LocalDate if using java.time with minSdk compat
     val word: String,
-    val imagePath: String? = null, // 실제 이미지 경로
-    val imageRes: Int? = null, // 더미 데이터용 (하위 호환성)
-    val koreanMeaning: String? = null, // 한국어 의미
-    val objectId: Long? = null // DetectedObject의 ID
+    val imagePath: String? = null, // Actual image path
+    val imageRes: Int? = null, // For placeholder data (backward compatibility)
+    val koreanMeaning: String? = null, // Korean meaning
+    val objectId: Long? = null // ID of the DetectedObject
 ) : Serializable
 
 // UI items for sectioned list
@@ -289,7 +289,7 @@ class LogEntryViewHolder(itemView: android.view.View) : RecyclerView.ViewHolder(
         wordView.text = entry.word
         wordView.visibility = View.VISIBLE
         
-        // 실제 이미지 경로가 있으면 사용, 없으면 더미 이미지
+        // Use the actual image path when available; otherwise show a placeholder
         if (entry.imagePath != null) {
             val (maxWidth, maxHeight) = calculateOptimalImageSize()
             val imagePath = entry.imagePath
@@ -347,8 +347,8 @@ class HeaderViewHolder(itemView: android.view.View) : RecyclerView.ViewHolder(it
 }
 
 /**
- * GridLayoutManager용 아이템 간격 설정 클래스
- * 모든 아이템이 동일한 너비를 가지도록 간격을 일정하게 설정
+ * Item spacing helper for GridLayoutManager
+ * Keeps spacing consistent so all items maintain the same width
  */
 class GridSpacingItemDecoration(
     private val spanCount: Int,
@@ -365,7 +365,7 @@ class GridSpacingItemDecoration(
         val position = parent.getChildAdapterPosition(view)
         val itemViewType = parent.adapter?.getItemViewType(position) ?: -1
         
-        // Header는 spanCount만큼 차지하므로 전체 너비 사용
+        // Header spans the full width because it uses spanCount columns
         if (itemViewType == 0) { // TYPE_HEADER
             if (includeEdge) {
                 outRect.left = spacing
@@ -379,7 +379,7 @@ class GridSpacingItemDecoration(
                 outRect.bottom = 0
             }
         } else {
-            // 일반 아이템 (Entry)
+            // Standard item (Entry)
             val column = position % spanCount
             
             if (includeEdge) {
